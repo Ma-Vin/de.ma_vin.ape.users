@@ -33,6 +33,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>de.ma_vin.ape</groupId>
             <artifactId>utils</artifactId>
             <version>1.0-SNAPSHOT</version>
@@ -41,6 +46,10 @@
             <groupId>de.ma_vin.util.layer.generator</groupId>
             <artifactId>layer-generator-annotation</artifactId>
             <version>${layer.generator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
