@@ -18,9 +18,18 @@
         <maven.plugin-dependency.version>3.1.2</maven.plugin-dependency.version>
         <build.helper.maven.plugin.version>3.2.0</build.helper.maven.plugin.version>
 
-
+        <skip.generating.model>true</skip.generating.model>
         <sonar.projectName>de.ma_vin.ape.users</sonar.projectName>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>gen-model</id>
+            <properties>
+                <skip.generating.model>false</skip.generating.model>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -38,8 +47,8 @@
             <artifactId>lombok</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>javax.persistence-api</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
     </dependencies>
 
@@ -112,6 +121,7 @@
                     <modelDefinitionFilename>usersModel.xml</modelDefinitionFilename>
                     <cleanTargetDirectory>true</cleanTargetDirectory>
                     <cleanBasePackage>false</cleanBasePackage>
+                    <skip>${skip.generating.model}</skip>
                 </configuration>
             </plugin>
             <plugin>
