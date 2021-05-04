@@ -1,0 +1,834 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="de.ma_vin.util.gen.model" targetNamespace="de.ma_vin.util.gen.model" version="1.0">
+      
+  
+  <xs:element name="config" type="tns:config"/>
+      
+  
+  <xs:complexType name="config">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[Configuration of the model generator]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence>
+                  
+      
+      <xs:element name="basePackage" type="xs:string">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Basic package which will be used for generated java classes]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                  
+      
+      <xs:element name="dtoPackage" type="xs:string">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Extension of the basic package for dto objects]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                  
+      
+      <xs:element name="domainPackage" type="xs:string">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Extension of the basic package for domain objects]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                  
+      
+      <xs:element name="daoPackage" type="xs:string">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Extension of the basic package for dao objects]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                  
+      
+      <xs:element name="idGeneratorPackage" type="xs:string">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[The package of an id generator]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                  
+      
+      <xs:element name="idGeneratorClass" type="xs:string">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[The class of an id generator, which is used to transform the database id to an identification with some prefix.
+The prefix makes it easier to classy the identification to a concrete type of model object
+<br>
+Two static function are to provide:
+<ul>
+    <li>public static String generateIdentification(Long id, String prefix)</li>
+    <li> public static Long generateId(String identification, String prefix)</li>
+</ul>]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="entities">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Entities which will be used to generate domain objects, dto or dao.]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="entity" type="tns:entity"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="groupings">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Groupings of entities]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="grouping" type="tns:grouping"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                
+    
+    </xs:sequence>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="entity">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[Description of an entity which will be used to generate domain object, dto or dao]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence>
+                  
+      
+      <xs:element minOccurs="0" name="fields">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Attributes of the entity]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="field" type="tns:field"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="indices">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Indices of the entity]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="index" type="tns:index"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="references">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[References to other entities]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="reference" type="tns:reference"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                
+    
+    </xs:sequence>
+            
+    
+    <xs:attribute name="baseName" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Base name of the objects, which will be extended by some postfix for dto or dao]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="tableName" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Name of Table at database. if {@code null} the {@code baseName} is used]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="models" type="tns:models">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Which objects should be generated]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="description" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Description of the attribute]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="identificationPrefix" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Prefix which will be added in front of dto and domain id]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="parent" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[super entity]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="isAbstract" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[indication if the generated java class should be abstract]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="field">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[Describes the attribute of some entity]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence>
+                  
+      
+      <xs:element minOccurs="0" name="description" type="xs:string">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Description of the attribute]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="daoInfo" type="tns:daoInfo">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[(Optional) additional information for database.]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                
+    
+    </xs:sequence>
+            
+    
+    <xs:attribute name="fieldName" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Name of the attribute]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="type" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Type of the attribute]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="typePackage" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[package of the type if necessary]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="isTypeEnum" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[indication if the field is an enum or not]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="shortDescription" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Short description of the attribute]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="models" type="tns:models">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[For which object is this field relevant]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="daoInfo">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[Can be used to override default jpa column values]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence/>
+            
+    
+    <xs:attribute name="columnName" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[different column name compared to fieldName]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="nullable" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[(Optional) Whether the database column is nullable.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="length" type="xs:int">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[(Optional) The column length. (Applies only if a
+string-valued column is used.)]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="precision" type="xs:int">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[(Optional) The precision for a decimal (exact numeric)
+column. (Applies only if a decimal column is used.)
+Value must be set by developer if used when generating
+the DDL for the column.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="scale" type="xs:int">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[(Optional) The scale for a decimal (exact numeric) column.
+(Applies only if a decimal column is used.)]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="useEnumText" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[True if enum values should be stored by text and not by id]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="columnDefinition" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[(Optional) The SQL fragment that is used when generating the DDL for the column.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="isLobType" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Specifies that a persistent property or field should be persisted as a large object to a database-supported large object type.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="index">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[Description of an index which will be used at table annotation of data access objects]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence/>
+            
+    
+    <xs:attribute name="indexName" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Name of the index]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="isUnique" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Indicator if this is an unique index]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="fieldList" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[List of field names which define columns of the index.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="reference">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[Describes the reference to som Entity]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence>
+                  
+      
+      <xs:element minOccurs="0" name="nonOwnerFilterField" type="tns:nonOwnerFilterField">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Filtering on non owner references whose target value differs from target entity values]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                
+    
+    </xs:sequence>
+            
+    
+    <xs:attribute name="referenceName" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Name of the reference]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="targetEntity" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[The baseName of the entity where to point at]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="shortDescription" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Short description of the reference]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="filterField" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Field of enum type to filter references from one entity to another multiple times]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="filterFieldValue" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Value which should be used for filtering.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="isOwner" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[{@code true} if the parent should also be the parent at database. Otherwise some connection table will be generated]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="isList" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Indicator if a one to one relation or an one to many relation exists]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="nonOwnerFilterField">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[Describes an filter criteria for non owner reference whose filter enum differs from target entity fields.]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence/>
+            
+    
+    <xs:attribute name="filterFieldPackage" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Package of the filtering enum. Only in case of filtered reference, non ownership. Will be used at connection table.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="filterFieldType" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Field of enum type to filter references from one entity to another multiple times]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="filterFieldValue" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Value which should be used for filtering.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="grouping">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[Grouping of entities in their own package]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence>
+                  
+      
+      <xs:element minOccurs="0" name="entities">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Entities which will be used to generate domain objects, dto or dao.]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="entity" type="tns:entity"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                
+    
+    </xs:sequence>
+            
+    
+    <xs:attribute name="groupingPackage" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Extension of the grouping package]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:simpleType name="models">
+            
+    
+    <xs:restriction base="xs:string">
+                  
+      
+      <xs:enumeration value="DOMAIN"/>
+                  
+      
+      <xs:enumeration value="DAO"/>
+                  
+      
+      <xs:enumeration value="DTO"/>
+                  
+      
+      <xs:enumeration value="DOMAIN_DAO"/>
+                  
+      
+      <xs:enumeration value="DOMAIN_DTO"/>
+                  
+      
+      <xs:enumeration value="DAO_DTO"/>
+                  
+      
+      <xs:enumeration value="DOMAIN_DAO_DTO"/>
+                
+    
+    </xs:restriction>
+          
+  
+  </xs:simpleType>
+    
+
+</xs:schema>

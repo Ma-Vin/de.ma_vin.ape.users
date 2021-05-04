@@ -1,0 +1,118 @@
+<conf:config xmlns:conf="de.ma_vin.util.gen.model">
+    <basePackage>de.ma_vin.ape.users.model.gen</basePackage>
+    <dtoPackage>dto</dtoPackage>
+    <domainPackage>domain</domainPackage>
+    <daoPackage>dao</daoPackage>
+    <idGeneratorPackage>de.ma_vin.ape.utils.generators</idGeneratorPackage>
+    <idGeneratorClass>IdGenerator</idGeneratorClass>
+    <groupings>
+        <grouping groupingPackage="group">
+            <entities>
+                <entity baseName="AbstractGroup" identificationPrefix="G" isAbstract="true"
+                        description="Base group which is will be extended by all other group types">
+                    <fields>
+                        <field fieldName="groupName" type="String" shortDescription="Name of the group"/>
+                        <field fieldName="description" type="String" shortDescription="Description of the group"/>
+                        <field fieldName="validFrom" type="LocalDateTime" typePackage="java.time" shortDescription="Begin of the validity"/>
+                        <field fieldName="validTo" type="LocalDateTime" typePackage="java.time" shortDescription="End of the validity"/>
+                    </fields>
+                </entity>
+                <entity baseName="AdminGroup" parent="AbstractGroup" description="Group which contains all admin groups">
+                    <references>
+                        <reference referenceName="admins" targetEntity="User" isList="true" isOwner="true" shortDescription="all global admins"/>
+                    </references>
+                </entity>
+                <entity baseName="CommonGroup" parent="AbstractGroup" description="Common group which holds all privilege, base groups and users">
+                    <fields>
+                        <field fieldName="defaultRole" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
+                    </fields>
+                    <references>
+                        <reference referenceName="privileges" targetEntity="PrivilegeGroup" shortDescription="All groups with privileges"
+                                   isList="true" isOwner="true"/>
+                        <reference referenceName="basics" targetEntity="BaseGroup" shortDescription="All basic groups" isList="true" isOwner="true"/>
+                        <reference referenceName="admins" targetEntity="User" filterField="role" filterFieldValue="ADMIN" isList="true" isOwner="true"/>
+                        <reference referenceName="managers" targetEntity="User" filterField="role" filterFieldValue="MANAGER" isList="true" isOwner="true"/>
+                        <reference referenceName="contributors" targetEntity="User" filterField="role" filterFieldValue="CONTRIBUTOR" isList="true" isOwner="true"/>
+                        <reference referenceName="visitors" targetEntity="User" filterField="role" filterFieldValue="VISITOR" isList="true" isOwner="true"/>
+                        <reference referenceName="blocks" targetEntity="User" filterField="role" filterFieldValue="BLOCKED" isList="true" isOwner="true"/>
+                    </references>
+                </entity>
+                <entity baseName="PrivilegeGroup" parent="AbstractGroup"
+                        description="Group which holds information about privileges of basic groups and users">
+                    <references>
+                        <reference referenceName="admins" targetEntity="User" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="ADMIN"/>
+                        </reference>
+                        <reference referenceName="managers" targetEntity="User" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="MANAGER"/>
+                        </reference>
+                        <reference referenceName="contributors" targetEntity="User" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="CONTRIBUTOR"/>
+                        </reference>
+                        <reference referenceName="visitors" targetEntity="User" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="VISITOR"/>
+                        </reference>
+                        <reference referenceName="blocks" targetEntity="User" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="BLOCKED"/>
+                        </reference>
+                        <reference referenceName="adminGroups" targetEntity="BaseGroup" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="ADMIN"/>
+                        </reference>
+                        <reference referenceName="managerGroups" targetEntity="BaseGroup" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="MANAGER"/>
+                        </reference>
+                        <reference referenceName="contributorGroups" targetEntity="BaseGroup" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="CONTRIBUTOR"/>
+                        </reference>
+                        <reference referenceName="visitorGroups" targetEntity="BaseGroup" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="VISITOR"/>
+                        </reference>
+                        <reference referenceName="blockGroups" targetEntity="BaseGroup" isList="true">
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="BLOCKED"/>
+                        </reference>
+                    </references>
+                </entity>
+                <entity baseName="BaseGroup" parent="AbstractGroup"
+                        description="Basic group which contains only other basic groups and memberships of users without roles">
+                    <references>
+                        <reference referenceName="users" targetEntity="User" isList="true"/>
+                    </references>
+                </entity>
+            </entities>
+        </grouping>
+        <grouping groupingPackage="user">
+            <entities>
+                <entity baseName="User" identificationPrefix="U"
+                        description="User which is used to identify and to assign privileges at">
+                    <fields>
+                        <field fieldName="firstName" type="String"/>
+                        <field fieldName="lastName" type="String"/>
+                        <field fieldName="mail" type="String"/>
+                        <field fieldName="validFrom" type="LocalDateTime" typePackage="java.time"/>
+                        <field fieldName="validTo" type="LocalDateTime" typePackage="java.time"/>
+                        <field fieldName="password" type="String"/>
+                        <field fieldName="lastLogin" type="LocalDateTime" typePackage="java.time"/>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true" models="DOMAIN_DAO"/>
+                    </fields>
+                    <references>
+                        <reference referenceName="image" targetEntity="UserResource"/>
+                        <reference referenceName="smallImage" targetEntity="UserResource"/>
+                    </references>
+                </entity>
+            </entities>
+        </grouping>
+        <grouping groupingPackage="resource">
+            <entities>
+                <entity baseName="UserResource" identificationPrefix="UR"
+                        description="Data of users which is to store as blob">
+                    <fields>
+                        <field fieldName="data" type="byte[]">
+                            <description>Blob data of the resource</description>
+                            <daoInfo columnDefinition="BLOB" isLobType="true"/>
+                        </field>
+                    </fields>
+                </entity>
+            </entities>
+        </grouping>
+    </groupings>
+</conf:config>
