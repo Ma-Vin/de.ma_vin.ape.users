@@ -19,7 +19,7 @@
     <url>https://github.com/Ma-Vin/de.ma_vin.ape.users</url>
 
     <properties>
-        <layer.generator.version>1.0-SNAPSHOT</layer.generator.version>
+        <layer.generator.version>1.0</layer.generator.version>
         <maven.plugin-dependency.version>3.1.2</maven.plugin-dependency.version>
         <build.helper.maven.plugin.version>3.2.0</build.helper.maven.plugin.version>
 
