@@ -84,7 +84,7 @@
                                 <artifactItem>
                                     <groupId>de.ma_vin.util.layer.generator</groupId>
                                     <artifactId>layer-generator-plugin</artifactId>
-                                    <version>${project.version}</version>
+                                    <version>${layer.generator.version}</version>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                     <includes>**\/*.xsd</includes>
                                 </artifactItem>
