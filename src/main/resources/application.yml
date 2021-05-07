@@ -13,3 +13,7 @@ spring:
 logging:
   level:
     root: INFO
+db:
+  user:
+    isToInitialize: true
+    isCommonGroupToInitialize: true
