@@ -8,7 +8,7 @@
     <groupings>
         <grouping groupingPackage="group">
             <entities>
-                <entity baseName="AbstractGroup" identificationPrefix="G" isAbstract="true"
+                <entity baseName="AbstractGroup" isAbstract="true"
                         description="Base group which is will be extended by all other group types">
                     <fields>
                         <field fieldName="groupName" type="String" shortDescription="Name of the group"/>
@@ -17,12 +17,12 @@
                         <field fieldName="validTo" type="LocalDateTime" typePackage="java.time" shortDescription="End of the validity"/>
                     </fields>
                 </entity>
-                <entity baseName="AdminGroup" parent="AbstractGroup" description="Group which contains all admin groups">
+                <entity baseName="AdminGroup" parent="AbstractGroup" identificationPrefix="AG" description="Group which contains all admin groups">
                     <references>
                         <reference referenceName="admins" targetEntity="User" isList="true" isOwner="true" shortDescription="all global admins"/>
                     </references>
                 </entity>
-                <entity baseName="CommonGroup" parent="AbstractGroup" description="Common group which holds all privilege, base groups and users">
+                <entity baseName="CommonGroup" parent="AbstractGroup" identificationPrefix="CG" description="Common group which holds all privilege, base groups and users">
                     <fields>
                         <field fieldName="defaultRole" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
                     </fields>
@@ -37,7 +37,7 @@
                         <reference referenceName="blocks" targetEntity="User" filterField="role" filterFieldValue="BLOCKED" isList="true" isOwner="true"/>
                     </references>
                 </entity>
-                <entity baseName="PrivilegeGroup" parent="AbstractGroup"
+                <entity baseName="PrivilegeGroup" parent="AbstractGroup" identificationPrefix="PG"
                         description="Group which holds information about privileges of basic groups and users">
                     <references>
                         <reference referenceName="admins" targetEntity="User" isList="true">
@@ -72,7 +72,7 @@
                         </reference>
                     </references>
                 </entity>
-                <entity baseName="BaseGroup" parent="AbstractGroup"
+                <entity baseName="BaseGroup" parent="AbstractGroup" identificationPrefix="BG"
                         description="Basic group which contains only other basic groups and memberships of users without roles">
                     <references>
                         <reference referenceName="users" targetEntity="User" isList="true"/>
