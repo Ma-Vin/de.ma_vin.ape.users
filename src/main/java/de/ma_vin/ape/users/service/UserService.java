@@ -169,14 +169,14 @@ public class UserService extends AbstractRepositoryService {
     /**
      * Stores a user at a admin group
      *
-     * @param user               user which should be stored
-     * @param teamIdentification identification of the parent team
-     * @return Stored team with additional generated ids, if missing before.
+     * @param user                user which should be stored
+     * @param groupIdentification identification of the parent admin group
+     * @return Stored user with additional generated ids, if missing before.
      * <br>
-     * In case of not existing team for given identification, the result will be {@link Optional#empty()}
+     * In case of not existing user for given identification, the result will be {@link Optional#empty()}
      */
-    public Optional<User> saveAtAdminGroup(User user, String teamIdentification) {
-        return save(user, teamIdentification
+    public Optional<User> saveAtAdminGroup(User user, String groupIdentification) {
+        return save(user, groupIdentification
                 , userDomainObject -> String.format("(%s, %s)", userDomainObject.getFirstName(), userDomainObject.getLastName())
                 , () -> {
                     AdminGroupDao res = new AdminGroupDao();
@@ -191,14 +191,14 @@ public class UserService extends AbstractRepositoryService {
     /**
      * Stores a user at a common group
      *
-     * @param user               user which should be stored
-     * @param teamIdentification identification of the parent team
-     * @return Stored team with additional generated ids, if missing before.
+     * @param user                user which should be stored
+     * @param groupIdentification identification of the parent common group
+     * @return Stored user with additional generated ids, if missing before.
      * <br>
-     * In case of not existing team for given identification, the result will be {@link Optional#empty()}
+     * In case of not existing user for given identification, the result will be {@link Optional#empty()}
      */
-    public Optional<User> saveAtCommonGroup(User user, String teamIdentification) {
-        return save(user, teamIdentification
+    public Optional<User> saveAtCommonGroup(User user, String groupIdentification) {
+        return save(user, groupIdentification
                 , userDomainObject -> String.format("(%s, %s)", userDomainObject.getFirstName(), userDomainObject.getLastName())
                 , () -> {
                     CommonGroupDao res = new CommonGroupDao();
