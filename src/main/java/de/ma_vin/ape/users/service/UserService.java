@@ -26,7 +26,7 @@ public class UserService extends AbstractRepositoryService {
     public static final String ADMIN_OR_COMMON_GROUP_LOG_PARAM = "admin or common group";
     public static final String ADMIN_GROUP_LOG_PARAM = "admin group";
     public static final String COMMON_GROUP_LOG_PARAM = "common group";
-    public static final String USER_LOG_PARAM = "users";
+    public static final String USER_LOG_PARAM = "user";
     public static final String USERS_LOG_PARAM = "users";
 
     @Autowired
