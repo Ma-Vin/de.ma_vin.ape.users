@@ -12,12 +12,12 @@ import java.util.Optional;
 @Log4j2
 public abstract class AbstractRepositoryService {
 
-    public static final String GET_PARENT_ID_MISSING_CHILD_ID_LOG_ERROR = "The identification of the parent {] could not be determined without identification of the {}";
+    public static final String GET_PARENT_ID_MISSING_CHILD_ID_LOG_ERROR = "The identification of the parent {} could not be determined without identification of the {}";
     public static final String GET_PARENT_ID_NOT_FOUND_LOG_ERROR = "The identification of the parent {} could not be determined";
 
     public static final String DELETE_BEGIN_LOG_MESSAGE = "Delete {} with identification \"{}\" and id \"{}\"\"";
     public static final String DELETE_END_LOG_MESSAGE = "{} with identification \"{}\" and id \"{}\" was deleted";
-    public static final String DELETE_SUB_ENTITY_LOG_MESSAGE = "{} {}} are also to delete by deletion of {} with identification \"{}\" and id \"{}\"";
+    public static final String DELETE_SUB_ENTITY_LOG_MESSAGE = "{} {} are also to delete by deletion of {} with identification \"{}\" and id \"{}\"";
 
     public static final String SEARCH_START_LOG_MESSAGE = "Search for {} at {} with identification \"{}\"";
     public static final String SEARCH_RESULT_LOG_MESSAGE = "{} {} are found at {} with identification \"{}\"";

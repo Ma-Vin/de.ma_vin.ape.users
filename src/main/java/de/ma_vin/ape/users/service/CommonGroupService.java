@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.CommonGroupRepository;
@@ -27,6 +28,8 @@ public class CommonGroupService extends AbstractRepositoryService {
     private CommonGroupRepository commonGroupRepository;
     @Autowired
     private UserService userService;
+    @Autowired
+    private PrivilegeGroupService privilegeGroupService;
 
     /**
      * Deletes an common group from repository
@@ -49,6 +52,11 @@ public class CommonGroupService extends AbstractRepositoryService {
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, users.size(), UserService.USERS_LOG_PARAM, GROUP_LOG_PARAM
                 , commonGroupDao.getIdentification(), commonGroupDao.getId());
         users.forEach(userService::delete);
+
+        List<PrivilegeGroup> privilegeGroups = privilegeGroupService.findAllPrivilegeGroups(commonGroupDao.getIdentification());
+        log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, privilegeGroups.size(), PrivilegeGroupService.GROUP_LOG_PARAM, GROUP_LOG_PARAM
+                , commonGroupDao.getIdentification(), commonGroupDao.getId());
+        privilegeGroups.forEach(privilegeGroupService::delete);
 
         commonGroupRepository.delete(commonGroupDao);
 

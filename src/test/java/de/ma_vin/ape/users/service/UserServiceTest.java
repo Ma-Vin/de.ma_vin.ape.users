@@ -1,10 +1,14 @@
 package de.ma_vin.ape.users.service;
 
-import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
+import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
+import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
 import de.ma_vin.ape.users.persistence.UserRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
@@ -27,9 +31,11 @@ public class UserServiceTest {
     public static final Long USER_ID = 1L;
     public static final Long COMMON_GROUP_ID = 2L;
     public static final Long ADMIN_GROUP_ID = 3L;
+    public static final Long PRIVILEGE_GROUP_ID = 4L;
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String ADMIN_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ADMIN_GROUP_ID, AdminGroup.ID_PREFIX);
+    public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
 
     private UserService cut;
     private AutoCloseable openMocks;
@@ -37,9 +43,15 @@ public class UserServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
+    private PrivilegeGroupRepository privilegeGroupRepository;
+    @Mock
+    private PrivilegeGroupToUserRepository privilegeGroupToUserRepository;
+    @Mock
     private User user;
     @Mock
     private UserDao userDao;
+    @Mock
+    private PrivilegeGroupDao privilegeGroupDao;
 
     @BeforeEach
     public void setUp() {
@@ -47,6 +59,8 @@ public class UserServiceTest {
 
         cut = new UserService();
         cut.setUserRepository(userRepository);
+        cut.setPrivilegeGroupRepository(privilegeGroupRepository);
+        cut.setPrivilegeGroupToUserRepository(privilegeGroupToUserRepository);
     }
 
     @AfterEach
@@ -344,5 +358,121 @@ public class UserServiceTest {
 
         verify(userRepository).findById(any());
         verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Add user to privilege group")
+    @Test
+    public void testAddUserToPrivilegeGroup() {
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
+        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        when(privilegeGroupRepository.findById(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.of(privilegeGroupDao));
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(privilegeGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR);
+
+        assertTrue(added, "The user should be added to the privilege group");
+
+        verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
+        verify(userRepository).findById(eq(USER_ID));
+        verify(privilegeGroupToUserRepository).save(any());
+    }
+
+    @DisplayName("Add user to non existing privilege group")
+    @Test
+    public void testAddUserToPrivilegeGroupMissingPrivilegeGroup() {
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+
+        when(privilegeGroupRepository.findById(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.empty());
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(privilegeGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR);
+
+        assertFalse(added, "The user should not be added to the privilege group");
+
+        verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
+        verify(userRepository, never()).findById(eq(USER_ID));
+        verify(privilegeGroupToUserRepository, never()).save(any());
+    }
+
+    @DisplayName("Add non existing user to privilege group")
+    @Test
+    public void testAddUserToPrivilegeGroupMissingUser() {
+        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
+        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        when(privilegeGroupRepository.findById(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.of(privilegeGroupDao));
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.empty());
+        when(privilegeGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR);
+
+        assertFalse(added, "The user should not be added to the privilege group");
+
+        verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
+        verify(userRepository).findById(eq(USER_ID));
+        verify(privilegeGroupToUserRepository, never()).save(any());
+    }
+
+    @DisplayName("Add user to privilege group without result at saving")
+    @Test
+    public void testAddUserToPrivilegeGroupNoSavingResult() {
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
+        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        when(privilegeGroupRepository.findById(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.of(privilegeGroupDao));
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(privilegeGroupToUserRepository.save(any())).thenReturn(null);
+
+        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR);
+
+        assertFalse(added, "The user should not be added to the privilege group");
+
+        verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
+        verify(userRepository).findById(eq(USER_ID));
+        verify(privilegeGroupToUserRepository).save(any());
+    }
+
+    @DisplayName("Remove user from privilege group")
+    @Test
+    public void testRemoveUserFromPrivilegeGroup() {
+        when(privilegeGroupToUserRepository.deleteByPrivilegeGroupAndUser(any(), any())).thenReturn(1L);
+
+        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertTrue(removed, "The user should be removed from the privilege group");
+
+        verify(privilegeGroupToUserRepository).deleteByPrivilegeGroupAndUser(any(), any());
+    }
+
+    @DisplayName("Remove user from privilege group, but not connection exists")
+    @Test
+    public void testRemoveUserFromPrivilegeGroupNonExisting() {
+        when(privilegeGroupToUserRepository.deleteByPrivilegeGroupAndUser(any(), any())).thenReturn(0L);
+
+        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertFalse(removed, "The user should not be removed from the privilege group");
+
+        verify(privilegeGroupToUserRepository).deleteByPrivilegeGroupAndUser(any(), any());
+    }
+
+    @DisplayName("Remove user from privilege group, but non more than one connection exists")
+    @Test
+    public void testRemoveUserFromPrivilegeGroupNotUnique() {
+        when(privilegeGroupToUserRepository.deleteByPrivilegeGroupAndUser(any(), any())).thenReturn(2L);
+
+        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertFalse(removed, "The user should not be removed from the privilege group");
+
+        verify(privilegeGroupToUserRepository).deleteByPrivilegeGroupAndUser(any(), any());
     }
 }

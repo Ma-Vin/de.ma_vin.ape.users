@@ -1,12 +1,18 @@
 package de.ma_vin.ape.users.service;
 
+import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dao.group.AdminGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupToUserDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
+import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
+import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
 import de.ma_vin.ape.users.persistence.UserRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
@@ -31,6 +37,10 @@ public class UserService extends AbstractRepositoryService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PrivilegeGroupRepository privilegeGroupRepository;
+    @Autowired
+    private PrivilegeGroupToUserRepository privilegeGroupToUserRepository;
 
     /**
      * Deletes a user from repository
@@ -208,5 +218,39 @@ public class UserService extends AbstractRepositoryService {
                 , (userDomainObject, parentDao) -> UserAccessMapper.convertToUserDao(userDomainObject, parentDao)
                 , UserAccessMapper::convertToUser
                 , userRepository);
+    }
+
+    /**
+     * Adds an user to a privilege group
+     *
+     * @param privilegeGroupIdentification identification of the privilege group
+     * @param userIdentification           identification of the user to add
+     * @param role                         role of the user at privilege group
+     * @return {@code true} if the user was added to the privilege group, otherwise {@code false}
+     */
+    public boolean addUserToPrivilegeGroup(String privilegeGroupIdentification, String userIdentification, Role role) {
+        return add(privilegeGroupIdentification, userIdentification, PrivilegeGroup.class.getSimpleName(), User.class.getSimpleName()
+                , PrivilegeGroup.ID_PREFIX, User.ID_PREFIX
+                , privilegeGroupRepository, userRepository, privilegeGroupToUserRepository
+                , (privilegeGroup, user) -> {
+                    PrivilegeGroupToUserDao connection = new PrivilegeGroupToUserDao();
+                    connection.setPrivilegeGroup(privilegeGroup);
+                    connection.setUser(user);
+                    connection.setFilterRole(role);
+                    return connection;
+                });
+    }
+
+    /**
+     * Removes an user from a privilege group
+     *
+     * @param privilegeGroupIdentification Identification of the privilege group
+     * @param userIdentification           Identification of the user to remove
+     * @return {@code true} if the use was removed from the privilege group. Otherwise {@code false}
+     */
+    public boolean removeUserFromPrivilegeGroup(String privilegeGroupIdentification, String userIdentification) {
+        return remove(privilegeGroupIdentification, userIdentification, PrivilegeGroup.class.getSimpleName(), User.class.getSimpleName()
+                , PrivilegeGroup.ID_PREFIX, User.ID_PREFIX, PrivilegeGroupDao::new, UserDao::new
+                , (privilegeGroup, user) -> privilegeGroupToUserRepository.deleteByPrivilegeGroupAndUser(privilegeGroup, user));
     }
 }
