@@ -1,15 +1,15 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
-import de.ma_vin.ape.users.persistence.UserRepository;
+import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,10 +32,12 @@ public class UserServiceTest {
     public static final Long COMMON_GROUP_ID = 2L;
     public static final Long ADMIN_GROUP_ID = 3L;
     public static final Long PRIVILEGE_GROUP_ID = 4L;
+    public static final Long BASE_GROUP_ID = 5L;
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String ADMIN_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ADMIN_GROUP_ID, AdminGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
+    public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
 
     private UserService cut;
     private AutoCloseable openMocks;
@@ -47,11 +49,17 @@ public class UserServiceTest {
     @Mock
     private PrivilegeGroupToUserRepository privilegeGroupToUserRepository;
     @Mock
+    private BaseGroupRepository baseGroupRepository;
+    @Mock
+    private BaseGroupToUserRepository baseGroupToUserRepository;
+    @Mock
     private User user;
     @Mock
     private UserDao userDao;
     @Mock
     private PrivilegeGroupDao privilegeGroupDao;
+    @Mock
+    private BaseGroupDao baseGroupDao;
 
     @BeforeEach
     public void setUp() {
@@ -61,6 +69,8 @@ public class UserServiceTest {
         cut.setUserRepository(userRepository);
         cut.setPrivilegeGroupRepository(privilegeGroupRepository);
         cut.setPrivilegeGroupToUserRepository(privilegeGroupToUserRepository);
+        cut.setBaseGroupRepository(baseGroupRepository);
+        cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
     }
 
     @AfterEach
@@ -440,6 +450,86 @@ public class UserServiceTest {
         verify(privilegeGroupToUserRepository).save(any());
     }
 
+    @DisplayName("Add user to base group")
+    @Test
+    public void testAddUserToBaseGroup() {
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(baseGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertTrue(added, "The user should be added to the base group");
+
+        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
+        verify(userRepository).findById(eq(USER_ID));
+        verify(baseGroupToUserRepository).save(any());
+    }
+
+    @DisplayName("Add user to non existing base group")
+    @Test
+    public void testAddUserToBaseGroupMissingBaseGroup() {
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.empty());
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(baseGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertFalse(added, "The user should not be added to the base group");
+
+        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
+        verify(userRepository, never()).findById(eq(USER_ID));
+        verify(baseGroupToUserRepository, never()).save(any());
+    }
+
+    @DisplayName("Add non existing user to base group")
+    @Test
+    public void testAddUserToBaseGroupMissingUser() {
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.empty());
+        when(baseGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertFalse(added, "The user should not be added to the base group");
+
+        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
+        verify(userRepository).findById(eq(USER_ID));
+        verify(baseGroupToUserRepository, never()).save(any());
+    }
+
+    @DisplayName("Add user to base group without result at saving")
+    @Test
+    public void testAddUserToBaseGroupNoSavingResult() {
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(baseGroupToUserRepository.save(any())).thenReturn(null);
+
+        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertFalse(added, "The user should not be added to the base group");
+
+        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
+        verify(userRepository).findById(eq(USER_ID));
+        verify(baseGroupToUserRepository).save(any());
+    }
+
     @DisplayName("Remove user from privilege group")
     @Test
     public void testRemoveUserFromPrivilegeGroup() {
@@ -474,5 +564,41 @@ public class UserServiceTest {
         assertFalse(removed, "The user should not be removed from the privilege group");
 
         verify(privilegeGroupToUserRepository).deleteByPrivilegeGroupAndUser(any(), any());
+    }
+
+    @DisplayName("Remove user from base group")
+    @Test
+    public void testRemoveUserFromBaseGroup() {
+        when(baseGroupToUserRepository.deleteByBaseGroupAndUser(any(), any())).thenReturn(1L);
+
+        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertTrue(removed, "The user should be removed from the base group");
+
+        verify(baseGroupToUserRepository).deleteByBaseGroupAndUser(any(), any());
+    }
+
+    @DisplayName("Remove user from base group, but not connection exists")
+    @Test
+    public void testRemoveUserFromBaseGroupNonExisting() {
+        when(baseGroupToUserRepository.deleteByBaseGroupAndUser(any(), any())).thenReturn(0L);
+
+        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertFalse(removed, "The user should not be removed from the base group");
+
+        verify(baseGroupToUserRepository).deleteByBaseGroupAndUser(any(), any());
+    }
+
+    @DisplayName("Remove user from base group, but non more than one connection exists")
+    @Test
+    public void testRemoveUserFromBaseGroupNotUnique() {
+        when(baseGroupToUserRepository.deleteByBaseGroupAndUser(any(), any())).thenReturn(2L);
+
+        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+
+        assertFalse(removed, "The user should not be removed from the base group");
+
+        verify(baseGroupToUserRepository).deleteByBaseGroupAndUser(any(), any());
     }
 }

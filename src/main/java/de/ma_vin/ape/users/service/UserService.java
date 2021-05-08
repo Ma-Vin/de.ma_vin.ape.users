@@ -1,19 +1,15 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
-import de.ma_vin.ape.users.model.gen.dao.group.AdminGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupToUserDao;
+import de.ma_vin.ape.users.model.gen.dao.group.*;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
-import de.ma_vin.ape.users.persistence.UserRepository;
+import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -41,6 +37,10 @@ public class UserService extends AbstractRepositoryService {
     private PrivilegeGroupRepository privilegeGroupRepository;
     @Autowired
     private PrivilegeGroupToUserRepository privilegeGroupToUserRepository;
+    @Autowired
+    private BaseGroupRepository baseGroupRepository;
+    @Autowired
+    private BaseGroupToUserRepository baseGroupToUserRepository;
 
     /**
      * Deletes a user from repository
@@ -193,7 +193,7 @@ public class UserService extends AbstractRepositoryService {
                     res.setAdmins(new ArrayList<>());
                     return res;
                 }
-                , (userDomainObject, parentDao) -> UserAccessMapper.convertToUserDao(userDomainObject, parentDao)
+                , UserAccessMapper::convertToUserDao
                 , UserAccessMapper::convertToUser
                 , userRepository);
     }
@@ -215,7 +215,7 @@ public class UserService extends AbstractRepositoryService {
                     res.setAggUser(new ArrayList<>());
                     return res;
                 }
-                , (userDomainObject, parentDao) -> UserAccessMapper.convertToUserDao(userDomainObject, parentDao)
+                , UserAccessMapper::convertToUserDao
                 , UserAccessMapper::convertToUser
                 , userRepository);
     }
@@ -242,15 +242,46 @@ public class UserService extends AbstractRepositoryService {
     }
 
     /**
+     * Adds an user to a base group
+     *
+     * @param baseGroupIdentification identification of the base group
+     * @param userIdentification      identification of the user to add
+     * @return {@code true} if the user was added to the base group, otherwise {@code false}
+     */
+    public boolean addUserToBaseGroup(String baseGroupIdentification, String userIdentification) {
+        return add(baseGroupIdentification, userIdentification, BaseGroup.class.getSimpleName(), User.class.getSimpleName()
+                , BaseGroup.ID_PREFIX, User.ID_PREFIX
+                , baseGroupRepository, userRepository, baseGroupToUserRepository
+                , (baseGroup, user) -> {
+                    BaseGroupToUserDao connection = new BaseGroupToUserDao();
+                    connection.setBaseGroup(baseGroup);
+                    connection.setUser(user);
+                    return connection;
+                });
+    }
+
+    /**
      * Removes an user from a privilege group
      *
      * @param privilegeGroupIdentification Identification of the privilege group
      * @param userIdentification           Identification of the user to remove
-     * @return {@code true} if the use was removed from the privilege group. Otherwise {@code false}
+     * @return {@code true} if the user was removed from the privilege group. Otherwise {@code false}
      */
     public boolean removeUserFromPrivilegeGroup(String privilegeGroupIdentification, String userIdentification) {
         return remove(privilegeGroupIdentification, userIdentification, PrivilegeGroup.class.getSimpleName(), User.class.getSimpleName()
                 , PrivilegeGroup.ID_PREFIX, User.ID_PREFIX, PrivilegeGroupDao::new, UserDao::new
-                , (privilegeGroup, user) -> privilegeGroupToUserRepository.deleteByPrivilegeGroupAndUser(privilegeGroup, user));
+                , privilegeGroupToUserRepository::deleteByPrivilegeGroupAndUser);
+    }
+
+    /**
+     * Removes an user from a base group
+     *
+     * @param baseGroupIdentification Identification of the base group
+     * @param userIdentification      Identification of the user to remove
+     * @return {@code true} if the user was removed from the base group. Otherwise {@code false}
+     */
+    public boolean removeUserFromBaseGroup(String baseGroupIdentification, String userIdentification) {
+        return remove(baseGroupIdentification, userIdentification, BaseGroup.class.getSimpleName(), User.class.getSimpleName()
+                , BaseGroup.ID_PREFIX, User.ID_PREFIX, BaseGroupDao::new, UserDao::new, baseGroupToUserRepository::deleteByBaseGroupAndUser);
     }
 }

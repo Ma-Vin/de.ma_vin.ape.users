@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
+import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
@@ -35,6 +36,8 @@ public class CommonGroupServiceTest {
     @Mock
     private PrivilegeGroupService privilegeGroupService;
     @Mock
+    private BaseGroupService baseGroupService;
+    @Mock
     private CommonGroupRepository commonGroupRepository;
     @Mock
     private CommonGroup commonGroup;
@@ -44,6 +47,8 @@ public class CommonGroupServiceTest {
     private User user;
     @Mock
     private PrivilegeGroup privilegeGroup;
+    @Mock
+    private BaseGroup baseGroup;
 
 
     @BeforeEach
@@ -54,6 +59,7 @@ public class CommonGroupServiceTest {
         cut.setUserService(userService);
         cut.setCommonGroupRepository(commonGroupRepository);
         cut.setPrivilegeGroupService(privilegeGroupService);
+        cut.setBaseGroupService(baseGroupService);
     }
 
     @AfterEach
@@ -66,6 +72,7 @@ public class CommonGroupServiceTest {
     public void testDelete() {
         when(userService.findAllUsersAtCommonGroup(anyString())).thenReturn(Collections.emptyList());
         when(privilegeGroupService.findAllPrivilegeGroups(anyString())).thenReturn(Collections.emptyList());
+        when(baseGroupService.findAllBaseGroups(anyString())).thenReturn(Collections.emptyList());
         when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
 
         cut.delete(commonGroup);
@@ -74,6 +81,8 @@ public class CommonGroupServiceTest {
         verify(userService, never()).delete(any());
         verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
         verify(privilegeGroupService, never()).delete(any());
+        verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(baseGroupService, never()).delete(any());
         verify(commonGroupRepository).delete(any());
     }
 
@@ -82,6 +91,7 @@ public class CommonGroupServiceTest {
     public void testDeleteWithSubEntities() {
         when(userService.findAllUsersAtCommonGroup(anyString())).thenReturn(Collections.singletonList(user));
         when(privilegeGroupService.findAllPrivilegeGroups(anyString())).thenReturn(Collections.singletonList(privilegeGroup));
+        when(baseGroupService.findAllBaseGroups(anyString())).thenReturn(Collections.singletonList(baseGroup));
         when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
 
         cut.delete(commonGroup);
@@ -90,6 +100,8 @@ public class CommonGroupServiceTest {
         verify(userService).delete(eq(user));
         verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
         verify(privilegeGroupService).delete(eq(privilegeGroup));
+        verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(baseGroupService).delete(any());
         verify(commonGroupRepository).delete(any());
     }
 
