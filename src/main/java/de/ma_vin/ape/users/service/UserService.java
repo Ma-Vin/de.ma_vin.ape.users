@@ -2,6 +2,7 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dao.group.*;
+import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
@@ -32,6 +33,8 @@ public class UserService extends AbstractRepositoryService {
     public static final String USERS_LOG_PARAM = "users";
 
     @Autowired
+    private UserResourceService userResourceService;
+    @Autowired
     private UserRepository userRepository;
     @Autowired
     private PrivilegeGroupRepository privilegeGroupRepository;
@@ -58,6 +61,17 @@ public class UserService extends AbstractRepositoryService {
      */
     private void delete(UserDao userDao) {
         log.debug(DELETE_BEGIN_LOG_MESSAGE, USER_LOG_PARAM, userDao.getIdentification(), userDao.getId());
+
+        findUser(userDao.getIdentification()).ifPresent(u -> {
+            if (u.getImage() != null) {
+                log.debug("Delete image with identification \"{}\" at user \"{}\"", u.getImage().getIdentification(), userDao.getIdentification());
+                userResourceService.delete(u.getImage());
+            }
+            if (u.getSmallImage() != null) {
+                log.debug("Delete small image with identification \"{}\" at user \"{}\"", u.getImage().getIdentification(), userDao.getIdentification());
+                userResourceService.delete(u.getSmallImage());
+            }
+        });
 
         userRepository.delete(userDao);
 
@@ -195,7 +209,8 @@ public class UserService extends AbstractRepositoryService {
                 }
                 , UserAccessMapper::convertToUserDao
                 , UserAccessMapper::convertToUser
-                , userRepository);
+                , userRepository
+                , createUserAdoption());
     }
 
     /**
@@ -217,7 +232,46 @@ public class UserService extends AbstractRepositoryService {
                 }
                 , UserAccessMapper::convertToUserDao
                 , UserAccessMapper::convertToUser
-                , userRepository);
+                , userRepository
+                , createUserAdoption());
+    }
+
+    private Adoption<UserDao> createUserAdoption() {
+        return (dao, storedDao) -> {
+            if (isImageToDelete(dao.getImage(), storedDao.getImage())) {
+                log.debug("Image at user \"{}\" has changed: \"{}\" -> \"{}\"", dao.getIdentification()
+                        , getLogIdentification(storedDao.getImage()), getLogIdentification(dao.getImage()));
+                userResourceService.delete(storedDao.getImage());
+
+                if (isImageToSve(dao.getImage())) {
+                    log.debug("Image at user \"{}\" is new and has to stored", dao.getIdentification());
+                    userResourceService.save(dao.getImage()).ifPresent(dao::setImage);
+                }
+            }
+            if (isImageToDelete(dao.getSmallImage(), storedDao.getSmallImage())) {
+                log.debug("Small image at user \"{}\" has changed: \"{}\" -> \"{}\"", dao.getIdentification()
+                        , getLogIdentification(storedDao.getSmallImage()), getLogIdentification(dao.getSmallImage()));
+                userResourceService.delete(storedDao.getSmallImage());
+
+                if (isImageToSve(dao.getSmallImage())) {
+                    log.debug("Small image at user \"{}\" is new and has to stored", dao.getIdentification());
+                    userResourceService.save(dao.getSmallImage()).ifPresent(dao::setSmallImage);
+                }
+            }
+            return dao;
+        };
+    }
+
+    boolean isImageToDelete(UserResourceDao userResourceDao, UserResourceDao storedUserResourceDao) {
+        return storedUserResourceDao != null && (userResourceDao == null || !storedUserResourceDao.getIdentification().equals(userResourceDao.getIdentification()));
+    }
+
+    boolean isImageToSve(UserResourceDao userResourceDao) {
+        return userResourceDao != null && userResourceDao.getId() == null;
+    }
+
+    private String getLogIdentification(UserResourceDao userResourceDao) {
+        return userResourceDao == null ? "null" : userResourceDao.getIdentification();
     }
 
     /**

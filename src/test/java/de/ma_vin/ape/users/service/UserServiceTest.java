@@ -3,11 +3,13 @@ package de.ma_vin.ape.users.service;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.resource.UserResource;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -33,17 +35,23 @@ public class UserServiceTest {
     public static final Long ADMIN_GROUP_ID = 3L;
     public static final Long PRIVILEGE_GROUP_ID = 4L;
     public static final Long BASE_GROUP_ID = 5L;
+    public static final Long USER_IMAGE_ID = 6L;
+    public static final Long USER_SMALL_IMAGE_ID = 7L;
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String ADMIN_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ADMIN_GROUP_ID, AdminGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
+    public static final String USER_IMAGE_IDENTIFICATION = IdGenerator.generateIdentification(USER_IMAGE_ID, UserResource.ID_PREFIX);
+    public static final String USER_SMALL_IMAGE_IDENTIFICATION = IdGenerator.generateIdentification(USER_SMALL_IMAGE_ID, UserResource.ID_PREFIX);
 
     private UserService cut;
     private AutoCloseable openMocks;
 
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private UserResourceService userResourceService;
     @Mock
     private PrivilegeGroupRepository privilegeGroupRepository;
     @Mock
@@ -55,7 +63,15 @@ public class UserServiceTest {
     @Mock
     private User user;
     @Mock
+    private UserResource image;
+    @Mock
+    private UserResource smallImage;
+    @Mock
     private UserDao userDao;
+    @Mock
+    private UserResourceDao imageDao;
+    @Mock
+    private UserResourceDao smallImageDao;
     @Mock
     private PrivilegeGroupDao privilegeGroupDao;
     @Mock
@@ -71,6 +87,7 @@ public class UserServiceTest {
         cut.setPrivilegeGroupToUserRepository(privilegeGroupToUserRepository);
         cut.setBaseGroupRepository(baseGroupRepository);
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
+        cut.setUserResourceService(userResourceService);
     }
 
     @AfterEach
@@ -82,10 +99,27 @@ public class UserServiceTest {
     @Test
     public void testDeleteUser() {
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
 
         cut.delete(user);
 
         verify(userRepository).delete(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Delete user with references")
+    @Test
+    public void testDeleteUserWithReferences() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        cut.delete(user);
+
+        verify(userRepository).delete(any());
+        verify(userResourceService, times(2)).delete(any(UserResource.class));
     }
 
     @DisplayName("Check existence of user")
@@ -173,6 +207,8 @@ public class UserServiceTest {
         verify(userRepository).getIdOfParentAdminGroup(eq(USER_ID));
         verify(userRepository).findById(eq(USER_ID));
         verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save user with admin group parent")
@@ -194,6 +230,8 @@ public class UserServiceTest {
         verify(userRepository).getIdOfParentCommonGroup(eq(USER_ID));
         verify(userRepository).findById(eq(USER_ID));
         verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save user without parent")
@@ -214,6 +252,8 @@ public class UserServiceTest {
         verify(userRepository).getIdOfParentCommonGroup(eq(USER_ID));
         verify(userRepository, never()).findById(any());
         verify(userRepository, never()).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save user without identification")
@@ -236,6 +276,8 @@ public class UserServiceTest {
         verify(userRepository, never()).getIdOfParentCommonGroup(any());
         verify(userRepository, never()).findById(any());
         verify(userRepository, never()).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save new user at admin group")
@@ -259,6 +301,8 @@ public class UserServiceTest {
 
         verify(userRepository, never()).findById(any());
         verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save existing user at admin group")
@@ -281,6 +325,146 @@ public class UserServiceTest {
 
         verify(userRepository).findById(any());
         verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Save existing user at admin group with equal images")
+    @Test
+    public void testSaveAtAdminGroupWithEqualImages() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getImage()).thenReturn(image);
+        when(user.getSmallImage()).thenReturn(smallImage);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Parent at save should not be null");
+            assertEquals(ADMIN_GROUP_ID, ((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
+        when(image.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImage.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(imageDao.getId()).thenReturn(USER_IMAGE_ID);
+        when(smallImageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(smallImageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
+
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+
+        verify(userRepository).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(eq(imageDao));
+        verify(userResourceService, never()).delete(eq(smallImageDao));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Save existing user at admin group with different images")
+    @Test
+    public void testSaveAtAdminGroupWithDifferentImages() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getImage()).thenReturn(image);
+        when(user.getSmallImage()).thenReturn(smallImage);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Parent at save should not be null");
+            assertEquals(ADMIN_GROUP_ID, ((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
+        when(image.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImage.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
+        when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
+
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+
+        verify(userRepository).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService).delete(eq(imageDao));
+        verify(userResourceService).delete(eq(smallImageDao));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Save existing user at admin group with new images")
+    @Test
+    public void testSaveAtAdminGroupWithNewImages() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getImage()).thenReturn(image);
+        when(user.getSmallImage()).thenReturn(smallImage);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Parent at save should not be null");
+            assertEquals(ADMIN_GROUP_ID, ((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
+        when(image.getIdentification()).thenReturn(null);
+        when(smallImage.getIdentification()).thenReturn(null);
+        when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
+        when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
+
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+
+        verify(userRepository).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService).delete(eq(imageDao));
+        verify(userResourceService).delete(eq(smallImageDao));
+        verify(userResourceService, times(2)).save(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Save existing user at admin group with removed images")
+    @Test
+    public void testSaveAtAdminGroupWithRemovedImages() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getImage()).thenReturn(null);
+        when(user.getSmallImage()).thenReturn(null);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Parent at save should not be null");
+            assertEquals(ADMIN_GROUP_ID, ((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
+        when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
+        when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
+
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+
+        verify(userRepository).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService).delete(eq(imageDao));
+        verify(userResourceService).delete(eq(smallImageDao));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save non existing user at admin group")
@@ -302,6 +486,8 @@ public class UserServiceTest {
 
         verify(userRepository).findById(any());
         verify(userRepository, never()).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save new user at common group")
@@ -325,6 +511,8 @@ public class UserServiceTest {
 
         verify(userRepository, never()).findById(any());
         verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save existing user at common group")
@@ -347,6 +535,146 @@ public class UserServiceTest {
 
         verify(userRepository).findById(any());
         verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Save existing user at common group with equal images")
+    @Test
+    public void testSaveAtCommonGroupWithEqualImages() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getImage()).thenReturn(image);
+        when(user.getSmallImage()).thenReturn(smallImage);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
+            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
+        when(image.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImage.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(imageDao.getId()).thenReturn(USER_IMAGE_ID);
+        when(smallImageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(smallImageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
+
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+
+        verify(userRepository).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(eq(imageDao));
+        verify(userResourceService, never()).delete(eq(smallImageDao));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Save existing user at common group with different images")
+    @Test
+    public void testSaveAtCommonGroupWithDifferentImages() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getImage()).thenReturn(image);
+        when(user.getSmallImage()).thenReturn(smallImage);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
+            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
+        when(image.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImage.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
+        when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
+
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+
+        verify(userRepository).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService).delete(eq(imageDao));
+        verify(userResourceService).delete(eq(smallImageDao));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Save existing user at common group with new images")
+    @Test
+    public void testSaveAtCommonGroupWithNewImages() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getImage()).thenReturn(image);
+        when(user.getSmallImage()).thenReturn(smallImage);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
+            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
+        when(image.getIdentification()).thenReturn(null);
+        when(smallImage.getIdentification()).thenReturn(null);
+        when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
+        when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
+
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+
+        verify(userRepository).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService).delete(eq(imageDao));
+        verify(userResourceService).delete(eq(smallImageDao));
+        verify(userResourceService, times(2)).save(any(UserResourceDao.class));
+    }
+
+    @DisplayName("Save existing user at common group with removed images")
+    @Test
+    public void testSaveAtCommonGroupWithRemovedImages() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getImage()).thenReturn(null);
+        when(user.getSmallImage()).thenReturn(null);
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getImage()).thenReturn(imageDao);
+        when(userDao.getSmallImage()).thenReturn(smallImageDao);
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
+            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
+        when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
+        when(imageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
+        when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
+        when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
+
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+
+        verify(userRepository).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService).delete(eq(imageDao));
+        verify(userResourceService).delete(eq(smallImageDao));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Save non existing user at common group")
@@ -368,6 +696,8 @@ public class UserServiceTest {
 
         verify(userRepository).findById(any());
         verify(userRepository, never()).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Add user to privilege group")
@@ -389,6 +719,8 @@ public class UserServiceTest {
         verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
         verify(userRepository).findById(eq(USER_ID));
         verify(privilegeGroupToUserRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
     @DisplayName("Add user to non existing privilege group")
