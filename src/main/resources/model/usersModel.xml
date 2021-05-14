@@ -78,6 +78,16 @@
                         <reference referenceName="users" targetEntity="User" isList="true"/>
                     </references>
                 </entity>
+                <entity baseName="BaseGroupRole" models="DTO">
+                    <fields>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
+                    </fields>
+                </entity>
+                <entity baseName="UserRole" models="DTO">
+                    <fields>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
+                    </fields>
+                </entity>
             </entities>
         </grouping>
         <grouping groupingPackage="user">
@@ -93,6 +103,7 @@
                         <field fieldName="password" type="String"/>
                         <field fieldName="lastLogin" type="LocalDateTime" typePackage="java.time"/>
                         <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true" models="DOMAIN_DAO"/>
+                        <field fieldName="isGlobalAdmin" type="boolean" models="DOMAIN" shortDescription="indicator whether the is a global admin or not"/>
                     </fields>
                     <references>
                         <reference referenceName="image" targetEntity="UserResource"/>
