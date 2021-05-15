@@ -31,10 +31,14 @@ Feature: Testing methods of the common group controller
 
   Scenario: Delete common group
     Given There exists a common group with name "Common Group Name" with alias "common"
+    And There exists a base group with name "Base Group Name" with alias "base" at common group "common"
     When Controller is called to delete the common group with the identification of the alias "common"
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The response is true
     When Controller is called to get the common group with the identification of the alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "ERROR"
+    When Controller is called to get the base group with the identification of the alias "base"
     Then The result is Ok and Json
     And The status of the result should be "ERROR"

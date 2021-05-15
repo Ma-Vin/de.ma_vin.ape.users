@@ -8,6 +8,6 @@ import org.junit.runner.RunWith;
 @CucumberOptions(plugin = {"pretty", "summary"}
         , snippets = CucumberOptions.SnippetType.CAMELCASE
         , glue = "de.ma_vin.ape.users.controller.it.steps"
-        , features = "src/test/resources/de/ma_vin/ape/users/controller/common")
-public class CommonGroupControllerIT {
+        , features = "src/test/resources/de/ma_vin/ape/users/controller/base")
+public class BaseGroupControllerIT {
 }
