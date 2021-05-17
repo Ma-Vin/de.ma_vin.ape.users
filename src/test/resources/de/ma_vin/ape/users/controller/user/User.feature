@@ -19,6 +19,13 @@ Feature: Testing methods of the user controller
     And The "firstName" property at response is "New"
     And The "lastName" property at response is "User"
     And The identification is the same like the one of alias "user"
+    Given There exists an user with first name "Another" and last name "User" with alias "anotherUser" at common group "common"
+    When Controller is called to get all users from common group with identification of "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user"
+    And The identification at 1 is the same like the one of alias "anotherUser"
+    And The "identification" property at response position 2 does not exists
 
   Scenario: Update and get user
     Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"

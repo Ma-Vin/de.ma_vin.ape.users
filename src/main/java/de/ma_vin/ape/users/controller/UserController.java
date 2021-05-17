@@ -13,7 +13,10 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 
@@ -71,6 +74,16 @@ public class UserController extends AbstractDefaultOperationController {
         };
     }
 
+    @GetMapping("/getAllUsers/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserDto>> getAllUsers(@PathVariable String commonGroupIdentification) {
+        List<UserDto> result = userService.findAllUsersAtCommonGroup(commonGroupIdentification).stream()
+                .map(UserTransportMapper::convertToUserDto)
+                .collect(Collectors.toList());
+
+        return createSuccessResponse(result);
+    }
+
     @PatchMapping("/addUserToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addUserToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody UserRoleDto userRoleDto) {
@@ -105,7 +118,7 @@ public class UserController extends AbstractDefaultOperationController {
         boolean result = userService.addUserToBaseGroup(baseGroupIdentification, userIdentification);
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The user with identification \"%s\" was not added to base group with identification \"%s\""
-                , userIdentification,  baseGroupIdentification));
+                , userIdentification, baseGroupIdentification));
     }
 
     @PatchMapping("/removeUserFromBaseGroup/{baseGroupIdentification}")

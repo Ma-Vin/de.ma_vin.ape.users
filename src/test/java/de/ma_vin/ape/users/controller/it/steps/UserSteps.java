@@ -63,4 +63,9 @@ public class UserSteps extends AbstractIntegrationTestSteps {
     public void callControllerToDeleteUser(String userAlias) {
         shared.setResultActions(performDeleteWithAuthorization("/user/deleteUser", getIdentification(userAlias)));
     }
+
+    @When("Controller is called to get all users from common group with identification of {string}")
+    public void callControllerToGetAllUsers(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/getAllUsers", getIdentification(commonGroupAlias)));
+    }
 }

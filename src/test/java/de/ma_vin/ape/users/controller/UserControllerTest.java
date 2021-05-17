@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -474,5 +475,21 @@ public class UserControllerTest {
         checkWarn(response, 1);
 
         verify(userService).removeUserFromBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+    }
+
+    @DisplayName("Get all users from common group")
+    @Test
+    public void testGetAllUsers() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userService.findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsers(COMMON_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
     }
 }
