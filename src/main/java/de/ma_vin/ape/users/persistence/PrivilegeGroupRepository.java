@@ -13,6 +13,6 @@ public interface PrivilegeGroupRepository extends JpaRepository<PrivilegeGroupDa
 
     List<PrivilegeGroupDao> findByParentCommonGroup(CommonGroupDao parentCommonGroup);
 
-    @Query(value = "SELECT pg.Parent_Common_Group_Id FROM PrivilegeGroups pg WHERE pg.id = :groupId", nativeQuery = true)
+    @Query(value = "SELECT pg.Parent_Common_Group_Id FROM Privilege_Groups pg WHERE pg.id = :groupId", nativeQuery = true)
     Optional<Long> getIdOfParentCommonGroup(@Param("groupId") Long groupId);
 }

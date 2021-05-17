@@ -32,6 +32,7 @@ Feature: Testing methods of the common group controller
   Scenario: Delete common group
     Given There exists a common group with name "Common Group Name" with alias "common"
     And There exists a base group with name "Base Group Name" with alias "base" at common group "common"
+    And There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"
     When Controller is called to delete the common group with the identification of the alias "common"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -40,5 +41,8 @@ Feature: Testing methods of the common group controller
     Then The result is Ok and Json
     And The status of the result should be "ERROR"
     When Controller is called to get the base group with the identification of the alias "base"
+    Then The result is Ok and Json
+    And The status of the result should be "ERROR"
+    When Controller is called to get the privilege group with the identification of the alias "privilege"
     Then The result is Ok and Json
     And The status of the result should be "ERROR"
