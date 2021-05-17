@@ -36,10 +36,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public abstract class AbstractIntegrationTestSteps {
 
     @Autowired
-    @MockBean
-    protected UserService userService;
-
-    @Autowired
     protected MockMvc mvc;
 
     @Autowired

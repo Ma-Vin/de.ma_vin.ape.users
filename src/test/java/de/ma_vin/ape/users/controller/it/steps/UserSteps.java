@@ -1,0 +1,66 @@
+package de.ma_vin.ape.users.controller.it.steps;
+
+import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
+import de.ma_vin.ape.utils.TestUtil;
+import de.ma_vin.ape.utils.controller.response.Status;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.When;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.util.MultiValueMap;
+
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsAnything.anything;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
+public class UserSteps extends AbstractIntegrationTestSteps {
+    @Given("There exists an user with first name {string} and last name {string} with alias {string} at common group {string}")
+    public void createUser(String firstName, String lastName, String userAlias, String commonGroupAlias) throws Exception {
+        if (!shared.containsKey(commonGroupAlias)) {
+            fail("There is not any common group with alias " + commonGroupAlias);
+        }
+        MultiValueMap<String, String> createUserValues = createValueMap("firstName", firstName, "lastName", lastName
+                , "commonGroupIdentification", getIdentification(commonGroupAlias));
+
+        MockHttpServletResponse createUserResponse = performPostWithAuthorization("/user/createUser", createUserValues)
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("status", is(Status.OK.name())))
+                .andExpect(jsonPath("response.firstName", is(firstName)))
+                .andExpect(jsonPath("response.lastName", is(lastName)))
+                .andExpect(jsonPath("response.identification", anything()))
+                .andReturn().getResponse();
+
+        String createdUserText = TestUtil.getObjectMapper().readTree(createUserResponse.getContentAsString()).findValue("response").toString();
+        shared.put(userAlias, TestUtil.getObjectMapper().readValue(createdUserText, UserDto.class));
+    }
+
+    @Given("The {string} of the user with alias {string} is set to {string}")
+    public void setUserValue(String property, String alias, String valueToSet) {
+        setStringValue(property, alias, valueToSet);
+    }
+
+    @When("The Controller is called to create an user with first name {string} and last name {string} at common group {string}")
+    public void callControllerToCreateUser(String firstName, String lastName, String commonGroupAlias) {
+        MultiValueMap<String, String> createUserValues = createValueMap("firstName", firstName, "lastName", lastName
+                , "commonGroupIdentification", getIdentification(commonGroupAlias));
+        shared.setResultActions(performPostWithAuthorization("/user/createUser", createUserValues));
+    }
+
+    @When("Controller is called to get the user with the identification of the alias {string}")
+    public void callControllerToGetUser(String userAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/getUser", getIdentification(userAlias)));
+    }
+
+    @When("Controller is called to update the user with the identification of the alias {string}")
+    public void callControllerToUpdateUser(String userAlias) {
+        shared.setResultActions(performPutWithAuthorization("/user/updateUser", getIdentification(userAlias), userAlias));
+    }
+
+    @When("Controller is called to delete the user with the identification of the alias {string}")
+    public void callControllerToDeleteUser(String userAlias) {
+        shared.setResultActions(performDeleteWithAuthorization("/user/deleteUser", getIdentification(userAlias)));
+    }
+}

@@ -17,6 +17,8 @@ import java.util.Optional;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 
+@RestController
+@RequestMapping(path = "user")
 @Data
 public class UserController extends AbstractDefaultOperationController {
 
