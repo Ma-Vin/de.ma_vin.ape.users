@@ -10,6 +10,8 @@ spring:
       path: /h2-console
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+server:
+  port: 8080
 logging:
   level:
     root: INFO

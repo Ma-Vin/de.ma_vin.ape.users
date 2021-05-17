@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class CommonGroupSteps extends AbstractIntegrationTestSteps {
 
     @Given("There exists a common group with name {string} with alias {string}")
-    public void createSkill(String groupName, String commonGroupAlias) throws Exception {
+    public void createCommonGroup(String groupName, String commonGroupAlias) throws Exception {
         MultiValueMap<String, String> createCommonGroupValues = createValueMap("groupName", groupName);
 
         MockHttpServletResponse createCommonGroupResponse = performPostWithAuthorization("/group/common/createCommonGroup", createCommonGroupValues)
@@ -45,17 +45,17 @@ public class CommonGroupSteps extends AbstractIntegrationTestSteps {
     }
 
     @When("Controller is called to get the common group with the identification of the alias {string}")
-    public void callControllerToGetSkill(String commonGroupAlias) {
+    public void callControllerToGetCommonGroup(String commonGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/common/getCommonGroup", getIdentification(commonGroupAlias)));
     }
 
     @When("Controller is called to update the common group with the identification of the alias {string}")
-    public void callControllerToUpdateSkill(String commonGroupAlias) {
+    public void callControllerToUpdateCommonGroup(String commonGroupAlias) {
         shared.setResultActions(performPutWithAuthorization("/group/common/updateCommonGroup", getIdentification(commonGroupAlias), commonGroupAlias));
     }
 
     @When("Controller is called to delete the common group with the identification of the alias {string}")
-    public void callControllerToDeleteSkill(String commonGroupAlias) {
+    public void callControllerToDeleteCommonGroup(String commonGroupAlias) {
         shared.setResultActions(performDeleteWithAuthorization("/group/common/deleteCommonGroup", getIdentification(commonGroupAlias)));
     }
 }

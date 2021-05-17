@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     @Given("There exists a base group with name {string} with alias {string} at common group {string}")
-    public void createSkill(String groupName, String baseGroupAlias, String commonGroupAlias) throws Exception {
+    public void createBaseGroup(String groupName, String baseGroupAlias, String commonGroupAlias) throws Exception {
         if (!shared.containsKey(commonGroupAlias)) {
             fail("There is not any common group with alias " + commonGroupAlias);
         }
@@ -41,7 +41,6 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
         setStringValue(property, alias, valueToSet);
     }
 
-
     @When("The Controller is called to create a base group with name {string} at common group {string}")
     public void callControllerToCreateBaseGroup(String groupName, String commonGroupAlias) {
         MultiValueMap<String, String> createBaseGroupValues = createValueMap("groupName", groupName
@@ -50,17 +49,17 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     }
 
     @When("Controller is called to get the base group with the identification of the alias {string}")
-    public void callControllerToGetSkill(String baseGroupAlias) {
+    public void callControllerToGetBaseGroup(String baseGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/base/getBaseGroup", getIdentification(baseGroupAlias)));
     }
 
     @When("Controller is called to update the base group with the identification of the alias {string}")
-    public void callControllerToUpdateSkill(String baseGroupAlias) {
+    public void callControllerToUpdateBaseGroup(String baseGroupAlias) {
         shared.setResultActions(performPutWithAuthorization("/group/base/updateBaseGroup", getIdentification(baseGroupAlias), baseGroupAlias));
     }
 
     @When("Controller is called to delete the base group with the identification of the alias {string}")
-    public void callControllerToDeleteSkill(String baseGroupAlias) {
+    public void callControllerToDeleteBaseGroup(String baseGroupAlias) {
         shared.setResultActions(performDeleteWithAuthorization("/group/base/deleteBaseGroup", getIdentification(baseGroupAlias)));
     }
 }
