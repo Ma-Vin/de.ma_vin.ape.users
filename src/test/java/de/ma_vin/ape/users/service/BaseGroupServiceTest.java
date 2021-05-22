@@ -4,6 +4,7 @@ import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToBaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupToBaseGroupDao;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
@@ -135,7 +136,7 @@ public class BaseGroupServiceTest {
         when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(baseGroupDao));
 
-        List<BaseGroup> result = cut.findAllBaseGroups(BASE_GROUP_IDENTIFICATION);
+        List<BaseGroup> result = cut.findAllBaseGroups(COMMON_GROUP_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
@@ -164,6 +165,29 @@ public class BaseGroupServiceTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseToBaseGroupRepository).findAllByBaseGroup(any());
+    }
+
+    @DisplayName("Find all base groups at privilege group")
+    @Test
+    public void testFindAllBaseAtPrivilegeGroup() {
+        PrivilegeGroupToBaseGroupDao privilegeGroupToBaseGroupDao= mock(PrivilegeGroupToBaseGroupDao.class);
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(privilegeGroupToBaseGroupDao.getBaseGroup()).thenReturn(baseGroupDao);
+        when(privilegeToBaseGroupRepository.findAllByPrivilegeGroup(any())).then(a -> {
+            if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
+                when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+                return Collections.singletonList(privilegeGroupToBaseGroupDao);
+            }
+            return Collections.emptyList();
+        });
+
+        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any());
     }
 
     @DisplayName("Save base group")

@@ -34,6 +34,9 @@ Feature: Testing methods of the privilege group controller
 
   Scenario: Delete privilege group
     Given There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"
+    Given There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    When Controller is called to add the base group with alias "subBase" as MANAGER to privilege group with alias "privilege"
+    Then The result is Ok and Json
     When Controller is called to delete the privilege group with the identification of the alias "privilege"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -41,3 +44,6 @@ Feature: Testing methods of the privilege group controller
     When Controller is called to get the privilege group with the identification of the alias "privilege"
     Then The result is Ok and Json
     And The status of the result should be "ERROR"
+    When Controller is called to get the base group with the identification of the alias "subBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"

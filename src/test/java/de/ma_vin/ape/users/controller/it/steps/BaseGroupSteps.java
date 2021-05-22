@@ -1,6 +1,9 @@
 package de.ma_vin.ape.users.controller.it.steps;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
+import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupRoleDto;
 import de.ma_vin.ape.utils.TestUtil;
 import de.ma_vin.ape.utils.controller.response.Status;
 import io.cucumber.java.en.Given;
@@ -78,5 +81,29 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     @When("Controller is called to get all sub groups of base group with alias {string}")
     public void callControllerToFindAllBaseAtBaseGroup(String baseGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias)));
+    }
+
+    @When("Controller is called to add the base group with alias {string} as {roleValue} to privilege group with alias {string}")
+    public void callControllerToAddBaseToPrivilegeGroup(String baseGroupAlias, Role role, String privilegeGroupAlias) {
+        BaseGroupRoleDto baseGroupRoleDto = new BaseGroupRoleDto();
+        baseGroupRoleDto.setIdentification(getIdentification(baseGroupAlias));
+        baseGroupRoleDto.setRole(role);
+        try {
+            shared.setResultActions(performPatchWithAuthorization("/group/base/addBaseToPrivilegeGroup", getIdentification(privilegeGroupAlias)
+                    , TestUtil.getObjectMapper().writeValueAsString(baseGroupRoleDto)));
+        } catch (JsonProcessingException e) {
+            fail("JsonProcessingException: " + e.getMessage());
+        }
+    }
+
+    @When("Controller is called to remove the base group with alias {string} from privilege group with alias {string}")
+    public void callControllerToRemoveBaseFromPrivilegeGroup(String baseGroupAlias, String privilegeGroupAlias) {
+        shared.setResultActions(performPatchWithAuthorization("/group/base/removeBaseFromPrivilegeGroup", getIdentification(privilegeGroupAlias)
+                , getIdentification(baseGroupAlias)));
+    }
+
+    @When("Controller is called to get all sub base groups of privilege group with alias {string}")
+    public void callControllerToFindAllBaseAtPrivilegeGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(baseGroupAlias)));
     }
 }

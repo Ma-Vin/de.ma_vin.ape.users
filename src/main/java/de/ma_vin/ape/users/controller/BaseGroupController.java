@@ -84,6 +84,15 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , baseGroupIdentification, privilegeGroupIdentification));
     }
 
+    @GetMapping("/findAllBaseAtPrivilegeGroup/{parentGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification) {
+        List<BaseGroupDto> result = baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification).stream()
+                .map(GroupTransportMapper::convertToBaseGroupDto)
+                .collect(Collectors.toList());
+        return createSuccessResponse(result);
+    }
+
     @PatchMapping("/addBaseToBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addBaseToBaseGroup(@PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {

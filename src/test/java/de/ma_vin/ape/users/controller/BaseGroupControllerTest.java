@@ -349,7 +349,7 @@ public class BaseGroupControllerTest {
         verify(baseGroupService).removeBaseFromBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
     }
 
-    @DisplayName("Find all base groups at base groups")
+    @DisplayName("Find all base groups at base group")
     @Test
     public void testFindAllBaseAtBaseGroup() {
         when(baseGroupService.findAllBasesAtBaseGroup(any())).thenReturn(Collections.singletonList(baseGroup));
@@ -363,5 +363,21 @@ public class BaseGroupControllerTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Find all base groups at privilege group")
+    @Test
+    public void testFindAllBaseAtPrivilegeGroup() {
+        when(baseGroupService.findAllBaseAtPrivilegeGroup(any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
     }
 }
