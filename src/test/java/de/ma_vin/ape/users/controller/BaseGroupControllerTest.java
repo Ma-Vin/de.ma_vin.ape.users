@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,9 +32,11 @@ public class BaseGroupControllerTest {
     public static final Long COMMON_GROUP_ID = 1L;
     public static final Long BASE_GROUP_ID = 2L;
     public static final Long PRIVILEGE_GROUP_ID = 3L;
+    public static final Long PARENT_BASE_GROUP_ID = 4L;
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
+    public static final String PARENT_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PARENT_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
 
     private AutoCloseable openMocks;
     private BaseGroupController cut;
@@ -296,5 +299,69 @@ public class BaseGroupControllerTest {
         checkWarn(response, 1);
 
         verify(baseGroupService).removeBaseFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Add base to base group")
+    @Test
+    public void testAddBaseToBaseGroup() {
+        when(baseGroupService.addBaseToBaseGroup(any(), any())).thenReturn(Boolean.TRUE);
+
+        ResponseWrapper<Boolean> response = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        verify(baseGroupService).addBaseToBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Add base to base group, but not successful")
+    @Test
+    public void testAddBaseToBaseGroupNotSuccessful() {
+        when(baseGroupService.addBaseToBaseGroup(any(), any())).thenReturn(Boolean.FALSE);
+
+        ResponseWrapper<Boolean> response = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        checkWarn(response, 1);
+
+        verify(baseGroupService).addBaseToBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Remove base from base group")
+    @Test
+    public void testRemoveBaseFromBaseGroup() {
+        when(baseGroupService.removeBaseFromBaseGroup(any(), any())).thenReturn(Boolean.TRUE);
+
+        ResponseWrapper<Boolean> response = cut.removeBaseFromBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        verify(baseGroupService).removeBaseFromBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Remove base from base group, but not successful")
+    @Test
+    public void testRemoveBaseFromBaseGroupNotSuccessful() {
+        when(baseGroupService.removeBaseFromBaseGroup(any(), any())).thenReturn(Boolean.FALSE);
+
+        ResponseWrapper<Boolean> response = cut.removeBaseFromBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        checkWarn(response, 1);
+
+        verify(baseGroupService).removeBaseFromBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Find all base groups at base groups")
+    @Test
+    public void testFindAllBaseAtBaseGroup() {
+        when(baseGroupService.findAllBasesAtBaseGroup(any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION));
     }
 }

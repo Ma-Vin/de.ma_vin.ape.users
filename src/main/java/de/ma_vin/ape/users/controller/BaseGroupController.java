@@ -14,7 +14,9 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "group/base")
@@ -80,5 +82,32 @@ public class BaseGroupController extends AbstractDefaultOperationController {
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not removed from privilege group with identification \"%s\""
                 , baseGroupIdentification, privilegeGroupIdentification));
+    }
+
+    @PatchMapping("/addBaseToBaseGroup/{parentGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Boolean> addBaseToBaseGroup(@PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {
+        boolean result = baseGroupService.addBaseToBaseGroup(parentGroupIdentification, baseGroupIdentification);
+        return result ? createSuccessResponse(Boolean.TRUE)
+                : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not added base group with identification \"%s\""
+                , baseGroupIdentification, parentGroupIdentification));
+    }
+
+    @PatchMapping("/removeBaseFromBaseGroup/{parentGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Boolean> removeBaseFromBaseGroup(@PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {
+        boolean result = baseGroupService.removeBaseFromBaseGroup(parentGroupIdentification, baseGroupIdentification);
+        return result ? createSuccessResponse(Boolean.TRUE)
+                : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not removed from base group with identification \"%s\""
+                , baseGroupIdentification, parentGroupIdentification));
+    }
+
+    @GetMapping("/findAllBaseAtBaseGroup/{parentGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtBaseGroup(@PathVariable String parentGroupIdentification) {
+        List<BaseGroupDto> result = baseGroupService.findAllBasesAtBaseGroup(parentGroupIdentification).stream()
+                .map(GroupTransportMapper::convertToBaseGroupDto)
+                .collect(Collectors.toList());
+        return createSuccessResponse(result);
     }
 }

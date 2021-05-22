@@ -7,10 +7,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
-import de.ma_vin.ape.users.persistence.BaseGroupRepository;
-import de.ma_vin.ape.users.persistence.BaseGroupToUserRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeToBaseGroupRepository;
+import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -20,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @Data
@@ -31,6 +29,8 @@ public class BaseGroupService extends AbstractRepositoryService {
 
     @Autowired
     private BaseGroupRepository baseGroupRepository;
+    @Autowired
+    private BaseToBaseGroupRepository baseToBaseGroupRepository;
     @Autowired
     private BaseGroupToUserRepository baseGroupToUserRepository;
     @Autowired
@@ -57,6 +57,18 @@ public class BaseGroupService extends AbstractRepositoryService {
 
         long numToUserDeleted = baseGroupToUserRepository.deleteByBaseGroup(baseGroupDao);
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, numToUserDeleted, "connections to user", GROUP_LOG_PARAM
+                , baseGroupDao.getIdentification(), baseGroupDao.getId());
+
+        long numToBaseGroup = baseToBaseGroupRepository.deleteByBaseGroup(baseGroupDao);
+        log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, numToBaseGroup, "connections to other base group", GROUP_LOG_PARAM
+                , baseGroupDao.getIdentification(), baseGroupDao.getId());
+
+        long numFromBaseGroup = baseToBaseGroupRepository.deleteBySubBaseGroup(baseGroupDao);
+        log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, numFromBaseGroup, "connections from other base group", GROUP_LOG_PARAM
+                , baseGroupDao.getIdentification(), baseGroupDao.getId());
+
+        long numFromPrivilegeGroup = privilegeToBaseGroupRepository.deleteByBaseGroup(baseGroupDao);
+        log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, numFromPrivilegeGroup, "connections from privilege group", GROUP_LOG_PARAM
                 , baseGroupDao.getIdentification(), baseGroupDao.getId());
 
         baseGroupRepository.delete(baseGroupDao);
@@ -113,6 +125,24 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Searches for all base groups at an other parent base group
+     *
+     * @param parentIdentification identification of the parent
+     * @return List of base groups
+     */
+    public List<BaseGroup> findAllBasesAtBaseGroup(String parentIdentification) {
+        log.debug(SEARCH_START_LOG_MESSAGE, GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
+        BaseGroupDao parent = new BaseGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        List<BaseGroup> result = new ArrayList<>();
+        findAllBasesAtBaseGroup(parent).forEach(pg -> result.add(GroupAccessMapper.convertToBaseGroup(pg, false)));
+
+        log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
      * Searches for all base groups
      *
      * @param parent parent common group
@@ -121,6 +151,17 @@ public class BaseGroupService extends AbstractRepositoryService {
     private List<BaseGroupDao> findAllBaseGroups(CommonGroupDao parent) {
         return baseGroupRepository.findByParentCommonGroup(parent);
     }
+
+    /**
+     * Searches for all base groups
+     *
+     * @param parent parent base group
+     * @return List of base groups
+     */
+    private List<BaseGroupDao> findAllBasesAtBaseGroup(BaseGroupDao parent) {
+        return baseToBaseGroupRepository.findAllByBaseGroup(parent).stream().map(BaseGroupToBaseGroupDao::getSubBaseGroup).collect(Collectors.toList());
+    }
+
 
     /**
      * Stores a base group
@@ -199,4 +240,36 @@ public class BaseGroupService extends AbstractRepositoryService {
                 , privilegeToBaseGroupRepository::deleteByPrivilegeGroupAndBaseGroup);
     }
 
+
+    /**
+     * Adds a base to an other base group
+     *
+     * @param parentGroupIdentification identification of the parent base group
+     * @param baseGroupIdentification   identification of the base group to add
+     * @return {@code true} if the base group was added to the other base group, otherwise {@code false}
+     */
+    public boolean addBaseToBaseGroup(String parentGroupIdentification, String baseGroupIdentification) {
+        return add(parentGroupIdentification, baseGroupIdentification, BaseGroup.class.getSimpleName(), BaseGroup.class.getSimpleName()
+                , BaseGroup.ID_PREFIX, BaseGroup.ID_PREFIX
+                , baseGroupRepository, baseGroupRepository, baseToBaseGroupRepository
+                , (baseGroup, subBaseGroup) -> {
+                    BaseGroupToBaseGroupDao connection = new BaseGroupToBaseGroupDao();
+                    connection.setBaseGroup(baseGroup);
+                    connection.setSubBaseGroup(subBaseGroup);
+                    return connection;
+                });
+    }
+
+    /**
+     * Removes an base from an other base group
+     *
+     * @param parentGroupIdentification Identification of the parent base group
+     * @param baseGroupIdentification   Identification of the base group to remove
+     * @return {@code true} if the base group was removed from the other base group. Otherwise {@code false}
+     */
+    public boolean removeBaseFromBaseGroup(String parentGroupIdentification, String baseGroupIdentification) {
+        return remove(parentGroupIdentification, baseGroupIdentification, BaseGroup.class.getSimpleName(), BaseGroup.class.getSimpleName()
+                , BaseGroup.ID_PREFIX, BaseGroup.ID_PREFIX, BaseGroupDao::new, BaseGroupDao::new
+                , baseToBaseGroupRepository::deleteByBaseGroupAndSubBaseGroup);
+    }
 }

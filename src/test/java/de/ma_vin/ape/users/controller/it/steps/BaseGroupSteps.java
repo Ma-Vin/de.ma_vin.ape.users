@@ -62,4 +62,21 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     public void callControllerToDeleteBaseGroup(String baseGroupAlias) {
         shared.setResultActions(performDeleteWithAuthorization("/group/base/deleteBaseGroup", getIdentification(baseGroupAlias)));
     }
+
+    @When("Controller is called to add the base group with alias {string} to base group with alias {string}")
+    public void callControllerToAddBaseToBaseGroup(String baseGroupAlias, String baseGroupParentAlias) {
+        shared.setResultActions(performPatchWithAuthorization("/group/base/addBaseToBaseGroup", getIdentification(baseGroupParentAlias)
+                , getIdentification(baseGroupAlias)));
+    }
+
+    @When("Controller is called to remove the base group with alias {string} from base group with alias {string}")
+    public void callControllerToRemoveBaseFromBaseGroup(String baseGroupAlias, String baseGroupParentAlias) {
+        shared.setResultActions(performPatchWithAuthorization("/group/base/removeBaseFromBaseGroup", getIdentification(baseGroupParentAlias)
+                , getIdentification(baseGroupAlias)));
+    }
+
+    @When("Controller is called to get all sub groups of base group with alias {string}")
+    public void callControllerToFindAllBaseAtBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias)));
+    }
 }

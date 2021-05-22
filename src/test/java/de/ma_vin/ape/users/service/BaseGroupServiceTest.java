@@ -2,14 +2,12 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToBaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
-import de.ma_vin.ape.users.persistence.BaseGroupRepository;
-import de.ma_vin.ape.users.persistence.BaseGroupToUserRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeToBaseGroupRepository;
+import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,15 +29,19 @@ public class BaseGroupServiceTest {
     public static final Long BASE_GROUP_ID = 1L;
     public static final Long COMMON_GROUP_ID = 2L;
     public static final Long PRIVILEGE_GROUP_ID = 3L;
+    public static final Long PARENT_BASE_GROUP_ID = 4L;
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
+    public static final String PARENT_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PARENT_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
 
     private BaseGroupService cut;
     private AutoCloseable openMocks;
 
     @Mock
     private BaseGroupRepository baseGroupRepository;
+    @Mock
+    private BaseToBaseGroupRepository baseToBaseGroupRepository;
     @Mock
     private BaseGroupToUserRepository baseGroupToUserRepository;
     @Mock
@@ -51,6 +53,8 @@ public class BaseGroupServiceTest {
     @Mock
     private BaseGroupDao baseGroupDao;
     @Mock
+    private BaseGroupDao parentBaseGroupDao;
+    @Mock
     private PrivilegeGroupDao privilegeGroupDao;
 
     @BeforeEach
@@ -59,6 +63,7 @@ public class BaseGroupServiceTest {
 
         cut = new BaseGroupService();
         cut.setBaseGroupRepository(baseGroupRepository);
+        cut.setBaseToBaseGroupRepository(baseToBaseGroupRepository);
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
         cut.setPrivilegeToBaseGroupRepository(privilegeToBaseGroupRepository);
         cut.setPrivilegeGroupRepository(privilegeGroupRepository);
@@ -74,10 +79,16 @@ public class BaseGroupServiceTest {
     public void testDelete() {
         when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupToUserRepository.deleteByBaseGroup(any())).thenReturn(1L);
+        when(baseToBaseGroupRepository.deleteByBaseGroup(any())).thenReturn(2L);
+        when(baseToBaseGroupRepository.deleteBySubBaseGroup(any())).thenReturn(3L);
+        when(privilegeToBaseGroupRepository.deleteByBaseGroup(any())).thenReturn(4L);
 
         cut.delete(baseGroup);
 
         verify(baseGroupToUserRepository).deleteByBaseGroup(any());
+        verify(baseToBaseGroupRepository).deleteByBaseGroup(any());
+        verify(baseToBaseGroupRepository).deleteBySubBaseGroup(any());
+        verify(privilegeToBaseGroupRepository).deleteByBaseGroup(any());
         verify(baseGroupRepository).delete(any());
     }
 
@@ -130,6 +141,29 @@ public class BaseGroupServiceTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupRepository).findByParentCommonGroup(any());
+    }
+
+    @DisplayName("Find all base groups at base group")
+    @Test
+    public void testFindAllBasesAtBaseGroup() {
+        BaseGroupToBaseGroupDao baseGroupToBaseGroupDao = mock(BaseGroupToBaseGroupDao.class);
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupToBaseGroupDao.getSubBaseGroup()).thenReturn(baseGroupDao);
+        when(baseToBaseGroupRepository.findAllByBaseGroup(any())).then(a -> {
+            if (((BaseGroupDao) a.getArgument(0)).getIdentification().equals(PARENT_BASE_GROUP_IDENTIFICATION)) {
+                when(baseGroupToBaseGroupDao.getBaseGroup()).thenReturn(a.getArgument(0));
+                return Collections.singletonList(baseGroupToBaseGroupDao);
+            }
+            return Collections.emptyList();
+        });
+
+        List<BaseGroup> result = cut.findAllBasesAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseToBaseGroupRepository).findAllByBaseGroup(any());
     }
 
     @DisplayName("Save base group")
@@ -371,5 +405,122 @@ public class BaseGroupServiceTest {
         assertFalse(removed, "The base group should not be removed from the privilege group");
 
         verify(privilegeToBaseGroupRepository).deleteByPrivilegeGroupAndBaseGroup(any(), any());
+    }
+
+    @DisplayName("Add a base to base group")
+    @Test
+    public void testAddBaseToBaseGroup() {
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(parentBaseGroupDao.getId()).thenReturn(PARENT_BASE_GROUP_ID);
+        when(parentBaseGroupDao.getIdentification()).thenReturn(PARENT_BASE_GROUP_IDENTIFICATION);
+
+        when(baseGroupRepository.findById(eq(PARENT_BASE_GROUP_ID))).thenReturn(Optional.of(parentBaseGroupDao));
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
+        when(baseToBaseGroupRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        assertTrue(added, "The base group should be added to the base group");
+
+        verify(baseGroupRepository).findById(eq(PARENT_BASE_GROUP_ID));
+        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
+        verify(baseToBaseGroupRepository).save(any());
+    }
+
+    @DisplayName("Add a base to non existing base group")
+    @Test
+    public void testAddBaseToBaseGroupMissingParentGroup() {
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+
+        when(baseGroupRepository.findById(eq(PARENT_BASE_GROUP_ID))).thenReturn(Optional.empty());
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
+        when(privilegeToBaseGroupRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        assertFalse(added, "The base group should not be added to the other base group");
+
+        verify(baseGroupRepository).findById(eq(PARENT_BASE_GROUP_ID));
+        verify(baseGroupRepository, never()).findById(eq(BASE_GROUP_ID));
+        verify(baseToBaseGroupRepository, never()).save(any());
+    }
+
+    @DisplayName("Add non existing base to base group")
+    @Test
+    public void testAddBaseToBaseGroupMissingSubBaseGroup() {
+        when(parentBaseGroupDao.getId()).thenReturn(PARENT_BASE_GROUP_ID);
+        when(parentBaseGroupDao.getIdentification()).thenReturn(PARENT_BASE_GROUP_IDENTIFICATION);
+
+
+        when(baseGroupRepository.findById(eq(PARENT_BASE_GROUP_ID))).thenReturn(Optional.of(parentBaseGroupDao));
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.empty());
+        when(baseToBaseGroupRepository.save(any())).then(a -> a.getArgument(0));
+
+        boolean added = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        assertFalse(added, "The base group should not be added to the other base group");
+
+        verify(baseGroupRepository).findById(eq(PARENT_BASE_GROUP_ID));
+        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
+        verify(baseToBaseGroupRepository, never()).save(any());
+    }
+
+    @DisplayName("Add a base to base group without result at saving")
+    @Test
+    public void testAddBaseToBaseGroupNoSavingResult() {
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(parentBaseGroupDao.getId()).thenReturn(PARENT_BASE_GROUP_ID);
+        when(parentBaseGroupDao.getIdentification()).thenReturn(PARENT_BASE_GROUP_IDENTIFICATION);
+
+        when(baseGroupRepository.findById(eq(PARENT_BASE_GROUP_ID))).thenReturn(Optional.of(parentBaseGroupDao));
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
+        when(baseToBaseGroupRepository.save(any())).thenReturn(null);
+
+        boolean added = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        assertFalse(added, "The base group should not be added to the other base group");
+
+        verify(baseGroupRepository).findById(eq(PARENT_BASE_GROUP_ID));
+        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
+        verify(baseToBaseGroupRepository).save(any());
+    }
+
+    @DisplayName("Remove a base from base group")
+    @Test
+    public void testRemoveBaseFromBaseGroup() {
+        when(baseToBaseGroupRepository.deleteByBaseGroupAndSubBaseGroup(any(), any())).thenReturn(1L);
+
+        boolean removed = cut.removeBaseFromBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        assertTrue(removed, "The base group should be removed from the other base group");
+
+        verify(baseToBaseGroupRepository).deleteByBaseGroupAndSubBaseGroup(any(), any());
+    }
+
+    @DisplayName("Remove a base from base group, but not connection exists")
+    @Test
+    public void testRemoveBaseFromBaseGroupNonExisting() {
+        when(baseToBaseGroupRepository.deleteByBaseGroupAndSubBaseGroup(any(), any())).thenReturn(0L);
+
+        boolean removed = cut.removeBaseFromBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        assertFalse(removed, "The base group should not be removed from the other base group");
+
+        verify(baseToBaseGroupRepository).deleteByBaseGroupAndSubBaseGroup(any(), any());
+    }
+
+    @DisplayName("Remove a base from base group, but non more than one connection exists")
+    @Test
+    public void testRemoveBaseFromBaseGroupNotUnique() {
+        when(baseToBaseGroupRepository.deleteByBaseGroupAndSubBaseGroup(any(), any())).thenReturn(2L);
+
+        boolean removed = cut.removeBaseFromBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+
+        assertFalse(removed, "The base group should not be removed from the other base group");
+
+        verify(baseToBaseGroupRepository).deleteByBaseGroupAndSubBaseGroup(any(), any());
     }
 }
