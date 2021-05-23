@@ -17,9 +17,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Log4j2
@@ -42,6 +41,8 @@ public class UserService extends AbstractRepositoryService {
     private PrivilegeGroupToUserRepository privilegeGroupToUserRepository;
     @Autowired
     private BaseGroupRepository baseGroupRepository;
+    @Autowired
+    private BaseToBaseGroupRepository baseToBaseGroupRepository;
     @Autowired
     private BaseGroupToUserRepository baseGroupToUserRepository;
 
@@ -142,6 +143,50 @@ public class UserService extends AbstractRepositoryService {
         findAllUsers(parent).forEach(s -> result.add(UserAccessMapper.convertToUser(s)));
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all user children of a parent base group
+     *
+     * @param parentIdentification identification of the parent
+     * @param dissolveSubgroups    indicator if the users of subgroups should also be added
+     * @return List of users
+     */
+    public List<User> findAllUsersAtBaseGroup(String parentIdentification, boolean dissolveSubgroups) {
+        log.debug(SEARCH_START_LOG_MESSAGE, USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        BaseGroupDao parent = new BaseGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        List<User> result = new ArrayList<>();
+        findAllUsersAtBaseGroup(parent, dissolveSubgroups).forEach(s -> result.add(UserAccessMapper.convertToUser(s)));
+
+        log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        Collections.sort(result, Comparator.comparing(User::getIdentification));
+        return result;
+    }
+
+    /**
+     * Searches for all user children of a parent base group
+     *
+     * @param parent            the parent base group
+     * @param dissolveSubgroups indicator if the users of subgroups should also be added
+     * @return Set of users
+     */
+    private Set<UserDao> findAllUsersAtBaseGroup(BaseGroupDao parent, boolean dissolveSubgroups) {
+        HashSet<UserDao> result = new HashSet<>();
+        result.addAll(baseGroupToUserRepository.findAllByBaseGroup(parent).stream().map(BaseGroupToUserDao::getUser).collect(Collectors.toSet()));
+        log.debug("{} direct users are found at base group \"{}\" while getting all users", result.size(), parent.getIdentification());
+
+        if (dissolveSubgroups) {
+            log.debug("Dissolve subgroups of base group \"{}\" to get all users", parent.getIdentification());
+            baseToBaseGroupRepository.findAllByBaseGroup(parent)
+                    .forEach(btb -> result.addAll(findAllUsersAtBaseGroup(btb.getSubBaseGroup(), true)));
+
+            log.debug("{} users (direct and indirect) are found at base group \"{}\" while getting all users"
+                    , result.size(), parent.getIdentification());
+        }
+
         return result;
     }
 

@@ -128,4 +128,14 @@ public class UserController extends AbstractDefaultOperationController {
                 : createResponseWithWarning(Boolean.FALSE, String.format("The user with identification \"%s\" was not removed from base group with identification \"%s\""
                 , userIdentification, baseGroupIdentification));
     }
+
+    @GetMapping("/getAllUsersFromBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserDto>> getAllUsersFromBaseGroup(@PathVariable String baseGroupIdentification, @RequestParam(required = false) Boolean dissolveSubgroups) {
+        List<UserDto> result = userService.findAllUsersAtBaseGroup(baseGroupIdentification, Boolean.TRUE.equals(dissolveSubgroups)).stream()
+                .map(UserTransportMapper::convertToUserDto)
+                .collect(Collectors.toList());
+
+        return createSuccessResponse(result);
+    }
 }
