@@ -108,6 +108,38 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Searches for an base group and its sub entities
+     *
+     * @param identification Id of the base group which is searched for
+     * @return search result
+     */
+    public Optional<BaseGroup> findBaseGroupTree(String identification) {
+        Optional<BaseGroupDao> root = find(identification, BaseGroup.ID_PREFIX, BaseGroup.class.getSimpleName(), baseGroupRepository);
+        if (root.isEmpty()) {
+            return Optional.empty();
+        }
+        loadSubTree(root.get());
+        return Optional.of(GroupAccessMapper.convertToBaseGroup(root.get(), true));
+    }
+
+    /**
+     * Loads all sub entities of the given base group and adds them
+     *
+     * @param parent base group whose sub entities should be loaded
+     */
+    private void loadSubTree(BaseGroupDao parent) {
+        baseToBaseGroupRepository.findAllByBaseGroup(parent).forEach(btb -> {
+            parent.getSubBaseGroups().add(btb);
+            btb.setBaseGroup(parent);
+            loadSubTree(btb.getSubBaseGroup());
+        });
+        baseGroupToUserRepository.findAllByBaseGroup(parent).forEach(btu -> {
+            parent.getUsers().add(btu);
+            btu.setBaseGroup(parent);
+        });
+    }
+
+    /**
      * Searches for all base groups at a parent common group
      *
      * @param parentIdentification identification of the parent

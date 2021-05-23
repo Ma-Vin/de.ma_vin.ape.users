@@ -1,13 +1,12 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
-import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToBaseGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupToBaseGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.group.*;
+import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -31,10 +31,12 @@ public class BaseGroupServiceTest {
     public static final Long COMMON_GROUP_ID = 2L;
     public static final Long PRIVILEGE_GROUP_ID = 3L;
     public static final Long PARENT_BASE_GROUP_ID = 4L;
+    public static final Long USER_ID = 5L;
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String PARENT_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PARENT_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
+    public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
 
     private BaseGroupService cut;
     private AutoCloseable openMocks;
@@ -57,6 +59,8 @@ public class BaseGroupServiceTest {
     private BaseGroupDao parentBaseGroupDao;
     @Mock
     private PrivilegeGroupDao privilegeGroupDao;
+    @Mock
+    private UserDao userDao;
 
     @BeforeEach
     public void setUp() {
@@ -114,7 +118,7 @@ public class BaseGroupServiceTest {
         verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
     }
 
-    @DisplayName("Find non existing base group")
+    @DisplayName("Find base group")
     @Test
     public void testFindBaseGroup() {
         when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
@@ -127,6 +131,90 @@ public class BaseGroupServiceTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification");
 
         verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
+    }
+
+
+    @DisplayName("Find base group with all sub entities")
+    @Test
+    public void testFindBaseGroupTree() {
+        ArrayList<BaseGroupToBaseGroupDao> subGroups = new ArrayList<>();
+        ArrayList<BaseGroupToUserDao> users = new ArrayList<>();
+
+        when(parentBaseGroupDao.getId()).thenReturn(PARENT_BASE_GROUP_ID);
+        when(parentBaseGroupDao.getIdentification()).thenReturn(PARENT_BASE_GROUP_IDENTIFICATION);
+        when(parentBaseGroupDao.getSubBaseGroups()).thenReturn(subGroups);
+        when(parentBaseGroupDao.getUsers()).thenReturn(users);
+        when(baseGroupRepository.findById(eq(PARENT_BASE_GROUP_ID))).thenReturn(Optional.of(parentBaseGroupDao));
+
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
+
+        BaseGroupToBaseGroupDao btb = mock(BaseGroupToBaseGroupDao.class);
+        when(btb.getBaseGroup()).thenReturn(parentBaseGroupDao);
+        when(btb.getSubBaseGroup()).thenReturn(baseGroupDao);
+        when(baseToBaseGroupRepository.findAllByBaseGroup(eq(parentBaseGroupDao))).thenReturn(Collections.singletonList(btb));
+
+        BaseGroupToUserDao btu = mock(BaseGroupToUserDao.class);
+        when(btu.getBaseGroup()).thenReturn(parentBaseGroupDao);
+        when(btu.getUser()).thenReturn(userDao);
+        when(baseGroupToUserRepository.findAllByBaseGroup(eq(parentBaseGroupDao))).thenReturn(Collections.singletonList(btu));
+
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+
+        Optional<BaseGroup> result = cut.findBaseGroupTree(PARENT_BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(PARENT_BASE_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification");
+        assertEquals(1, result.get().getSubBaseGroups().size(), "Wrong number of subgroups");
+        assertTrue(result.get().getSubBaseGroups().stream().anyMatch(b -> b.getIdentification().equals(BASE_GROUP_IDENTIFICATION))
+                , "Wrong identification at subgroup");
+        assertEquals(1, result.get().getUsers().size(), "Wrong number of users");
+        assertTrue(result.get().getUsers().stream().anyMatch(u -> u.getIdentification().equals(USER_IDENTIFICATION))
+                , "Wrong identification at user");
+
+        verify(baseGroupRepository).findById(any());
+        verify(baseToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
+        verify(baseGroupToUserRepository, times(2)).findAllByBaseGroup(any());
+    }
+
+    @DisplayName("Find non existing base group with all sub entities")
+    @Test
+    public void testFindBaseGroupTreeNonExisting() {
+        ArrayList<BaseGroupToBaseGroupDao> subGroups = new ArrayList<>();
+        ArrayList<BaseGroupToUserDao> users = new ArrayList<>();
+
+        when(parentBaseGroupDao.getId()).thenReturn(PARENT_BASE_GROUP_ID);
+        when(parentBaseGroupDao.getIdentification()).thenReturn(PARENT_BASE_GROUP_IDENTIFICATION);
+        when(parentBaseGroupDao.getSubBaseGroups()).thenReturn(subGroups);
+        when(parentBaseGroupDao.getUsers()).thenReturn(users);
+        when(baseGroupRepository.findById(any())).thenReturn(Optional.empty());
+
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
+
+        BaseGroupToBaseGroupDao btb = mock(BaseGroupToBaseGroupDao.class);
+        when(btb.getBaseGroup()).thenReturn(parentBaseGroupDao);
+        when(btb.getSubBaseGroup()).thenReturn(baseGroupDao);
+        when(baseToBaseGroupRepository.findAllByBaseGroup(eq(parentBaseGroupDao))).thenReturn(Collections.singletonList(btb));
+
+        BaseGroupToUserDao btu = mock(BaseGroupToUserDao.class);
+        when(btu.getBaseGroup()).thenReturn(parentBaseGroupDao);
+        when(btu.getUser()).thenReturn(userDao);
+        when(baseGroupToUserRepository.findAllByBaseGroup(eq(parentBaseGroupDao))).thenReturn(Collections.singletonList(btu));
+
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+
+        Optional<BaseGroup> result = cut.findBaseGroupTree(PARENT_BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isEmpty(), "The result should be empty");
+
+        verify(baseGroupRepository).findById(any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
+        verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any());
     }
 
     @DisplayName("Find all base groups at common group")
@@ -170,7 +258,7 @@ public class BaseGroupServiceTest {
     @DisplayName("Find all base groups at privilege group")
     @Test
     public void testFindAllBaseAtPrivilegeGroup() {
-        PrivilegeGroupToBaseGroupDao privilegeGroupToBaseGroupDao= mock(PrivilegeGroupToBaseGroupDao.class);
+        PrivilegeGroupToBaseGroupDao privilegeGroupToBaseGroupDao = mock(PrivilegeGroupToBaseGroupDao.class);
         when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
         when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(privilegeGroupToBaseGroupDao.getBaseGroup()).thenReturn(baseGroupDao);

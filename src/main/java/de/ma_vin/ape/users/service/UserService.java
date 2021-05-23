@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
 import de.ma_vin.ape.users.model.gen.dao.group.*;
 import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
@@ -18,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @Log4j2
@@ -45,6 +45,8 @@ public class UserService extends AbstractRepositoryService {
     private BaseToBaseGroupRepository baseToBaseGroupRepository;
     @Autowired
     private BaseGroupToUserRepository baseGroupToUserRepository;
+    @Autowired
+    private BaseGroupService baseGroupService;
 
     /**
      * Deletes a user from repository
@@ -159,34 +161,15 @@ public class UserService extends AbstractRepositoryService {
         parent.setIdentification(parentIdentification);
 
         List<User> result = new ArrayList<>();
-        findAllUsersAtBaseGroup(parent, dissolveSubgroups).forEach(s -> result.add(UserAccessMapper.convertToUser(s)));
-
-        log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
-        Collections.sort(result, Comparator.comparing(User::getIdentification));
-        return result;
-    }
-
-    /**
-     * Searches for all user children of a parent base group
-     *
-     * @param parent            the parent base group
-     * @param dissolveSubgroups indicator if the users of subgroups should also be added
-     * @return Set of users
-     */
-    private Set<UserDao> findAllUsersAtBaseGroup(BaseGroupDao parent, boolean dissolveSubgroups) {
-        HashSet<UserDao> result = new HashSet<>();
-        result.addAll(baseGroupToUserRepository.findAllByBaseGroup(parent).stream().map(BaseGroupToUserDao::getUser).collect(Collectors.toSet()));
-        log.debug("{} direct users are found at base group \"{}\" while getting all users", result.size(), parent.getIdentification());
-
         if (dissolveSubgroups) {
-            log.debug("Dissolve subgroups of base group \"{}\" to get all users", parent.getIdentification());
-            baseToBaseGroupRepository.findAllByBaseGroup(parent)
-                    .forEach(btb -> result.addAll(findAllUsersAtBaseGroup(btb.getSubBaseGroup(), true)));
-
-            log.debug("{} users (direct and indirect) are found at base group \"{}\" while getting all users"
-                    , result.size(), parent.getIdentification());
+            baseGroupService.findBaseGroupTree(parentIdentification).ifPresent(b -> result.addAll(((BaseGroupExt) b).getAllUsers()));
+        } else {
+            baseGroupToUserRepository.findAllByBaseGroup(parent).stream()
+                    .map(btu -> UserAccessMapper.convertToUser(btu.getUser()))
+                    .sorted(Comparator.comparing(User::getIdentification)).forEach(result::add);
         }
 
+        log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
         return result;
     }
 

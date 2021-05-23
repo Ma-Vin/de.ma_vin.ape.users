@@ -93,14 +93,34 @@ public abstract class AbstractRepositoryService {
     protected <T extends IIdentifiable, S extends IIdentifiableDao> Optional<T> find(String identification, String idPrefix
             , String domainClassName, DomainConverter<T, S> domainConverter, JpaRepository<S, Long> repository) {
 
+        Optional<S> resultDao = find(identification, idPrefix, domainClassName, repository);
+        if (resultDao.isPresent()) {
+            return Optional.of(domainConverter.convert(resultDao.get()));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Searches for a dao object
+     *
+     * @param identification Identification of the domain object which is searched for
+     * @param idPrefix       prefix to generate ID
+     * @param className      Simple name of the domain class
+     * @param repository     repository where to search at
+     * @param <S>            Corresponding dao of the domain class
+     * @return search result
+     */
+    protected <S extends IIdentifiableDao> Optional<S> find(String identification, String idPrefix, String className
+            , JpaRepository<S, Long> repository) {
+
         Long id = IdGenerator.generateId(identification, idPrefix);
-        log.debug("search for {} with identification {} and id {}", domainClassName, identification, id);
+        log.debug("search for {} with identification {} and id {}", className, identification, id);
         Optional<S> daoObject = repository.findById(id);
         if (daoObject.isPresent()) {
-            log.debug("{} with identification {} and id {} was found", domainClassName, identification, id);
-            return Optional.of(domainConverter.convert(daoObject.get()));
+            log.debug("{} with identification {} and id {} was found", className, identification, id);
+            return Optional.of(daoObject.get());
         }
-        log.debug("{} with identification {} and id {} was not found", domainClassName, identification, id);
+        log.debug("{} with identification {} and id {} was not found", className, identification, id);
         return Optional.empty();
     }
 

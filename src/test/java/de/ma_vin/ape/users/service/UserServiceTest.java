@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToBaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToUserDao;
@@ -21,9 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,6 +64,8 @@ public class UserServiceTest {
     @Mock
     private BaseGroupToUserRepository baseGroupToUserRepository;
     @Mock
+    private BaseGroupService baseGroupService;
+    @Mock
     private User user;
     @Mock
     private UserResource image;
@@ -80,6 +81,8 @@ public class UserServiceTest {
     private PrivilegeGroupDao privilegeGroupDao;
     @Mock
     private BaseGroupDao baseGroupDao;
+    @Mock
+    private BaseGroupExt baseGroup;
 
     @BeforeEach
     public void setUp() {
@@ -93,6 +96,7 @@ public class UserServiceTest {
         cut.setBaseToBaseGroupRepository(baseToBaseGroupRepository);
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
         cut.setUserResourceService(userResourceService);
+        cut.setBaseGroupService(baseGroupService);
 
         initDefaultUserMock();
     }
@@ -194,39 +198,15 @@ public class UserServiceTest {
     public void testFindAllUsersAtBaseGroup() {
         Long otherUserId = USER_ID + 1L;
         String otherUserIdentification = IdGenerator.generateIdentification(otherUserId, User.ID_PREFIX);
-        UserDao otherUser = mock(UserDao.class);
-        when(otherUser.getId()).thenReturn(otherUserId);
+        UserDao otherUserDao = mock(UserDao.class);
+        User otherUser = mock(User.class);
+
+        when(otherUserDao.getId()).thenReturn(otherUserId);
+        when(otherUserDao.getIdentification()).thenReturn(otherUserIdentification);
         when(otherUser.getIdentification()).thenReturn(otherUserIdentification);
 
         BaseGroupToUserDao baseGroupToUserDao = mock(BaseGroupToUserDao.class);
-        when(baseGroupToUserDao.getUser()).thenReturn(userDao).thenReturn(otherUser);
-        when(baseGroupToUserRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToUserDao))
-                .thenReturn(Collections.singletonList(baseGroupToUserDao));
-
-        BaseGroupToBaseGroupDao baseGroupToBaseGroupDao = mock(BaseGroupToBaseGroupDao.class);
-        when(baseGroupToBaseGroupDao.getSubBaseGroup()).thenReturn(baseGroupDao);
-        when(baseToBaseGroupRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToBaseGroupDao));
-
-        List<User> result = cut.findAllUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION, false);
-        assertNotNull(result, "The result should not be null");
-        assertEquals(1, result.size(), "Wrong number of users at result");
-        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
-
-        verify(baseGroupToUserRepository).findAllByBaseGroup(any());
-        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
-    }
-
-    @DisplayName("Find all users at base group")
-    @Test
-    public void testFindAllUsersAtBaseGroupDissolve() {
-        Long otherUserId = USER_ID + 1L;
-        String otherUserIdentification = IdGenerator.generateIdentification(otherUserId, User.ID_PREFIX);
-        UserDao otherUser = mock(UserDao.class);
-        when(otherUser.getId()).thenReturn(otherUserId);
-        when(otherUser.getIdentification()).thenReturn(otherUserIdentification);
-
-        BaseGroupToUserDao baseGroupToUserDao = mock(BaseGroupToUserDao.class);
-        when(baseGroupToUserDao.getUser()).thenReturn(userDao).thenReturn(otherUser);
+        when(baseGroupToUserDao.getUser()).thenReturn(userDao).thenReturn(otherUserDao);
         when(baseGroupToUserRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToUserDao))
                 .thenReturn(Collections.singletonList(baseGroupToUserDao));
 
@@ -235,14 +215,53 @@ public class UserServiceTest {
         when(baseToBaseGroupRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToBaseGroupDao))
                 .thenReturn(Collections.emptyList());
 
+        when(baseGroupService.findBaseGroupTree(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
+        when(baseGroup.getAllUsers()).thenReturn(Set.of(user, otherUser));
+
+        List<User> result = cut.findAllUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION, false);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(baseGroupToUserRepository).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
+        verify(baseGroupService, never()).findBaseGroupTree(any());
+    }
+
+    @DisplayName("Find all users at base group")
+    @Test
+    public void testFindAllUsersAtBaseGroupDissolve() {
+        Long otherUserId = USER_ID + 1L;
+        String otherUserIdentification = IdGenerator.generateIdentification(otherUserId, User.ID_PREFIX);
+        UserDao otherUserDao = mock(UserDao.class);
+        User otherUser = mock(User.class);
+
+        when(otherUserDao.getId()).thenReturn(otherUserId);
+        when(otherUserDao.getIdentification()).thenReturn(otherUserIdentification);
+        when(otherUser.getIdentification()).thenReturn(otherUserIdentification);
+
+        BaseGroupToUserDao baseGroupToUserDao = mock(BaseGroupToUserDao.class);
+        when(baseGroupToUserDao.getUser()).thenReturn(userDao).thenReturn(otherUserDao);
+        when(baseGroupToUserRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToUserDao))
+                .thenReturn(Collections.singletonList(baseGroupToUserDao));
+
+        BaseGroupToBaseGroupDao baseGroupToBaseGroupDao = mock(BaseGroupToBaseGroupDao.class);
+        when(baseGroupToBaseGroupDao.getSubBaseGroup()).thenReturn(baseGroupDao);
+        when(baseToBaseGroupRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToBaseGroupDao))
+                .thenReturn(Collections.emptyList());
+
+        when(baseGroupService.findBaseGroupTree(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
+        when(baseGroup.getAllUsers()).thenReturn(Set.of(user, otherUser));
+
         List<User> result = cut.findAllUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION, true);
         assertNotNull(result, "The result should not be null");
         assertEquals(2, result.size(), "Wrong number of users at result");
         assertTrue(result.stream().anyMatch(u -> u.getIdentification().equals(USER_IDENTIFICATION)), "The direct user is missing at result");
         assertTrue(result.stream().anyMatch(u -> u.getIdentification().equals(otherUserIdentification)), "The indirect user is missing at result");
 
-        verify(baseGroupToUserRepository, times(2)).findAllByBaseGroup(any());
-        verify(baseToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
+        verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
+        verify(baseGroupService).findBaseGroupTree(any());
     }
 
     @DisplayName("Save user with admin group parent")
