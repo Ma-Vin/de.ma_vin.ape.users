@@ -86,15 +86,16 @@ public class UserController extends AbstractDefaultOperationController {
     @PatchMapping("/addUserToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addUserToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody UserRoleDto userRoleDto) {
-        Optional<User> storedUser = userService.findUser(userRoleDto.getIdentification());
+        Optional<User> storedUser = userService.findUser(userRoleDto.getUserIdentification());
         if (storedUser.isPresent() && storedUser.get().isGlobalAdmin()) {
-            return createEmptyResponseWithError(String.format("The user \"%s\" is an global admin and could not be added to an privilege group", userRoleDto.getIdentification()));
+            return createEmptyResponseWithError(String.format("The user \"%s\" is an global admin and could not be added to an privilege group"
+                    , userRoleDto.getUserIdentification()));
         }
 
-        boolean result = userService.addUserToPrivilegeGroup(privilegeGroupIdentification, userRoleDto.getIdentification(), userRoleDto.getRole());
+        boolean result = userService.addUserToPrivilegeGroup(privilegeGroupIdentification, userRoleDto.getUserIdentification(), userRoleDto.getRole());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The user with identification \"%s\" was not added with role %s to privilege group with identification \"%s\""
-                , userRoleDto.getIdentification(), userRoleDto.getRole().getDescription(), privilegeGroupIdentification));
+                , userRoleDto.getUserIdentification(), userRoleDto.getRole().getDescription(), privilegeGroupIdentification));
     }
 
     @PatchMapping("/removeUserFromPrivilegeGroup/{privilegeGroupIdentification}")

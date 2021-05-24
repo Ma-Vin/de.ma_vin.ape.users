@@ -314,7 +314,7 @@ public class UserControllerTest {
     @DisplayName("Add user to privilege group")
     @Test
     public void testAddUserToPrivilegeGroup() {
-        when(userRoleDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
@@ -330,7 +330,7 @@ public class UserControllerTest {
     @DisplayName("Add global admin to privilege group")
     @Test
     public void testAddUserToPrivilegeGroupGlobalAdmin() {
-        when(userRoleDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
@@ -346,7 +346,7 @@ public class UserControllerTest {
     @DisplayName("Add non existing user to privilege group")
     @Test
     public void testAddUserToPrivilegeGroupNonExisting() {
-        when(userRoleDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
         when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
@@ -361,7 +361,7 @@ public class UserControllerTest {
     @DisplayName("Add user to privilege group, but not successful")
     @Test
     public void testAddUserToPrivilegeGroupNotSuccessful() {
-        when(userRoleDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));

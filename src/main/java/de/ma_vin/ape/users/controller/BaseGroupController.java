@@ -69,10 +69,10 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PatchMapping("/addBaseToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addBaseToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody BaseGroupRoleDto baseGroupRole) {
-        boolean result = baseGroupService.addBaseToPrivilegeGroup(privilegeGroupIdentification, baseGroupRole.getIdentification(), baseGroupRole.getRole());
+        boolean result = baseGroupService.addBaseToPrivilegeGroup(privilegeGroupIdentification, baseGroupRole.getBaseGroupIdentification(), baseGroupRole.getRole());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not added with role %s to privilege group with identification \"%s\""
-                , baseGroupRole.getIdentification(), baseGroupRole.getRole().getDescription(), privilegeGroupIdentification));
+                , baseGroupRole.getBaseGroupIdentification(), baseGroupRole.getRole().getDescription(), privilegeGroupIdentification));
     }
 
     @PatchMapping("/removeBaseFromPrivilegeGroup/{privilegeGroupIdentification}")

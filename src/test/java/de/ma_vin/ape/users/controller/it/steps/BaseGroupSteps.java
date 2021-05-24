@@ -86,7 +86,7 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     @When("Controller is called to add the base group with alias {string} as {roleValue} to privilege group with alias {string}")
     public void callControllerToAddBaseToPrivilegeGroup(String baseGroupAlias, Role role, String privilegeGroupAlias) {
         BaseGroupRoleDto baseGroupRoleDto = new BaseGroupRoleDto();
-        baseGroupRoleDto.setIdentification(getIdentification(baseGroupAlias));
+        baseGroupRoleDto.setBaseGroupIdentification(getIdentification(baseGroupAlias));
         baseGroupRoleDto.setRole(role);
         try {
             shared.setResultActions(performPatchWithAuthorization("/group/base/addBaseToPrivilegeGroup", getIdentification(privilegeGroupAlias)

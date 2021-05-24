@@ -252,7 +252,7 @@ public class BaseGroupControllerTest {
     @DisplayName("Add base to privilege group")
     @Test
     public void testAddBaseToPrivilegeGroup() {
-        when(baseGroupRoleDto.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupRoleDto.getBaseGroupIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(baseGroupService.addBaseToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
@@ -266,7 +266,7 @@ public class BaseGroupControllerTest {
     @DisplayName("Add base to privilege group, but not successful")
     @Test
     public void testAddBaseToPrivilegeGroupNotSuccessful() {
-        when(baseGroupRoleDto.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupRoleDto.getBaseGroupIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(baseGroupService.addBaseToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 

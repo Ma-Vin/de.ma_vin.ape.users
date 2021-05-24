@@ -321,6 +321,17 @@ Two static function are to provide:
       </xs:annotation>
           
     </xs:attribute>
+            
+    
+    <xs:attribute name="genIdIfDto" type="xs:boolean">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Indicator whether to generate identification at entity, if the entity exists only at dto model]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
           
   
   </xs:complexType>
