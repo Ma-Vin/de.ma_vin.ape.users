@@ -127,7 +127,7 @@ public class BaseGroupService extends AbstractRepositoryService {
      *
      * @param parent base group whose sub entities should be loaded
      */
-    private void loadSubTree(BaseGroupDao parent) {
+    void loadSubTree(BaseGroupDao parent) {
         baseToBaseGroupRepository.findAllByBaseGroup(parent).forEach(btb -> {
             parent.getSubBaseGroups().add(btb);
             btb.setBaseGroup(parent);

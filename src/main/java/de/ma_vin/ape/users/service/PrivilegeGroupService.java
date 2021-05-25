@@ -32,6 +32,8 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
     private PrivilegeGroupToUserRepository privilegeGroupToUserRepository;
     @Autowired
     private PrivilegeToBaseGroupRepository privilegeToBaseGroupRepository;
+    @Autowired
+    private BaseGroupService baseGroupService;
 
     /**
      * Deletes an privilege group from repository
@@ -91,6 +93,38 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
      */
     public Optional<PrivilegeGroup> findPrivilegeGroup(String identification) {
         return find(identification, PrivilegeGroup.ID_PREFIX, PrivilegeGroup.class.getSimpleName(), g -> GroupAccessMapper.convertToPrivilegeGroup(g, false), privilegeGroupRepository);
+    }
+
+    /**
+     * Searches for an privilege group and its sub entities
+     *
+     * @param identification Id of the base group which is searched for
+     * @return search result
+     */
+    public Optional<PrivilegeGroup> findPrivilegeGroupTree(String identification) {
+        Optional<PrivilegeGroupDao> root = find(identification, PrivilegeGroup.ID_PREFIX, PrivilegeGroup.class.getSimpleName(), privilegeGroupRepository);
+        if (root.isEmpty()) {
+            return Optional.empty();
+        }
+        loadSubTree(root.get());
+        return Optional.of(GroupAccessMapper.convertToPrivilegeGroup(root.get(), true));
+    }
+
+    /**
+     * Loads all sub entities of the given privilege group and adds them
+     *
+     * @param parent privilege group whose sub entities should be loaded
+     */
+    private void loadSubTree(PrivilegeGroupDao parent) {
+        privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent).forEach(btb -> {
+            parent.getAggBaseGroup().add(btb);
+            btb.setPrivilegeGroup(parent);
+            baseGroupService.loadSubTree(btb.getBaseGroup());
+        });
+        privilegeGroupToUserRepository.findAllByPrivilegeGroup(parent).forEach(btu -> {
+            parent.getAggUser().add(btu);
+            btu.setPrivilegeGroup(parent);
+        });
     }
 
     /**
