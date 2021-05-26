@@ -3,7 +3,7 @@ package de.ma_vin.ape.users.controller.it.steps;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
-import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupRoleDto;
+import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
 import de.ma_vin.ape.utils.TestUtil;
 import de.ma_vin.ape.utils.controller.response.Status;
 import io.cucumber.java.en.Given;
@@ -85,12 +85,12 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
 
     @When("Controller is called to add the base group with alias {string} as {roleValue} to privilege group with alias {string}")
     public void callControllerToAddBaseToPrivilegeGroup(String baseGroupAlias, Role role, String privilegeGroupAlias) {
-        BaseGroupRoleDto baseGroupRoleDto = new BaseGroupRoleDto();
-        baseGroupRoleDto.setBaseGroupIdentification(getIdentification(baseGroupAlias));
-        baseGroupRoleDto.setRole(role);
+        BaseGroupIdRoleDto baseGroupIdRoleDto = new BaseGroupIdRoleDto();
+        baseGroupIdRoleDto.setBaseGroupIdentification(getIdentification(baseGroupAlias));
+        baseGroupIdRoleDto.setRole(role);
         try {
             shared.setResultActions(performPatchWithAuthorization("/group/base/addBaseToPrivilegeGroup", getIdentification(privilegeGroupAlias)
-                    , TestUtil.getObjectMapper().writeValueAsString(baseGroupRoleDto)));
+                    , TestUtil.getObjectMapper().writeValueAsString(baseGroupIdRoleDto)));
         } catch (JsonProcessingException e) {
             fail("JsonProcessingException: " + e.getMessage());
         }

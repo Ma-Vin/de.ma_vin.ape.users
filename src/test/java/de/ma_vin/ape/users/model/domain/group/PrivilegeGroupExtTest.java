@@ -1,5 +1,6 @@
 package de.ma_vin.ape.users.model.domain.group;
 
+import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
@@ -252,5 +254,27 @@ public class PrivilegeGroupExtTest {
         assertEquals(2, result.size(), "Wrong number of result");
         assertTrue(result.contains(directBlockedUser), "The direct blocked user should be contained");
         assertTrue(result.contains(indirectBlockedUser), "The indirect blocked user should be contained");
+    }
+
+    @DisplayName("Get direct users by role")
+    @Test
+    public void testGetUsersByRole() {
+        assertTrue(cut.getUsersByRole(Role.ADMIN, Boolean.FALSE).containsAll(Collections.singleton(directAdminUser)), "The admin should be contained");
+        assertTrue(cut.getUsersByRole(Role.MANAGER, Boolean.FALSE).containsAll(Collections.singleton(directManagerUser)), "The manager should be contained");
+        assertTrue(cut.getUsersByRole(Role.CONTRIBUTOR, Boolean.FALSE).containsAll(Collections.singleton(directContributorUser)), "The contributor should be contained");
+        assertTrue(cut.getUsersByRole(Role.VISITOR, Boolean.FALSE).containsAll(Collections.singleton(directVisitorUser)), "The visitor should be contained");
+        assertTrue(cut.getUsersByRole(Role.BLOCKED, Boolean.FALSE).containsAll(Collections.singleton(directBlockedUser)), "The blocked user should be contained");
+        assertEquals(0, cut.getUsersByRole(Role.NOT_RELEVANT, Boolean.FALSE).size(), "The not relevant user should be contained");
+    }
+
+    @DisplayName("Get direct and indirect users by role")
+    @Test
+    public void testGetUsersByRoleDissolveGroups() {
+        assertTrue(cut.getUsersByRole(Role.ADMIN, Boolean.TRUE).containsAll(Arrays.asList(directAdminUser, indirectAdminUser)), "The admin should be contained");
+        assertTrue(cut.getUsersByRole(Role.MANAGER, Boolean.TRUE).containsAll(Arrays.asList(directManagerUser, indirectManagerUser)), "The manager should be contained");
+        assertTrue(cut.getUsersByRole(Role.CONTRIBUTOR, Boolean.TRUE).containsAll(Arrays.asList(directContributorUser, indirectContributorUser)), "The contributor should be contained");
+        assertTrue(cut.getUsersByRole(Role.VISITOR, Boolean.TRUE).containsAll(Arrays.asList(directVisitorUser, indirectVisitorUser)), "The visitor should be contained");
+        assertTrue(cut.getUsersByRole(Role.BLOCKED, Boolean.TRUE).containsAll(Arrays.asList(directBlockedUser, indirectBlockedUser)), "The blocked user should be contained");
+        assertEquals(0, cut.getUsersByRole(Role.NOT_RELEVANT, Boolean.TRUE).size(), "The not relevant user should be contained");
     }
 }

@@ -5,7 +5,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
-import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupRoleDto;
+import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
 import de.ma_vin.ape.users.service.BaseGroupService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -48,7 +48,7 @@ public class BaseGroupControllerTest {
     @Mock
     private BaseGroupDto baseGroupDto;
     @Mock
-    private BaseGroupRoleDto baseGroupRoleDto;
+    private BaseGroupIdRoleDto baseGroupIdRoleDto;
 
 
     @BeforeEach
@@ -252,11 +252,11 @@ public class BaseGroupControllerTest {
     @DisplayName("Add base to privilege group")
     @Test
     public void testAddBaseToPrivilegeGroup() {
-        when(baseGroupRoleDto.getBaseGroupIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
-        when(baseGroupRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
+        when(baseGroupIdRoleDto.getBaseGroupIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(baseGroupService.addBaseToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addBaseToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, baseGroupRoleDto);
+        ResponseWrapper<Boolean> response = cut.addBaseToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, baseGroupIdRoleDto);
 
         checkOk(response);
 
@@ -266,11 +266,11 @@ public class BaseGroupControllerTest {
     @DisplayName("Add base to privilege group, but not successful")
     @Test
     public void testAddBaseToPrivilegeGroupNotSuccessful() {
-        when(baseGroupRoleDto.getBaseGroupIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
-        when(baseGroupRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
+        when(baseGroupIdRoleDto.getBaseGroupIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(baseGroupService.addBaseToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addBaseToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, baseGroupRoleDto);
+        ResponseWrapper<Boolean> response = cut.addBaseToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, baseGroupIdRoleDto);
 
         checkWarn(response, 1);
 

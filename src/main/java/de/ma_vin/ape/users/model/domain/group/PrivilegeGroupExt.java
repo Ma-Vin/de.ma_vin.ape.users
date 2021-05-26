@@ -122,6 +122,24 @@ public class PrivilegeGroupExt extends PrivilegeGroup {
         }
     }
 
+    /**
+     * Determines the users of a given role
+     *
+     * @param role              role to return
+     * @param dissolveSubgroups {@code true} if indirect users should also be considered
+     * @return Collection of users with the role asked for
+     */
+    public Collection<User> getUsersByRole(Role role, Boolean dissolveSubgroups) {
+        return switch (role) {
+            case ADMIN -> Boolean.TRUE.equals(dissolveSubgroups) ? getAllAdmins() : getAdmins();
+            case MANAGER -> Boolean.TRUE.equals(dissolveSubgroups) ? getAllManagers() : getManagers();
+            case CONTRIBUTOR -> Boolean.TRUE.equals(dissolveSubgroups) ? getAllContributors() : getContributors();
+            case VISITOR -> Boolean.TRUE.equals(dissolveSubgroups) ? getAllVisitors() : getVisitors();
+            case BLOCKED -> Boolean.TRUE.equals(dissolveSubgroups) ? getAllBlocks() : getBlocks();
+            case NOT_RELEVANT -> Collections.emptySet();
+        };
+    }
+
     @FunctionalInterface
     private interface GroupGetter {
         Collection<BaseGroup> get();

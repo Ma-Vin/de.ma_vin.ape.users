@@ -9,11 +9,14 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 
 import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.domain.group.PrivilegeGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
+import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.users.service.UserService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -46,11 +49,15 @@ public class UserControllerTest {
     @Mock
     private UserService userService;
     @Mock
+    private PrivilegeGroupService privilegeGroupService;
+    @Mock
     private User user;
     @Mock
     private UserDto userDto;
     @Mock
-    private UserRoleDto userRoleDto;
+    private UserIdRoleDto userIdRoleDto;
+    @Mock
+    private PrivilegeGroupExt privilegeGroupExt;
 
     @BeforeEach
     public void setUp() {
@@ -58,6 +65,7 @@ public class UserControllerTest {
 
         cut = new UserController();
         cut.setUserService(userService);
+        cut.setPrivilegeGroupService(privilegeGroupService);
     }
 
     @AfterEach
@@ -314,13 +322,13 @@ public class UserControllerTest {
     @DisplayName("Add user to privilege group")
     @Test
     public void testAddUserToPrivilegeGroup() {
-        when(userRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(userRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
+        when(userIdRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userRoleDto);
+        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
 
         checkOk(response);
 
@@ -330,13 +338,13 @@ public class UserControllerTest {
     @DisplayName("Add global admin to privilege group")
     @Test
     public void testAddUserToPrivilegeGroupGlobalAdmin() {
-        when(userRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(userRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
+        when(userIdRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userRoleDto);
+        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
 
         checkError(response);
 
@@ -346,12 +354,12 @@ public class UserControllerTest {
     @DisplayName("Add non existing user to privilege group")
     @Test
     public void testAddUserToPrivilegeGroupNonExisting() {
-        when(userRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(userRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
+        when(userIdRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
         when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userRoleDto);
+        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
 
         checkWarn(response);
 
@@ -361,13 +369,13 @@ public class UserControllerTest {
     @DisplayName("Add user to privilege group, but not successful")
     @Test
     public void testAddUserToPrivilegeGroupNotSuccessful() {
-        when(userRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(userRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
+        when(userIdRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userRoleDto);
+        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
 
         checkWarn(response, 1);
 
@@ -506,6 +514,122 @@ public class UserControllerTest {
         assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
         assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION),anyBoolean());
+        verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean());
+    }
+
+    @DisplayName("Get all users from privilege group")
+    @Test
+    public void testGetAllUsersFromPrivilegeGroup() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroupExt));
+        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.singletonList(user));
+
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(privilegeGroupExt).getUsersByRole(eq(Role.ADMIN), eq(Boolean.FALSE));
+    }
+
+    @DisplayName("Get all direct and indirect users from privilege group")
+    @Test
+    public void testGetAllUsersFromPrivilegeGroupDissolve() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroupExt));
+        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.singletonList(user));
+
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.TRUE, Role.ADMIN);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(privilegeGroupExt).getUsersByRole(eq(Role.ADMIN), eq(Boolean.TRUE));
+    }
+
+    @DisplayName("Get all users from privilege group without role")
+    @Test
+    public void testGetAllUsersFromPrivilegeGroupWithoutRole() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroupExt));
+        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.emptyList());
+        when(privilegeGroupExt.getUsersByRole(eq(Role.MANAGER), anyBoolean())).thenReturn(Collections.singletonList(user));
+
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(privilegeGroupExt, times(6)).getUsersByRole(any(), eq(Boolean.FALSE));
+    }
+
+    @DisplayName("Get all users from privilege group with not relevant role")
+    @Test
+    public void testGetAllUsersFromPrivilegeGroupNotRelevantRole() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroupExt));
+        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.emptyList());
+        when(privilegeGroupExt.getUsersByRole(eq(Role.MANAGER), anyBoolean())).thenReturn(Collections.singletonList(user));
+
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.NOT_RELEVANT);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(privilegeGroupExt, times(6)).getUsersByRole(any(), eq(Boolean.FALSE));
+    }
+
+
+    @DisplayName("Get all users from non existing privilege group")
+    @Test
+    public void testGetAllUsersFromPrivilegeGroupNonExisting() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
+        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.singletonList(user));
+
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN);
+
+        checkError(response);
+
+        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(privilegeGroupExt, never()).getUsersByRole(any(), any());
+    }
+
+    @DisplayName("Get all users from not extended privilege group")
+    @Test
+    public void testGetAllUsersFromPrivilegeGroupNotExtended() {
+        PrivilegeGroup privilegeGroup = mock(PrivilegeGroup.class);
+        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
+        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.singletonList(user));
+
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN);
+
+        checkError(response);
+
+        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(privilegeGroupExt, never()).getUsersByRole(any(), any());
     }
 }

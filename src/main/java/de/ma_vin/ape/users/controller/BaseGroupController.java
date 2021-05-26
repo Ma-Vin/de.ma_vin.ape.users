@@ -5,7 +5,7 @@ import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
-import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupRoleDto;
+import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
 import de.ma_vin.ape.users.service.BaseGroupService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
@@ -68,7 +68,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
 
     @PatchMapping("/addBaseToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> addBaseToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody BaseGroupRoleDto baseGroupRole) {
+    ResponseWrapper<Boolean> addBaseToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody BaseGroupIdRoleDto baseGroupRole) {
         boolean result = baseGroupService.addBaseToPrivilegeGroup(privilegeGroupIdentification, baseGroupRole.getBaseGroupIdentification(), baseGroupRole.getRole());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not added with role %s to privilege group with identification \"%s\""

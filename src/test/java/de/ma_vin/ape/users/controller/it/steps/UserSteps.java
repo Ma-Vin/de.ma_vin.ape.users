@@ -1,5 +1,8 @@
 package de.ma_vin.ape.users.controller.it.steps;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
 import de.ma_vin.ape.utils.TestUtil;
 import de.ma_vin.ape.utils.controller.response.Status;
@@ -76,14 +79,39 @@ public class UserSteps extends AbstractIntegrationTestSteps {
     }
 
     @When("Controller is called to remove the user with alias {string} from base group with alias {string}")
-    public void callControllerToRemoveUSerFromBaseGroup(String userAlias, String baseGroupAlias) {
+    public void callControllerToRemoveUserFromBaseGroup(String userAlias, String baseGroupAlias) {
         shared.setResultActions(performPatchWithAuthorization("/user/removeUserFromBaseGroup", getIdentification(baseGroupAlias)
                 , getIdentification(userAlias)));
     }
 
     @When("Controller is called to get all user of base group with alias {string} and dissolving sub groups {booleanValue}")
-    public void callControllerToFindGetUsersAtBaseGroup(String baseGroupAlias, Boolean dissolveSubgroups) {
+    public void callControllerToGetAllUsersFromBaseGroup(String baseGroupAlias, Boolean dissolveSubgroups) {
         MultiValueMap<String, String> findAllUsers = createValueMap("dissolveSubgroups", dissolveSubgroups.toString());
         shared.setResultActions(performGetWithAuthorization("/user/getAllUsersFromBaseGroup", getIdentification(baseGroupAlias), findAllUsers));
+    }
+
+    @When("Controller is called to add the user with alias {string} as {roleValue} to privilege group with alias {string}")
+    public void callControllerToAddUserToPrivilegeGroup(String userAlias, Role role, String privilegeGroupAlias) {
+        UserIdRoleDto baseGroupIdRoleDto = new UserIdRoleDto();
+        baseGroupIdRoleDto.setUserIdentification(getIdentification(userAlias));
+        baseGroupIdRoleDto.setRole(role);
+        try {
+            shared.setResultActions(performPatchWithAuthorization("/user/addUserToPrivilegeGroup", getIdentification(privilegeGroupAlias)
+                    , TestUtil.getObjectMapper().writeValueAsString(baseGroupIdRoleDto)));
+        } catch (JsonProcessingException e) {
+            fail("JsonProcessingException: " + e.getMessage());
+        }
+    }
+
+    @When("Controller is called to get all user of privilege group with alias {string} with role {roleValue} and dissolving sub groups {booleanValue}")
+    public void callControllerToGetAllUsersFromPrivilegeGroup(String baseGroupAlias, Role role, Boolean dissolveSubgroups) {
+        MultiValueMap<String, String> findAllUsers = createValueMap("dissolveSubgroups", dissolveSubgroups.toString(), "role", role.name());
+        shared.setResultActions(performGetWithAuthorization("/user/getAllUsersFromPrivilegeGroup", getIdentification(baseGroupAlias), findAllUsers));
+    }
+
+    @When("Controller is called to remove the user with alias {string} from privilege group with alias {string}")
+    public void callControllerToRemoveUserFromPrivilegeGroup(String userAlias, String privilegeGroupAlias) {
+        shared.setResultActions(performPatchWithAuthorization("/user/removeUserFromPrivilegeGroup", getIdentification(privilegeGroupAlias)
+                , getIdentification(userAlias)));
     }
 }

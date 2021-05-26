@@ -13,62 +13,85 @@
                     <fields>
                         <field fieldName="groupName" type="String" shortDescription="Name of the group"/>
                         <field fieldName="description" type="String" shortDescription="Description of the group"/>
-                        <field fieldName="validFrom" type="LocalDateTime" typePackage="java.time" shortDescription="Begin of the validity"/>
-                        <field fieldName="validTo" type="LocalDateTime" typePackage="java.time" shortDescription="End of the validity"/>
+                        <field fieldName="validFrom" type="LocalDateTime" typePackage="java.time"
+                               shortDescription="Begin of the validity"/>
+                        <field fieldName="validTo" type="LocalDateTime" typePackage="java.time"
+                               shortDescription="End of the validity"/>
                     </fields>
                 </entity>
-                <entity baseName="AdminGroup" parent="AbstractGroup" identificationPrefix="AG" description="Group which contains all admin groups">
+                <entity baseName="AdminGroup" parent="AbstractGroup" identificationPrefix="AG"
+                        description="Group which contains all admin groups">
                     <references>
-                        <reference referenceName="admins" targetEntity="User" isList="true" isOwner="true" shortDescription="all global admins"/>
+                        <reference referenceName="admins" targetEntity="User" isList="true" isOwner="true"
+                                   shortDescription="all global admins"/>
                     </references>
                 </entity>
-                <entity baseName="CommonGroup" parent="AbstractGroup" identificationPrefix="CG" description="Common group which holds all privilege, base groups and users">
+                <entity baseName="CommonGroup" parent="AbstractGroup" identificationPrefix="CG"
+                        description="Common group which holds all privilege, base groups and users">
                     <fields>
-                        <field fieldName="defaultRole" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
+                        <field fieldName="defaultRole" type="Role" typePackage="de.ma_vin.ape.users.enums"
+                               isTypeEnum="true"/>
                     </fields>
                     <references>
-                        <reference referenceName="privileges" targetEntity="PrivilegeGroup" shortDescription="All groups with privileges"
+                        <reference referenceName="privileges" targetEntity="PrivilegeGroup"
+                                   shortDescription="All groups with privileges"
                                    isList="true" isOwner="true"/>
-                        <reference referenceName="basics" targetEntity="BaseGroup" shortDescription="All basic groups" isList="true" isOwner="true"/>
-                        <reference referenceName="admins" targetEntity="User" filterField="role" filterFieldValue="ADMIN" isList="true" isOwner="true"/>
-                        <reference referenceName="managers" targetEntity="User" filterField="role" filterFieldValue="MANAGER" isList="true" isOwner="true"/>
-                        <reference referenceName="contributors" targetEntity="User" filterField="role" filterFieldValue="CONTRIBUTOR" isList="true" isOwner="true"/>
-                        <reference referenceName="visitors" targetEntity="User" filterField="role" filterFieldValue="VISITOR" isList="true" isOwner="true"/>
-                        <reference referenceName="blocks" targetEntity="User" filterField="role" filterFieldValue="BLOCKED" isList="true" isOwner="true"/>
+                        <reference referenceName="basics" targetEntity="BaseGroup" shortDescription="All basic groups"
+                                   isList="true" isOwner="true"/>
+                        <reference referenceName="admins" targetEntity="User" filterField="role"
+                                   filterFieldValue="ADMIN" isList="true" isOwner="true"/>
+                        <reference referenceName="managers" targetEntity="User" filterField="role"
+                                   filterFieldValue="MANAGER" isList="true" isOwner="true"/>
+                        <reference referenceName="contributors" targetEntity="User" filterField="role"
+                                   filterFieldValue="CONTRIBUTOR" isList="true" isOwner="true"/>
+                        <reference referenceName="visitors" targetEntity="User" filterField="role"
+                                   filterFieldValue="VISITOR" isList="true" isOwner="true"/>
+                        <reference referenceName="blocks" targetEntity="User" filterField="role"
+                                   filterFieldValue="BLOCKED" isList="true" isOwner="true"/>
                     </references>
                 </entity>
                 <entity baseName="PrivilegeGroup" parent="AbstractGroup" identificationPrefix="PG"
                         description="Group which holds information about privileges of basic groups and users">
                     <references>
                         <reference referenceName="admins" targetEntity="User" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="ADMIN"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="ADMIN"/>
                         </reference>
                         <reference referenceName="managers" targetEntity="User" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="MANAGER"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="MANAGER"/>
                         </reference>
                         <reference referenceName="contributors" targetEntity="User" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="CONTRIBUTOR"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="CONTRIBUTOR"/>
                         </reference>
                         <reference referenceName="visitors" targetEntity="User" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="VISITOR"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="VISITOR"/>
                         </reference>
                         <reference referenceName="blocks" targetEntity="User" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="BLOCKED"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="BLOCKED"/>
                         </reference>
                         <reference referenceName="adminGroups" targetEntity="BaseGroup" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="ADMIN"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="ADMIN"/>
                         </reference>
                         <reference referenceName="managerGroups" targetEntity="BaseGroup" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="MANAGER"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="MANAGER"/>
                         </reference>
                         <reference referenceName="contributorGroups" targetEntity="BaseGroup" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="CONTRIBUTOR"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="CONTRIBUTOR"/>
                         </reference>
                         <reference referenceName="visitorGroups" targetEntity="BaseGroup" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="VISITOR"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="VISITOR"/>
                         </reference>
                         <reference referenceName="blockGroups" targetEntity="BaseGroup" isList="true">
-                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role" filterFieldValue="BLOCKED"/>
+                            <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
+                                                 filterFieldValue="BLOCKED"/>
                         </reference>
                     </references>
                 </entity>
@@ -79,17 +102,25 @@
                         <reference referenceName="subBaseGroups" targetEntity="BaseGroup" isList="true"/>
                     </references>
                 </entity>
-                <entity baseName="BaseGroupRole" models="DTO" genIdIfDto="false">
+                <entity baseName="BaseGroupIdRole" models="DTO" genIdIfDto="false">
                     <fields>
                         <field fieldName="baseGroupIdentification" type="String"/>
                         <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
                     </fields>
                 </entity>
-                <entity baseName="UserRole" models="DTO" genIdIfDto="false">
+                <entity baseName="UserIdRole" models="DTO" genIdIfDto="false">
                     <fields>
                         <field fieldName="userIdentification" type="String"/>
                         <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
                     </fields>
+                </entity>
+                <entity baseName="UserRole" models="DTO" genIdIfDto="false">
+                    <fields>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
+                    </fields>
+                    <references>
+                        <reference referenceName="user" targetEntity="User"/>
+                    </references>
                 </entity>
             </entities>
         </grouping>
@@ -105,8 +136,10 @@
                         <field fieldName="validTo" type="LocalDateTime" typePackage="java.time"/>
                         <field fieldName="password" type="String"/>
                         <field fieldName="lastLogin" type="LocalDateTime" typePackage="java.time"/>
-                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true" models="DOMAIN_DAO"/>
-                        <field fieldName="isGlobalAdmin" type="boolean" models="DOMAIN" shortDescription="indicator whether the is a global admin or not"/>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"
+                               models="DOMAIN_DAO"/>
+                        <field fieldName="isGlobalAdmin" type="boolean" models="DOMAIN"
+                               shortDescription="indicator whether the is a global admin or not"/>
                     </fields>
                     <references>
                         <reference referenceName="image" targetEntity="UserResource"/>

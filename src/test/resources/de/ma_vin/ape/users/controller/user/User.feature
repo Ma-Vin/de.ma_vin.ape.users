@@ -63,6 +63,50 @@ Feature: Testing methods of the user controller
     And The identification at 0 is the same like the one of alias "indirectUser"
     And The "identification" property at response position 1 does not exists
 
+  Scenario: Add and remove users at privilege groups
+    Given There exists an user with first name "Direct" and last name "User" with alias "directUser" at common group "common"
+    And There exists an user with first name "Indirect" and last name "User" with alias "indirectUser" at common group "common"
+    And There exists a privilege group with name "Privilege Group" with alias "privilege" at common group "common"
+    And There exists a base group with name "Base Group" with alias "base" at common group "common"
+    When Controller is called to add the base group with alias "base" as MANAGER to privilege group with alias "privilege"
+    Then The result is Ok and Json
+    When Controller is called to add the user with alias "indirectUser" to base group with alias "base"
+    Then The result is Ok and Json
+    When Controller is called to add the user with alias "directUser" as ADMIN to privilege group with alias "privilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is true
+    When Controller is called to get all user of privilege group with alias "privilege" with role ADMIN and dissolving sub groups true
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "directUser"
+    And At response position 1 does not exists
+    When Controller is called to get all user of privilege group with alias "privilege" with role MANAGER and dissolving sub groups true
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "indirectUser"
+    And At response position 1 does not exists
+    When Controller is called to get all user of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups true
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "directUser"
+    And The identification of "user" at 1 is the same like the one of alias "indirectUser"
+    And At response position 2 does not exists
+    When Controller is called to get all user of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups false
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "directUser"
+    And At response position 1 does not exists
+    When Controller is called to remove the user with alias "directUser" from privilege group with alias "privilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is true
+    When Controller is called to get all user of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups true
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "indirectUser"
+    And At response position 1 does not exists
+
   Scenario: Update and get user
     Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"
     And The "mail" of the user with alias "user" is set to "anythingNew"

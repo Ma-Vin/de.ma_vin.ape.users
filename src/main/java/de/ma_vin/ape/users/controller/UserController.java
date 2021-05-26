@@ -1,11 +1,15 @@
 package de.ma_vin.ape.users.controller;
 
 import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.domain.group.PrivilegeGroupExt;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
+import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
 import de.ma_vin.ape.users.model.gen.mapper.UserTransportMapper;
+import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.users.service.UserService;
 import de.ma_vin.ape.utils.controller.response.ResponseUtil;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
@@ -13,8 +17,7 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
@@ -26,6 +29,8 @@ public class UserController extends AbstractDefaultOperationController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private PrivilegeGroupService privilegeGroupService;
 
     @PostMapping("/createUser")
     public @ResponseBody
@@ -85,17 +90,17 @@ public class UserController extends AbstractDefaultOperationController {
 
     @PatchMapping("/addUserToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> addUserToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody UserRoleDto userRoleDto) {
-        Optional<User> storedUser = userService.findUser(userRoleDto.getUserIdentification());
+    ResponseWrapper<Boolean> addUserToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody UserIdRoleDto userRole) {
+        Optional<User> storedUser = userService.findUser(userRole.getUserIdentification());
         if (storedUser.isPresent() && storedUser.get().isGlobalAdmin()) {
             return createEmptyResponseWithError(String.format("The user \"%s\" is an global admin and could not be added to an privilege group"
-                    , userRoleDto.getUserIdentification()));
+                    , userRole.getUserIdentification()));
         }
 
-        boolean result = userService.addUserToPrivilegeGroup(privilegeGroupIdentification, userRoleDto.getUserIdentification(), userRoleDto.getRole());
+        boolean result = userService.addUserToPrivilegeGroup(privilegeGroupIdentification, userRole.getUserIdentification(), userRole.getRole());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The user with identification \"%s\" was not added with role %s to privilege group with identification \"%s\""
-                , userRoleDto.getUserIdentification(), userRoleDto.getRole().getDescription(), privilegeGroupIdentification));
+                , userRole.getUserIdentification(), userRole.getRole().getDescription(), privilegeGroupIdentification));
     }
 
     @PatchMapping("/removeUserFromPrivilegeGroup/{privilegeGroupIdentification}")
@@ -138,5 +143,37 @@ public class UserController extends AbstractDefaultOperationController {
                 .collect(Collectors.toList());
 
         return createSuccessResponse(result);
+    }
+
+    @GetMapping("/getAllUsersFromPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserRoleDto>> getAllUsersFromPrivilegeGroup(@PathVariable String privilegeGroupIdentification
+            , @RequestParam(required = false) Boolean dissolveSubgroups, @RequestParam(required = false) Role role) {
+
+        Optional<PrivilegeGroup> privilegeGroup = privilegeGroupService.findPrivilegeGroupTree(privilegeGroupIdentification);
+        if (privilegeGroup.isEmpty() || !(privilegeGroup.get() instanceof PrivilegeGroupExt)) {
+            return createEmptyResponseWithError(String.format("The privilege group with identification \"%s\" could not be loaded", privilegeGroupIdentification));
+        }
+
+        List<UserRoleDto> result = new ArrayList<>();
+
+        if (role == null || Role.NOT_RELEVANT.equals(role)) {
+            for (Role r : Role.values()) {
+                addUserRoleToResult((PrivilegeGroupExt) privilegeGroup.get(), result, r, dissolveSubgroups);
+            }
+        } else {
+            addUserRoleToResult((PrivilegeGroupExt) privilegeGroup.get(), result, role, dissolveSubgroups);
+        }
+
+        return createSuccessResponse(result);
+    }
+
+    private void addUserRoleToResult(PrivilegeGroupExt privilegeGroup, List<UserRoleDto> result, Role role, Boolean dissolveSubgroups) {
+        privilegeGroup.getUsersByRole(role, dissolveSubgroups).forEach(u -> {
+            UserRoleDto userRoleDto = new UserRoleDto();
+            userRoleDto.setRole(role);
+            userRoleDto.setUser(UserTransportMapper.convertToUserDto(u));
+            result.add(userRoleDto);
+        });
     }
 }
