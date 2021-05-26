@@ -492,4 +492,20 @@ public class UserControllerTest {
 
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
     }
+
+    @DisplayName("Get all users from base group")
+    @Test
+    public void testGetAllUsersFromBaseGroup() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userService.findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean())).thenReturn(Collections.singletonList(user));
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsersFromBaseGroup(BASE_GROUP_IDENTIFICATION, Boolean.TRUE);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION),anyBoolean());
+    }
 }
