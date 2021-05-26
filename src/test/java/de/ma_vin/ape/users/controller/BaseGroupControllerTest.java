@@ -380,4 +380,20 @@ public class BaseGroupControllerTest {
 
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
     }
+
+    @DisplayName("Get all base groups")
+    @Test
+    public void testGetAllBaseGroups() {
+        when(baseGroupService.findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseGroups(COMMON_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
+    }
 }

@@ -106,4 +106,9 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     public void callControllerToFindAllBaseAtPrivilegeGroup(String baseGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(baseGroupAlias)));
     }
+
+    @When("Controller is called to get all base groups from common group with alias {string}")
+    public void callControllerToGetAllBaseGroups(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseGroups", getIdentification(commonGroupAlias)));
+    }
 }

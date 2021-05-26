@@ -17,6 +17,11 @@ Feature: Testing methods of the base group controller
     And The status of the result should be "OK"
     And The "groupName" property at response is "Base Group Name"
     And The identification is the same like the one of alias "base"
+    When Controller is called to get all base groups from common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "base"
+    And The "identification" property at response position 1 does not exists
 
   Scenario: Update and get base group
     Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"

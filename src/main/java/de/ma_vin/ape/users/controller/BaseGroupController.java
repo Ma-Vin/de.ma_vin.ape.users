@@ -66,6 +66,16 @@ public class BaseGroupController extends AbstractDefaultOperationController {
         );
     }
 
+    @GetMapping("/getAllBaseGroups/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupDto>> getAllBaseGroups(@PathVariable String commonGroupIdentification) {
+        List<BaseGroupDto> result = baseGroupService.findAllBaseGroups(commonGroupIdentification).stream()
+                .map(GroupTransportMapper::convertToBaseGroupDto)
+                .collect(Collectors.toList());
+
+        return createSuccessResponse(result);
+    }
+
     @PatchMapping("/addBaseToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addBaseToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody BaseGroupIdRoleDto baseGroupRole) {
