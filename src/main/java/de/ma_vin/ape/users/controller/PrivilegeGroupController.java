@@ -13,7 +13,11 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createSuccessResponse;
 
 @RestController
 @RequestMapping(path = "group/privilege")
@@ -61,5 +65,15 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
                 , GroupTransportMapper::convertToPrivilegeGroupDto
                 , GroupTransportMapper::convertToPrivilegeGroup
         );
+    }
+
+    @GetMapping("/getAllPrivilegeGroups/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<PrivilegeGroupDto>> getAllPrivilegeGroups(@PathVariable String commonGroupIdentification) {
+        List<PrivilegeGroupDto> result = privilegeGroupService.findAllPrivilegeGroups(commonGroupIdentification).stream()
+                .map(GroupTransportMapper::convertToPrivilegeGroupDto)
+                .collect(Collectors.toList());
+
+        return createSuccessResponse(result);
     }
 }

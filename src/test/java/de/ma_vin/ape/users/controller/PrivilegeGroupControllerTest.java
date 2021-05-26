@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -237,5 +238,21 @@ public class PrivilegeGroupControllerTest {
         verify(privilegeGroupService, never()).findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
         verify(privilegeGroupService).save(any());
         verify(privilegeGroupService, never()).save(any(), any());
+    }
+
+    @DisplayName("Get all privilege groups")
+    @Test
+    public void testGetAllPrivilegeGroups() {
+        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupService.findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(privilegeGroup));
+
+        ResponseWrapper<List<PrivilegeGroupDto>> response = cut.getAllPrivilegeGroups(COMMON_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
     }
 }
