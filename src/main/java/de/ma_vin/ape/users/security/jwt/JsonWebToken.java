@@ -54,7 +54,7 @@ public class JsonWebToken {
             Header header = getObjectMapper().readValue(Base64.getDecoder().decode(split[0].getBytes(StandardCharsets.UTF_8)), Header.class);
             return split[2].equals(Signature.getJsonBase64UrlEncoded(split[0], split[1], secret, header.getAlg()));
         } catch (JwtGeneratingException | IOException e) {
-            log.error("Could verify token {}: {}", encodedToken, e.getMessage());
+            log.error("Could not verify token {}: {}", encodedToken, e.getMessage());
             return false;
         }
     }
