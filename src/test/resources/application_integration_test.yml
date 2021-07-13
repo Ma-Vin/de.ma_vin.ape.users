@@ -19,3 +19,7 @@ db:
   user:
     isToInitialize: true
     isCommonGroupToInitialize: true
+tokenSecret: SomeSecret
+tokenExpiresInSeconds: 300
+refreshTokenExpiresInSeconds: 900
+encodingAlgorithm: HS256
