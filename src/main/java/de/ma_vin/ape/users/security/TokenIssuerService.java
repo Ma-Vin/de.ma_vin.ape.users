@@ -70,12 +70,12 @@ public class TokenIssuerService {
      * @return new {@link Optional} of a pair token and refresh token
      */
     public Optional<String[]> refresh(String encodedRefreshToken) {
-        if (!isValid(encodedRefreshToken, false)) {
+        if (!isValidInternal(encodedRefreshToken, false, null)) {
             return Optional.empty();
         }
 
         Optional<JsonWebToken> refreshToken = JsonWebToken.decodeToken(encodedRefreshToken, secret);
-        if(refreshToken.isEmpty()){
+        if (refreshToken.isEmpty()) {
             return Optional.empty();
         }
         TokenInfo tokenInfo = inMemoryTokens.get(refreshToken.get().getPayload().getJti());
@@ -112,7 +112,20 @@ public class TokenIssuerService {
      * @param password the password of the user
      * @return new {@link Optional} of a pair token and refresh token
      */
-    public Optional<String[]> issue(String clientId, String username, String password) {
+    public Optional<TokenInfo> issue(String clientId, String username, String password) {
+        return issue(clientId, username, password, null);
+    }
+
+    /**
+     * Issues a new Token and corresponding refresh token
+     *
+     * @param clientId id of the client who is issuing
+     * @param username name of user whose is issued for
+     * @param password the password of the user
+     * @param scopes   the scope of the issued token
+     * @return new {@link Optional} of a pair token and refresh token
+     */
+    public Optional<TokenInfo> issue(String clientId, String username, String password, String scopes) {
         Optional<UserDao> user = userRepository.findById(IdGenerator.generateId(username, User.ID_PREFIX));
         if (user.isEmpty()) {
             log.warn("The user {} is unknown while issuing token", username);
@@ -122,7 +135,7 @@ public class TokenIssuerService {
             log.warn("Wrong password for user {} while issuing token", username);
             return Optional.empty();
         }
-        return issue(clientId, username);
+        return issueInternal(clientId, username, scopes);
     }
 
     /**
@@ -130,9 +143,10 @@ public class TokenIssuerService {
      *
      * @param clientId id of the client who is issuing
      * @param username name of user whose is issued for
+     * @param scopes   the scopes of the issued token
      * @return new {@link Optional} of a pair token and refresh token
      */
-    private Optional<String[]> issue(String clientId, String username) {
+    private Optional<TokenInfo> issueInternal(String clientId, String username, String scopes) {
         LocalDateTime now = SystemProperties.getSystemDateTime();
 
         String uuid = UUID.randomUUID().toString();
@@ -148,15 +162,11 @@ public class TokenIssuerService {
         tokenInfo.setExpiresAtLeast(refreshPayload.getExp());
         tokenInfo.setToken(new JsonWebToken(encodingAlgorithm, secret, payload));
         tokenInfo.setRefreshToken(new JsonWebToken(encodingAlgorithm, secret, refreshPayload));
+        tokenInfo.setScopes(scopes);
 
         inMemoryTokens.put(uuid, tokenInfo);
-        try {
-            return Optional.of(new String[]{tokenInfo.getToken().getEncodedToken(), tokenInfo.getRefreshToken().getEncodedToken()});
-        } catch (JwtGeneratingException e) {
-            log.error("Could not issue new encoded token");
-            inMemoryTokens.remove(uuid);
-            return Optional.empty();
-        }
+
+        return Optional.of(tokenInfo);
     }
 
     /**
@@ -166,17 +176,30 @@ public class TokenIssuerService {
      * @return {@code true} if the token is valid. Otherwise {@code false}
      */
     public boolean isValid(String encodedToken) {
-        return isValid(encodedToken, true);
+        return isValid(encodedToken, null);
     }
+
+    /**
+     * Checks whether is a given token is known and valid
+     *
+     * @param encodedToken token to check
+     * @param scope        the scope for which is validated
+     * @return {@code true} if the token is valid. Otherwise {@code false}
+     */
+    public boolean isValid(String encodedToken, String scope) {
+        return isValidInternal(encodedToken, true, scope);
+    }
+
 
     /**
      * Checks whether is a given token or a refresh token is known and valid
      *
      * @param encodedToken token to check
      * @param isToken      {@code true} if to check a token. {@code false} if the its a refresh token
+     * @param scope        the scope for which is validated
      * @return {@code true} if the token is valid. Otherwise {@code false}
      */
-    private boolean isValid(String encodedToken, boolean isToken) {
+    private boolean isValidInternal(String encodedToken, boolean isToken, String scope) {
         String logText = isToken ? "token" : "refresh token";
         Optional<JsonWebToken> token = JsonWebToken.decodeToken(encodedToken, secret);
         if (token.isEmpty()) {
@@ -195,14 +218,67 @@ public class TokenIssuerService {
             log.error("The {} {} is different to the known one", logText, encodedToken);
             return false;
         }
-        return true;
+        return tokenInfo.containsScope(scope);
     }
 
     @Data
     public static class TokenInfo {
+        public static final String DEFAULT_DELIMITER = "|";
+
         private String id;
         private LocalDateTime expiresAtLeast;
         private JsonWebToken token;
         private JsonWebToken refreshToken;
+        private Set<String> scopes;
+
+        /**
+         * Sets the scopes for the actual token
+         *
+         * @param scopesText scopes separated by a delimiter
+         * @param delimiter  the delimiter
+         */
+        public void setScopes(String scopesText, String delimiter) {
+            scopes = new TreeSet<>();
+            if (scopesText == null) {
+                return;
+            }
+            for (String s : scopesText.split(delimiter)) {
+                scopes.add(s.toLowerCase());
+            }
+        }
+
+        /**
+         * Sets the scopes for the actual token
+         *
+         * @param scopesText scopes separated by a default delimiter
+         */
+        public void setScopes(String scopesText) {
+            setScopes(scopesText, DEFAULT_DELIMITER);
+        }
+
+        /**
+         * Checks whether the a scope is supported by the tokens
+         *
+         * @param scope scope to check
+         * @return {@code true} if the scope is null or the scope is supported by the tokens. Otherwise {@code false}
+         */
+        public boolean containsScope(String scope) {
+            return scope == null || scopes.contains(scope.toLowerCase());
+        }
+
+        /**
+         * @return The concatenated scope. Separated by default delimiter
+         */
+        public String getScope() {
+            if (scopes.isEmpty()) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder();
+            scopes.forEach(s -> {
+                sb.append(s);
+                sb.append(DEFAULT_DELIMITER);
+            });
+            return sb.substring(0, sb.length() - DEFAULT_DELIMITER.length());
+        }
     }
 }

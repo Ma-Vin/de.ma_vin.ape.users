@@ -84,6 +84,7 @@ public class TokenIssuerServiceTest {
         refreshToken = new JsonWebToken(header, refreshPayload, signature);
         when(tokenInfo.getToken()).thenReturn(token);
         when(tokenInfo.getRefreshToken()).thenReturn(refreshToken);
+        when(tokenInfo.containsScope(any())).thenReturn(Boolean.TRUE);
     }
 
     @DisplayName("The encoded token is invalid cause unable to decode")
@@ -129,6 +130,16 @@ public class TokenIssuerServiceTest {
         assertTrue(cut.isValid(encodedToken), "The token should be valid");
     }
 
+    @DisplayName("The encoded token is valid with scope")
+    @Test
+    public void testIsValidWithScope() throws JwtGeneratingException {
+        String encodedToken = token.getEncodedToken();
+
+        cut.getInMemoryTokens().put("abc", tokenInfo);
+
+        assertTrue(cut.isValid(encodedToken, "read"), "The token should be valid");
+    }
+
     @DisplayName("Issue a new pair of token and refresh token with user and password")
     @Test
     public void testIssueToken() {
@@ -136,14 +147,28 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_ENCODED_PWD);
         when(encoder.encode(eq(USER_PWD))).thenReturn(USER_ENCODED_PWD);
 
-        Optional<String[]> result = cut.issue(CLIENT_ID, USER_ID, USER_PWD);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_ID, USER_ID, USER_PWD);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
-        assertEquals(2, result.get().length, "Wrong number of entries");
-        assertNotNull(result.get()[0], "The first token should not be null");
-        assertFalse(result.get()[0].trim().isEmpty(), "The first token should not be empty");
-        assertNotNull(result.get()[1], "The second token should not be null");
-        assertFalse(result.get()[1].trim().isEmpty(), "The second token should not be empty");
+        assertNotNull(result.get().getToken(), "The token should not be null");
+        assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+
+        verify(userRepository).findById(eq(1L));
+        verify(encoder).encode(eq(USER_PWD));
+    }
+
+    @DisplayName("Issue a new pair of token and refresh token with user, password and scope")
+    @Test
+    public void testIssueTokenWithScope() {
+        when(userRepository.findById(eq(1L))).thenReturn(Optional.of(userDao));
+        when(userDao.getPassword()).thenReturn(USER_ENCODED_PWD);
+        when(encoder.encode(eq(USER_PWD))).thenReturn(USER_ENCODED_PWD);
+
+        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_ID, USER_ID, USER_PWD, "read|Write");
+        assertNotNull(result, "There should be a result");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertNotNull(result.get().getToken(), "The token should not be null");
+        assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
 
         verify(userRepository).findById(eq(1L));
         verify(encoder).encode(eq(USER_PWD));
@@ -156,7 +181,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_ENCODED_PWD);
         when(encoder.encode(eq(USER_PWD))).thenReturn(USER_ENCODED_PWD);
 
-        Optional<String[]> result = cut.issue(CLIENT_ID, USER_ID, USER_PWD);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_ID, USER_ID, USER_PWD);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -171,7 +196,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_ENCODED_PWD);
         when(encoder.encode(eq(USER_PWD))).thenReturn(USER_ENCODED_PWD + "_mod");
 
-        Optional<String[]> result = cut.issue(CLIENT_ID, USER_ID, USER_PWD);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_ID, USER_ID, USER_PWD);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
 
