@@ -204,6 +204,56 @@ public class TokenIssuerServiceTest {
         verify(encoder).encode(eq(USER_PWD));
     }
 
+    @DisplayName("Issue a new pair of implicit token and refresh token with user and password")
+    @Test
+    public void testIssueImplicitToken() {
+        when(userRepository.findById(eq(1L))).thenReturn(Optional.of(userDao));
+        when(userDao.getPassword()).thenReturn(USER_ENCODED_PWD);
+        when(encoder.encode(eq(USER_PWD))).thenReturn(USER_ENCODED_PWD);
+
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_ID, USER_ID);
+        assertNotNull(result, "There should be a result");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertNotNull(result.get().getToken(), "The token should not be null");
+        assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+
+        verify(userRepository).findById(eq(1L));
+        verify(encoder, never()).encode(eq(USER_PWD));
+    }
+
+    @DisplayName("Issue a new pair of implicit token and refresh token with user, password and scope")
+    @Test
+    public void testIssueImplicitTokenWithScope() {
+        when(userRepository.findById(eq(1L))).thenReturn(Optional.of(userDao));
+        when(userDao.getPassword()).thenReturn(USER_ENCODED_PWD);
+        when(encoder.encode(eq(USER_PWD))).thenReturn(USER_ENCODED_PWD);
+
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_ID, USER_ID, "read|Write");
+        assertNotNull(result, "There should be a result");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertNotNull(result.get().getToken(), "The token should not be null");
+        assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+
+        verify(userRepository).findById(eq(1L));
+        verify(encoder, never()).encode(eq(USER_PWD));
+    }
+
+    @DisplayName("Issue a new pair of implicit token and refresh token with missing user")
+    @Test
+    public void testIssueImplicitTokenMissingUser() {
+        when(userRepository.findById(eq(1L))).thenReturn(Optional.empty());
+        when(userDao.getPassword()).thenReturn(USER_ENCODED_PWD);
+        when(encoder.encode(eq(USER_PWD))).thenReturn(USER_ENCODED_PWD);
+
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_ID, USER_ID, USER_PWD);
+        assertNotNull(result, "There should be a result");
+        assertTrue(result.isEmpty(), "The result should be empty");
+
+        verify(userRepository).findById(eq(1L));
+        verify(encoder, never()).encode(eq(USER_PWD));
+    }
+
+
     @DisplayName("Refresh a valid token")
     @Test
     public void testRefresh() throws JwtGeneratingException {

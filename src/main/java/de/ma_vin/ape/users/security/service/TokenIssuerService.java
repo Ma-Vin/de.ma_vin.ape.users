@@ -143,6 +143,34 @@ public class TokenIssuerService {
     }
 
     /**
+     * Issues a new implicit Token and corresponding refresh token
+     *
+     * @param clientId id of the client who is issuing
+     * @param username name of user whose is issued for
+     * @return new {@link Optional} of a pair token and refresh token
+     */
+    public Optional<TokenInfo> issueImplicit(String clientId, String username) {
+        return issueImplicit(clientId, username, null);
+    }
+
+    /**
+     * Issues a new implicit Token and corresponding refresh token
+     *
+     * @param clientId id of the client who is issuing
+     * @param username name of user whose is issued for
+     * @param scopes   the scope of the issued token
+     * @return new {@link Optional} of a pair token and refresh token
+     */
+    public Optional<TokenInfo> issueImplicit(String clientId, String username, String scopes) {
+        Optional<UserDao> user = userRepository.findById(IdGenerator.generateId(username, User.ID_PREFIX));
+        if (user.isEmpty()) {
+            log.warn("The user {} is unknown while issuing token", username);
+            return Optional.empty();
+        }
+        return issueInternal(clientId, username, scopes);
+    }
+
+    /**
      * Issues a new Token and corresponding refresh token
      *
      * @param clientId id of the client who is issuing
