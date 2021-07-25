@@ -21,6 +21,7 @@ tokenSecret: SomeSecret
 tokenExpiresInSeconds: 300
 refreshTokenExpiresInSeconds: 900
 encodingAlgorithm: HS256
+authorizeCodeExpiresInSeconds: 600
 auth:
   clients:
     - clientId: users

@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.security;
 
 import de.ma_vin.ape.users.security.filter.ClientCheckFilter;
+import de.ma_vin.ape.users.security.service.UserExtDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -35,7 +36,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests().anyRequest().permitAll().and().cors().and().csrf().disable().headers().frameOptions().sameOrigin();
+        http.authorizeRequests().antMatchers("/auth/authorize").authenticated().and().formLogin();
+       // http.authorizeRequests().anyRequest().permitAll().and().cors().and().csrf().disable().headers().frameOptions().sameOrigin();
     }
 
     @Bean
@@ -43,7 +45,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         FilterRegistrationBean<ClientCheckFilter> registrationBean = new FilterRegistrationBean();
         registrationBean.setFilter(clientCheckFilter);
         registrationBean.addUrlPatterns("/auth/oauth/token");
-        registrationBean.setOrder(2); //set precedence
+        registrationBean.setOrder(2);
         return registrationBean;
     }
 }

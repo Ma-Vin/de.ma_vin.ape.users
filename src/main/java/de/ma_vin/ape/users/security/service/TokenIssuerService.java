@@ -1,4 +1,4 @@
-package de.ma_vin.ape.users.security;
+package de.ma_vin.ape.users.security.service;
 
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
@@ -8,7 +8,10 @@ import de.ma_vin.ape.users.security.jwt.JsonWebToken;
 import de.ma_vin.ape.users.security.jwt.Payload;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import de.ma_vin.ape.utils.properties.SystemProperties;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +44,7 @@ public class TokenIssuerService {
     @Value("${encodingAlgorithm}")
     private String encodingAlgorithm;
 
+    @Setter(AccessLevel.PRIVATE)
     private Map<String, TokenInfo> inMemoryTokens = new HashMap<>();
 
     /**
@@ -157,12 +161,10 @@ public class TokenIssuerService {
         Payload payload = new Payload(clientId, username, null, now.plus(tokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
         Payload refreshPayload = new Payload(clientId, username, null, now.plus(refreshTokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
 
-        TokenInfo tokenInfo = new TokenInfo();
-        tokenInfo.setId(uuid);
-        tokenInfo.setExpiresAtLeast(refreshPayload.getExp());
-        tokenInfo.setToken(new JsonWebToken(encodingAlgorithm, secret, payload));
-        tokenInfo.setRefreshToken(new JsonWebToken(encodingAlgorithm, secret, refreshPayload));
-        tokenInfo.setScopes(scopes);
+        TokenInfo tokenInfo = new TokenInfo(uuid, refreshPayload.getExp()
+                , new JsonWebToken(encodingAlgorithm, secret, payload)
+                , new JsonWebToken(encodingAlgorithm, secret, refreshPayload)
+                , scopes);
 
         inMemoryTokens.put(uuid, tokenInfo);
 
@@ -222,6 +224,7 @@ public class TokenIssuerService {
     }
 
     @Data
+    @AllArgsConstructor
     public static class TokenInfo {
         public static final String DEFAULT_DELIMITER = "|";
 
@@ -230,6 +233,11 @@ public class TokenIssuerService {
         private JsonWebToken token;
         private JsonWebToken refreshToken;
         private Set<String> scopes;
+
+        public TokenInfo(String id, LocalDateTime expiresAtLeast, JsonWebToken token, JsonWebToken refreshToken, String scopesText) {
+            this(id, expiresAtLeast, token, refreshToken, (Set<String>) null);
+            setScopes(scopesText);
+        }
 
         /**
          * Sets the scopes for the actual token

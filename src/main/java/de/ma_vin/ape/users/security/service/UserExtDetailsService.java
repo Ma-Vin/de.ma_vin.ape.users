@@ -1,4 +1,4 @@
-package de.ma_vin.ape.users.security;
+package de.ma_vin.ape.users.security.service;
 
 import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.service.UserService;

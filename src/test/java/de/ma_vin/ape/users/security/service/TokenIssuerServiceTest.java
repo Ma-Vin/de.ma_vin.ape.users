@@ -1,10 +1,10 @@
-package de.ma_vin.ape.users.service;
+package de.ma_vin.ape.users.security.service;
 
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.UserRepository;
-import de.ma_vin.ape.users.security.TokenIssuerService;
+import de.ma_vin.ape.users.security.service.TokenIssuerService;
 import de.ma_vin.ape.users.security.jwt.Header;
 import de.ma_vin.ape.users.security.jwt.JsonWebToken;
 import de.ma_vin.ape.users.security.jwt.Payload;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 
 /**
- * {@link de.ma_vin.ape.users.security.TokenIssuerService} is the class under test
+ * {@link TokenIssuerService} is the class under test
  */
 public class TokenIssuerServiceTest {
 
