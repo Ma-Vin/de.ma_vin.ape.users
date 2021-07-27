@@ -47,6 +47,21 @@
                 <skip.generating.model>false</skip.generating.model>
             </properties>
         </profile>
+        <profile>
+            <id>sonar-cloud</id>
+            <properties>
+                <sonar.projectKey>Ma-Vin_de.ma_vin.ape.users</sonar.projectKey>
+                <sonar.organization>ma-vin</sonar.organization>
+                <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>skipTests</id>
+            <properties>
+                <skip.test>true</skip.test>
+                <skip.it>true</skip.it>
+            </properties>
+        </profile>
     </profiles>
 
     <dependencies>

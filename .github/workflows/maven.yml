@@ -38,6 +38,12 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.14
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v1
+      with:
+        path: ~/.sonar/cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
     - name: Cache Maven packages
       uses: actions/cache@v1
       with:
@@ -52,4 +58,5 @@ jobs:
       env:
         GITHUB_PACKAGES_USERNAME: ${{ secrets.APE_GITHUB_PACKAGES_USER }}
         GITHUB_PACKAGES_TOKEN: ${{ secrets.APE_GITHUB_PACKAGES_PAT }}
-      run: mvn -B clean install -P gen-model --file main/pom.xml --settings maven/settings.xml
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: mvn -B clean install org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -P sonar-cloud,gen-model --file main/pom.xml --settings maven/settings.xml
