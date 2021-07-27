@@ -78,7 +78,7 @@ public class AuthorizeCodeService {
      * @param code Code whose info is ask for
      * @return Optional of the {@link CodeInfo}. {@link Optional#empty()} if there is no search result.
      */
-    private Optional<CodeInfo> getCodeInfo(String code) {
+    public Optional<CodeInfo> getCodeInfo(String code) {
         return inMemoryCodes.stream().filter(c -> c.getCode().equals(code)).findFirst();
     }
 

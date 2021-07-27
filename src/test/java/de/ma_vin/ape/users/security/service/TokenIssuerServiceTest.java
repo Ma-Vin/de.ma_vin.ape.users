@@ -253,6 +253,25 @@ public class TokenIssuerServiceTest {
         verify(encoder, never()).encode(eq(USER_PWD));
     }
 
+    @DisplayName("Issue a new pair of client token and refresh token with user and password")
+    @Test
+    public void testIssueClientToken() {
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueClient(CLIENT_ID);
+        assertNotNull(result, "There should be a result");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertNotNull(result.get().getToken(), "The token should not be null");
+        assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+    }
+
+    @DisplayName("Issue a new pair of client token and refresh token with user, password and scope")
+    @Test
+    public void testIssueClientTokenWithScope() {
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueClient(CLIENT_ID, "read|Write");
+        assertNotNull(result, "There should be a result");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertNotNull(result.get().getToken(), "The token should not be null");
+        assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+    }
 
     @DisplayName("Refresh a valid token")
     @Test
@@ -262,16 +281,13 @@ public class TokenIssuerServiceTest {
 
         cut.getInMemoryTokens().put("abc", tokenInfo);
 
-        Optional<String[]> result = cut.refresh(encodedRefreshToken);
+        Optional<TokenIssuerService.TokenInfo> result = cut.refresh(encodedRefreshToken);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
-        assertEquals(2, result.get().length, "Wrong number of entries");
-        assertNotNull(result.get()[0], "The first token should not be null");
-        assertFalse(result.get()[0].trim().isEmpty(), "The first token should not be empty");
-        assertNotNull(result.get()[1], "The second token should not be null");
-        assertFalse(result.get()[1].trim().isEmpty(), "The second token should not be empty");
-        assertNotEquals(encodedToken, result.get()[0], "The token should be changed");
-        assertNotEquals(encodedRefreshToken, result.get()[1], "The refresh token should be changed");
+        assertNotNull(result.get().getToken(), "The token should not be null");
+        assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+        assertNotEquals(encodedToken, result.get().getToken().getEncodedToken(), "The token should be changed");
+        assertNotEquals(encodedRefreshToken, result.get().getRefreshToken().getEncodedToken(), "The refresh token should be changed");
     }
 
     @DisplayName("Refresh a invalid token")
@@ -281,7 +297,7 @@ public class TokenIssuerServiceTest {
 
         cut.getInMemoryTokens().put("abc", tokenInfo);
 
-        Optional<String[]> result = cut.refresh(encodedRefreshToken);
+        Optional<TokenIssuerService.TokenInfo> result = cut.refresh(encodedRefreshToken);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
     }
@@ -294,7 +310,7 @@ public class TokenIssuerServiceTest {
 
         cut.getInMemoryTokens().put("abc", tokenInfo);
 
-        Optional<String[]> result = cut.refresh(encodedRefreshToken);
+        Optional<TokenIssuerService.TokenInfo> result = cut.refresh(encodedRefreshToken);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
     }

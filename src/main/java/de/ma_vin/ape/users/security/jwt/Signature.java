@@ -6,13 +6,6 @@ import de.ma_vin.ape.users.security.EncoderUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-
 @Data
 @AllArgsConstructor
 public class Signature {

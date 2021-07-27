@@ -1,6 +1,5 @@
 package de.ma_vin.ape.users.security.service;
 
-import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.UserRepository;
@@ -73,7 +72,7 @@ public class TokenIssuerService {
      * @param encodedRefreshToken refresh token
      * @return new {@link Optional} of a pair token and refresh token
      */
-    public Optional<String[]> refresh(String encodedRefreshToken) {
+    public Optional<TokenInfo> refresh(String encodedRefreshToken) {
         if (!isValidInternal(encodedRefreshToken, false, null)) {
             return Optional.empty();
         }
@@ -100,12 +99,7 @@ public class TokenIssuerService {
 
         tokenInfo.setExpiresAtLeast(tokenInfo.getRefreshToken().getPayload().getExp());
 
-        try {
-            return Optional.of(new String[]{tokenInfo.getToken().getEncodedToken(), tokenInfo.getRefreshToken().getEncodedToken()});
-        } catch (JwtGeneratingException e) {
-            log.error("Could not create encode token while refreshing ");
-            return Optional.empty();
-        }
+        return Optional.of(tokenInfo);
     }
 
     /**
@@ -168,6 +162,27 @@ public class TokenIssuerService {
             return Optional.empty();
         }
         return issueInternal(clientId, username, scopes);
+    }
+
+    /**
+     * Issues a new client Token and corresponding refresh token
+     *
+     * @param clientId id of the client who is issuing
+     * @return new {@link Optional} of a pair token and refresh token
+     */
+    public Optional<TokenInfo> issueClient(String clientId) {
+        return issueClient(clientId, null);
+    }
+
+    /**
+     * Issues a new client Token and corresponding refresh token
+     *
+     * @param clientId id of the client who is issuing
+     * @param scopes   the scope of the issued token
+     * @return new {@link Optional} of a pair token and refresh token
+     */
+    public Optional<TokenInfo> issueClient(String clientId, String scopes) {
+        return issueInternal(clientId, clientId, scopes);
     }
 
     /**
