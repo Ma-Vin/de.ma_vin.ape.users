@@ -129,7 +129,7 @@ public class TokenIssuerService {
             log.warn("The user {} is unknown while issuing token", username);
             return Optional.empty();
         }
-        if (!user.get().getPassword().equals(encoder.encode(password))) {
+        if (!encoder.matches(new String(Base64.getUrlDecoder().decode(password)), user.get().getPassword())) {
             log.warn("Wrong password for user {} while issuing token", username);
             return Optional.empty();
         }
@@ -269,6 +269,7 @@ public class TokenIssuerService {
     @Data
     @AllArgsConstructor
     public static class TokenInfo {
+        public static final String DEFAULT_DELIMITER_SPLIT = "\\|";
         public static final String DEFAULT_DELIMITER = "|";
 
         private String id;
@@ -304,7 +305,7 @@ public class TokenIssuerService {
          * @param scopesText scopes separated by a default delimiter
          */
         public void setScopes(String scopesText) {
-            setScopes(scopesText, DEFAULT_DELIMITER);
+            setScopes(scopesText, DEFAULT_DELIMITER_SPLIT);
         }
 
         /**
