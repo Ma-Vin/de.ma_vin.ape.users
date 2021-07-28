@@ -25,14 +25,39 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
 
+    @Then("The result is successful logged in")
+    public void checkResponseIsLogin() throws Exception {
+        checkResponseIsRedirected("/");
+    }
+
+    @Then("The result is redirected to location {string}")
+    public void checkResponseIsRedirected(String redirectedTo) throws Exception {
+        shared.getResultActions().andExpect(status().is3xxRedirection()).andExpect(header().string("Location", redirectedTo));
+    }
+
+    @Then("The result is a 4xx")
+    public void checkResponseIs4xx() throws Exception {
+        shared.getResultActions().andExpect(status().is4xxClientError());
+    }
+
     @Then("The status of the result should be {string}")
     public void checkStatus(String status) throws Exception {
         shared.getResultActions().andExpect(jsonPath("status", is(Status.valueOf(status).name())));
     }
 
     @Then("The {string} property at response is {string}")
+    public void checkPropertyResponse(String propertyName, String propertyValue) throws Exception {
+        checkProperty("response." + propertyName, propertyValue);
+    }
+
+    @Then("The {string} property is {string}")
     public void checkProperty(String propertyName, String propertyValue) throws Exception {
-        shared.getResultActions().andExpect(jsonPath("response." + propertyName, is(propertyValue)));
+        shared.getResultActions().andExpect(jsonPath(propertyName, is(propertyValue)));
+    }
+
+    @Then("The {string} property is anything")
+    public void checkAnythingAt(String propertyName) throws Exception {
+        shared.getResultActions().andExpect(jsonPath(propertyName, anything()));
     }
 
     @Then("The {string} property at response is {int}")
@@ -87,7 +112,7 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
 
     @Then("The identification is the same like the one of alias {string}")
     public void checkIdentificationAt(String alias) throws Exception {
-        checkProperty("identification", getIdentification(alias));
+        checkPropertyResponse("identification", getIdentification(alias));
     }
 
     @Then("The identification at {int} is the same like the one of alias {string}")
@@ -102,7 +127,7 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
 
     @Then("The identification at property {string} is the same like the one of alias {string}")
     public void checkIdentificationAt(String propertyName, String alias) throws Exception {
-        checkProperty(propertyName + ".identification", getIdentification(alias));
+        checkPropertyResponse(propertyName + ".identification", getIdentification(alias));
     }
 
     @ParameterType(value = "true|True|TRUE|false|False|FALSE")

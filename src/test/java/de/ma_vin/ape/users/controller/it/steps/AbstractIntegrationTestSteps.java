@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +21,7 @@ import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @ExtendWith(SpringExtension.class)
@@ -36,6 +38,9 @@ public abstract class AbstractIntegrationTestSteps {
 
     @Autowired
     protected CucumberShared shared;
+
+    @Autowired
+    protected BCryptPasswordEncoder encoder;
 
     protected MultiValueMap<String, String> createValueMap(String... argPairs) {
         if (argPairs.length % 2 != 0) {
@@ -62,12 +67,52 @@ public abstract class AbstractIntegrationTestSteps {
         return null;
     }
 
+    protected ResultActions performPost(String url, MultiValueMap<String, String> valueMap) {
+        try {
+            return mvc.perform(
+                    post(url)
+                            .with(csrf())
+                            .params(valueMap)
+                            .contentType(MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            fail(String.format("fail to call post at %s: %s", url, e.getMessage()));
+        }
+        return null;
+    }
+
     protected ResultActions performGetWithAuthorization(String url, String pathVariable) {
         try {
             return mvc.perform(
                     get(url + "/" + pathVariable)
                             .with(csrf())
                             .header("Authorization", "Bearer " + shared.getAccessToken())
+                            .contentType(MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
+        }
+        return null;
+    }
+
+    protected ResultActions performGet(String url, MultiValueMap<String, String> valueMap) {
+        try {
+            return mvc.perform(
+                    get(url)
+                            .with(csrf())
+                            .params(valueMap)
+                            .contentType(MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
+        }
+        return null;
+    }
+
+    protected ResultActions performGet(String url, MultiValueMap<String, String> valueMap, String username) {
+        try {
+            return mvc.perform(
+                    get(url)
+                            .with(csrf())
+                            .with(user(username))
+                            .params(valueMap)
                             .contentType(MediaType.APPLICATION_JSON));
         } catch (Exception e) {
             fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
