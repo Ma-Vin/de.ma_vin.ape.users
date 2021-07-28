@@ -44,7 +44,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public FilterRegistrationBean<ClientCheckFilter> clientCheckFilterRegistrationBean() {
         FilterRegistrationBean<ClientCheckFilter> registrationBean = new FilterRegistrationBean();
         registrationBean.setFilter(clientCheckFilter);
-        registrationBean.addUrlPatterns("/auth/oauth/token");
+        registrationBean.addUrlPatterns("/oauth/token");
         registrationBean.setOrder(2);
         return registrationBean;
     }
