@@ -235,7 +235,6 @@ public class TokenIssuerService {
         return isValidInternal(encodedToken, true, scope);
     }
 
-
     /**
      * Checks whether is a given token or a refresh token is known and valid
      *
@@ -245,25 +244,54 @@ public class TokenIssuerService {
      * @return {@code true} if the token is valid. Otherwise {@code false}
      */
     private boolean isValidInternal(String encodedToken, boolean isToken, String scope) {
+        return getTokenInfo(encodedToken, isToken, scope).isPresent();
+    }
+
+    /**
+     * Determines the known token and checks if it is valid
+     *
+     * @param encodedToken the encoded token
+     * @return Optional of the known and valid decoded token.
+     */
+    public Optional<JsonWebToken> getToken(String encodedToken) {
+        return getTokenInfo(encodedToken, true, null).map(TokenInfo::getToken);
+    }
+
+    /**
+     * Determines the known token info and checks if it is valid
+     *
+     * @param encodedToken token to check
+     * @param isToken      {@code true} if to check a token. {@code false} if the its a refresh token
+     * @param scope        the scope for which is validated
+     * @return Optional of the known and valid token info.
+     */
+    private Optional<TokenInfo> getTokenInfo(String encodedToken, boolean isToken, String scope) {
+        LocalDateTime now = SystemProperties.getSystemDateTime();
         String logText = isToken ? "token" : "refresh token";
         Optional<JsonWebToken> token = JsonWebToken.decodeToken(encodedToken, secret);
         if (token.isEmpty()) {
             log.error("The {} {} could not be decoded", logText, encodedToken);
-            return false;
+            return Optional.empty();
         }
-
         if (!inMemoryTokens.containsKey(token.get().getPayload().getJti())) {
             log.error("The {} {} is unknown", logText, encodedToken);
-            return false;
+            return Optional.empty();
         }
-
         TokenInfo tokenInfo = inMemoryTokens.get(token.get().getPayload().getJti());
         JsonWebToken referenceToken = isToken ? tokenInfo.getToken() : tokenInfo.getRefreshToken();
         if (!referenceToken.getPayload().equals(token.get().getPayload())) {
             log.error("The {} {} is different to the known one", logText, encodedToken);
-            return false;
+            return Optional.empty();
         }
-        return tokenInfo.containsScope(scope);
+        if (!tokenInfo.containsScope(scope)) {
+            log.error("The {} {} has the wrong scope {}", logText, encodedToken, scope);
+            return Optional.empty();
+        }
+        if (referenceToken.getPayload().getExp().isBefore(now)) {
+            log.error("The {} {} is expired", logText, encodedToken);
+            return Optional.empty();
+        }
+        return Optional.of(tokenInfo);
     }
 
     @Data

@@ -107,6 +107,17 @@ public class TokenIssuerServiceTest {
         assertFalse(cut.isValid(encodedToken), "The token should not be valid");
     }
 
+    @DisplayName("The encoded token is invalid cause the token is expired")
+    @Test
+    public void testIsValidExpired() throws JwtGeneratingException {
+        SystemProperties.getInstance().setTestingDateTime(payload.getExp().plus(1, ChronoUnit.SECONDS));
+        String encodedToken = token.getEncodedToken();
+
+        cut.getInMemoryTokens().put("abc", tokenInfo);
+
+        assertFalse(cut.isValid(encodedToken), "The token should not be valid");
+    }
+
     @DisplayName("The encoded token is invalid cause is different to the known one")
     @Test
     public void testIsValidDiffers() throws JwtGeneratingException {
@@ -138,6 +149,71 @@ public class TokenIssuerServiceTest {
         cut.getInMemoryTokens().put("abc", tokenInfo);
 
         assertTrue(cut.isValid(encodedToken, "read"), "The token should be valid");
+    }
+
+    @DisplayName("The encoded token could not be determined cause unable to decode")
+    @Test
+    public void testGetTokenFailToDecode() throws JwtGeneratingException {
+        String encodedToken = token.getEncodedToken() + "a";
+
+        cut.getInMemoryTokens().put("abc", tokenInfo);
+
+        Optional<JsonWebToken> result = cut.getToken(encodedToken);
+        assertNotNull(result, "There should token should be any result");
+        assertTrue(result.isEmpty(), "There should not be any token at the result");
+    }
+
+    @DisplayName("The encoded token could not be determined cause the token is not known")
+    @Test
+    public void testGetTokenUnknown() throws JwtGeneratingException {
+        String encodedToken = token.getEncodedToken();
+
+        cut.getInMemoryTokens().put("abcd", tokenInfo);
+
+        Optional<JsonWebToken> result = cut.getToken(encodedToken);
+        assertNotNull(result, "There should token should be any result");
+        assertTrue(result.isEmpty(), "There should not be any token at the result");
+    }
+
+    @DisplayName("The encoded token could not be determined cause the token is expired")
+    @Test
+    public void testGetTokenExpired() throws JwtGeneratingException {
+        SystemProperties.getInstance().setTestingDateTime(payload.getExp().plus(1, ChronoUnit.SECONDS));
+        String encodedToken = token.getEncodedToken();
+
+        cut.getInMemoryTokens().put("abc", tokenInfo);
+
+        Optional<JsonWebToken> result = cut.getToken(encodedToken);
+        assertNotNull(result, "There should token should be any result");
+        assertTrue(result.isEmpty(), "There should not be any token at the result");
+    }
+
+    @DisplayName("The encoded token could not be determined cause is different to the known one")
+    @Test
+    public void testGetTokenDiffers() throws JwtGeneratingException {
+        Payload otherPayload = new Payload("You", "You", null, LocalDateTime.of(2021, 7, 2, 0, 0)
+                , null, LocalDateTime.of(2021, 7, 1, 0, 0), "abc");
+        JsonWebToken otherToken = new JsonWebToken(header, otherPayload, signature);
+        String encodedToken = otherToken.getEncodedToken();
+
+        cut.getInMemoryTokens().put("abc", tokenInfo);
+
+        Optional<JsonWebToken> result = cut.getToken(encodedToken);
+        assertNotNull(result, "There should token should be any result");
+        assertTrue(result.isEmpty(), "There should not be any token at the result");
+    }
+
+    @DisplayName("The encoded token could be determined")
+    @Test
+    public void testGetToken() throws JwtGeneratingException {
+        String encodedToken = token.getEncodedToken();
+
+        cut.getInMemoryTokens().put("abc", tokenInfo);
+
+        Optional<JsonWebToken> result = cut.getToken(encodedToken);
+        assertNotNull(result, "There should token should be any result");
+        assertTrue(result.isPresent(), "There should be a token at the result");
+        assertEquals(token, result.get(), "Wrong token");
     }
 
     @DisplayName("Issue a new pair of token and refresh token with user and password")
