@@ -24,7 +24,7 @@ public class EncoderUtil {
                 case "HS512/256" -> getHmac(message, "HmacSHA512/256", secret);
                 default -> throw new CryptException("Unexpected code algorithm: " + alg);
             };
-            return Base64.getUrlEncoder().encodeToString(encrypted);
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(encrypted);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new CryptException("Not able to generate Signature", e);
         }

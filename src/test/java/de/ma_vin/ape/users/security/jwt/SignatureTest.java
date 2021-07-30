@@ -19,9 +19,9 @@ import static org.mockito.MockitoAnnotations.openMocks;
  */
 public class SignatureTest {
     private static final String SECRET = "SomeDummySecret";
-    private static final String HEADER_BASE64_URL_ENCODED = "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0=";
+    private static final String HEADER_BASE64_URL_ENCODED = "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0";
     private static final String PAYLOAD_BASE64_URL_ENCODED = "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9";
-    private static final String EXPECTED_SIGNATURE_BASE64_URL_ENCODED = "u2411rtXkLeOnjpOoyceBBcRY3UPcxwCa-8JqBGaiKw=";
+    private static final String EXPECTED_SIGNATURE_BASE64_URL_ENCODED = "doe9MklLVlTbn8HLnFWJWjBylOxgrGtQ9uD9IxQ0YYY";
 
 
     private AutoCloseable openMocks;

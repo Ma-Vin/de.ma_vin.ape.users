@@ -104,9 +104,9 @@ public class JsonWebTokenTest {
         assertTrue(
                 JsonWebToken.verify(
                         String.format("%s.%s.%s"
-                                , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0="
+                                , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0"
                                 , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9"
-                                , "u2411rtXkLeOnjpOoyceBBcRY3UPcxwCa-8JqBGaiKw=")
+                                , "doe9MklLVlTbn8HLnFWJWjBylOxgrGtQ9uD9IxQ0YYY")
                         , SECRET)
                 , "The token should be valid");
     }
@@ -163,9 +163,9 @@ public class JsonWebTokenTest {
 
         Optional<JsonWebToken> result = JsonWebToken.decodeToken(
                 String.format("%s.%s.%s"
-                        , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0="
+                        , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0"
                         , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9"
-                        , "u2411rtXkLeOnjpOoyceBBcRY3UPcxwCa-8JqBGaiKw=")
+                        , "doe9MklLVlTbn8HLnFWJWjBylOxgrGtQ9uD9IxQ0YYY")
                 , SECRET);
         assertTrue(result.isPresent(), "The token should be present");
         assertEquals(expectedHeader, result.get().getHeader(), "Wrong Header");

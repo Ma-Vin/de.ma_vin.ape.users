@@ -62,6 +62,6 @@ public class Header {
 
     @JsonIgnore
     public String getJsonBase64UrlEncoded() throws JwtGeneratingException {
-        return Base64.getUrlEncoder().encodeToString(getJson().getBytes(StandardCharsets.UTF_8));
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(getJson().getBytes(StandardCharsets.UTF_8));
     }
 }

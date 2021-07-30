@@ -24,7 +24,7 @@ public class HeaderTest {
         try {
             String result = cut.getJsonBase64UrlEncoded();
             assertNotNull(result, "There should be some result");
-            assertEquals("eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0=", result, "Wrong result");
+            assertEquals("eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0", result, "Wrong result");
         } catch (JwtGeneratingException e) {
             fail("Non expected JwtGeneratingException: " + e.getMessage());
         }
