@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.controller;
 import de.ma_vin.ape.users.controller.auth.*;
 import de.ma_vin.ape.users.exceptions.AuthTokenException;
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
+import de.ma_vin.ape.users.security.jwt.Header;
 import de.ma_vin.ape.users.security.jwt.JsonWebToken;
 import de.ma_vin.ape.users.security.jwt.Payload;
 import de.ma_vin.ape.users.security.service.AuthorizeCodeService;
@@ -13,12 +14,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.beans.CachedIntrospectionResults;
 
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
@@ -86,13 +89,16 @@ public class AuthControllerTest {
         try {
             when(token.getPayload()).thenReturn(payload);
             when(token.getEncodedToken()).thenReturn(TOKEN);
+            when(token.getHeader()).thenReturn(new Header());
             when(refreshToken.getPayload()).thenReturn(refreshPayload);
             when(refreshToken.getEncodedToken()).thenReturn(REFRESH_TOKEN);
+            when(refreshToken.getHeader()).thenReturn(new Header());
         } catch (JwtGeneratingException e) {
             fail(e.getMessage());
         }
 
         when(payload.getExp()).thenReturn(SystemProperties.getSystemDateTime().plus(10L, ChronoUnit.SECONDS));
+        when(payload.getSub()).thenReturn(USER_ID);
         when(refreshPayload.getExp()).thenReturn(SystemProperties.getSystemDateTime().plus(20L, ChronoUnit.SECONDS));
 
         when(codeInfo.getUserId()).thenReturn(USER_ID);
@@ -817,11 +823,42 @@ public class AuthControllerTest {
         verify(tokenIssuerService, never()).issueImplicit(any(), any(), any());
         verify(tokenIssuerService, never()).refresh(any());
         verify(tokenIssuerService, never()).issueClient(any(), any());
-        verify(tokenIssuerService, never()).issue(any(), any(), any(),any());
+        verify(tokenIssuerService, never()).issue(any(), any(), any(), any());
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
             fail(e.getMessage());
         }
+    }
+
+    @DisplayName("Introspect a valid token")
+    @Test
+    public void testIntrospection() {
+        when(tokenIssuerService.getToken(eq(TOKEN))).thenReturn(Optional.of(token));
+
+        IntrospectionResponse result = cut.introspection(TOKEN, null);
+
+        assertNotNull(result, "There should be any result");
+        assertEquals(USER_ID, result.getUsername(), "Wrong username");
+        assertEquals(USER_ID, result.getSub(), "Wrong sub");
+        assertEquals(SystemProperties.getSystemDateTime().plus(10L, ChronoUnit.SECONDS)
+                .atZone(ZoneId.systemDefault()).toEpochSecond(), result.getExp(), "Wrong expiration");
+
+        verify(tokenIssuerService).getToken(eq(TOKEN));
+    }
+
+    @DisplayName("Introspect an invalid token")
+    @Test
+    public void testIntrospectionInvalid() {
+        when(tokenIssuerService.getToken(eq(TOKEN))).thenReturn(Optional.empty());
+
+        try {
+            cut.introspection(TOKEN, null);
+            fail("There should be an AuthTokenException");
+        } catch (AuthTokenException e) {
+            assertEquals(HttpServletResponse.SC_UNAUTHORIZED, e.getHttpStatus(), "Wrong error status");
+        }
+
+        verify(tokenIssuerService).getToken(eq(TOKEN));
     }
 }

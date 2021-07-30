@@ -1,5 +1,10 @@
 Feature: Testing methods of the common group controller
 
+  Background:
+    Given The clientId is "users-test"
+    And The clientSecret is "f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15"
+    And There is token for user "UAA00001" with password "admin"
+
   Scenario: Create a common group
     When The Controller is called to create a common group with name "New Common Group"
     Then The result is Ok and Json
@@ -50,3 +55,8 @@ Feature: Testing methods of the common group controller
     When Controller is called to get the user with the identification of the alias "user"
     Then The result is Ok and Json
     And The status of the result should be "ERROR"
+
+  Scenario: Unauthorized
+    Given Use an unknown token
+    When The Controller is called to create a common group with name "New Common Group"
+    Then The result is a 4xx

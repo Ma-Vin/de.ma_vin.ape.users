@@ -10,6 +10,13 @@ spring:
       path: /h2-console
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+  security:
+    oauth2:
+      resourceserver:
+        opaque:
+          introspection-uri: http://localhost:8080/oauth/introspection
+          introspection-client-id: users-test
+          introspection-client-secret: f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15
 server:
   port: 8080
 logging:

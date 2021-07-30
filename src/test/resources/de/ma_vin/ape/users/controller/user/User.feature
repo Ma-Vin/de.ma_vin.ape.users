@@ -1,7 +1,10 @@
 Feature: Testing methods of the user controller
 
   Background:
-    Given There exists a common group with name "Common Group" with alias "common"
+    Given The clientId is "users-test"
+    And The clientSecret is "f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15"
+    And There is token for user "UAA00001" with password "admin"
+    And There exists a common group with name "Common Group" with alias "common"
 
   Scenario: Create an user
     When The Controller is called to create an user with first name "New" and last name "User" at common group "common"
@@ -130,3 +133,9 @@ Feature: Testing methods of the user controller
     When Controller is called to get the user with the identification of the alias "user"
     Then The result is Ok and Json
     And The status of the result should be "ERROR"
+
+
+  Scenario: Unauthorized
+    Given Use an unknown token
+    When The Controller is called to create an user with first name "New" and last name "User" at common group "common"
+    Then The result is a 4xx

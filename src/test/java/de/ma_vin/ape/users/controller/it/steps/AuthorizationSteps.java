@@ -3,11 +3,16 @@ package de.ma_vin.ape.users.controller.it.steps;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import de.ma_vin.ape.users.controller.auth.GrantType;
 import de.ma_vin.ape.users.controller.auth.ResponseType;
+import de.ma_vin.ape.users.controller.auth.TokenResponse;
+import de.ma_vin.ape.users.model.gen.dto.group.CommonGroupDto;
+import de.ma_vin.ape.users.security.jwt.JsonWebTokenTest;
 import de.ma_vin.ape.utils.TestUtil;
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.scheduling.support.SimpleTriggerContext;
 import org.springframework.util.MultiValueMap;
 
 import java.io.UnsupportedEncodingException;
@@ -120,6 +125,29 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performPost("/oauth/token", tokenValues));
     }
 
+    @Given("There is token for user {string} with password {string}")
+    public void callControllerToToken(String userId, String userPwd) throws Exception {
+        shared.setPrincipalUserId(userId);
+        shared.setPrincipalPassword(userPwd);
+        MultiValueMap<String, String> tokenValues = createValueMap("grant_type", GrantType.PASSWORD.getTypeName()
+                , "client_id", clientId, "client_secret", clientSecret
+                , "username", userId, "password", userPwd != null ? Base64.getUrlEncoder().encodeToString(userPwd.getBytes(StandardCharsets.UTF_8)) : null
+                , "scope", scope);
+        MockHttpServletResponse tokenResponse = performPost("/oauth/token", tokenValues).andReturn().getResponse();
+        shared.setTokenResponse(TestUtil.getObjectMapper().readValue(tokenResponse.getContentAsString(), TokenResponse.class));
+    }
+
+    @Given("Use an unknown token")
+    public void setUnknownToken() {
+        TokenResponse response = new TokenResponse();
+        response.setTokenType("JWT");
+        response.setAccessToken(JsonWebTokenTest.VALID_TOKEN);
+        response.setRefreshToken(JsonWebTokenTest.VALID_TOKEN);
+        response.setScope("read");
+        response.setExpiresIn(100);
+        shared.setTokenResponse(response);
+    }
+
     @When("The code is taken over")
     public void takeOverCode() {
         code = getJsonElement("code");
@@ -136,8 +164,12 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
     }
 
     private String getJsonElement(String valueName) {
+        return getJsonElement(valueName, shared.getResultActions().andReturn().getResponse());
+    }
+
+    private String getJsonElement(String valueName, MockHttpServletResponse response) {
         try {
-            String value = TestUtil.getObjectMapper().readTree(shared.getResultActions().andReturn().getResponse().getContentAsString()).findValue(valueName).toString();
+            String value = TestUtil.getObjectMapper().readTree(response.getContentAsString()).findValue(valueName).toString();
             assertTrue(value.startsWith("\"") && value.endsWith("\""), "The " + valueName + " json element should start and end with quotes");
             return value.substring(1, value.length() - 1);
         } catch (JsonProcessingException | UnsupportedEncodingException e) {
@@ -147,12 +179,12 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
     }
 
     @Then("The token changes")
-    public void checkTokenChanges(){
+    public void checkTokenChanges() {
         assertNotEquals(token, getJsonElement("access_token"), "The token did not change");
     }
 
     @Then("The refresh token changes")
-    public void checkRefreshTokenChanges(){
+    public void checkRefreshTokenChanges() {
         assertNotEquals(refreshToken, getJsonElement("refresh_token"), "The refresh token did not change");
     }
 

@@ -20,6 +20,10 @@ import static org.mockito.MockitoAnnotations.openMocks;
  */
 public class JsonWebTokenTest {
     private static final String SECRET = "SomeDummySecret";
+    public static final String VALID_TOKEN = String.format("%s.%s.%s"
+            , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0"
+            , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9"
+            , "doe9MklLVlTbn8HLnFWJWjBylOxgrGtQ9uD9IxQ0YYY");
 
     private AutoCloseable openMocks;
     private JsonWebToken cut;
@@ -101,14 +105,7 @@ public class JsonWebTokenTest {
     @DisplayName("Verify a valid token")
     @Test
     public void testVerifyValidToken() {
-        assertTrue(
-                JsonWebToken.verify(
-                        String.format("%s.%s.%s"
-                                , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0"
-                                , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9"
-                                , "doe9MklLVlTbn8HLnFWJWjBylOxgrGtQ9uD9IxQ0YYY")
-                        , SECRET)
-                , "The token should be valid");
+        assertTrue(JsonWebToken.verify(VALID_TOKEN, SECRET), "The token should be valid");
     }
 
     @DisplayName("Decode a empty token")

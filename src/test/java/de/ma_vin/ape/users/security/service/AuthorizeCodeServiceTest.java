@@ -135,6 +135,6 @@ public class AuthorizeCodeServiceTest {
 
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should not be empty");
-        assertEquals("kni7Pv2VDykuminJ23vqHCAsgqn-92YEiK8lPMCl4aM=", result.get(), "Wrong generated authorization code");
+        assertEquals("kni7Pv2VDykuminJ23vqHCAsgqn-92YEiK8lPMCl4aM", result.get(), "Wrong generated authorization code");
     }
 }

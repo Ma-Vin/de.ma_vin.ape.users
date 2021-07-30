@@ -1,5 +1,6 @@
 package de.ma_vin.ape.users.controller.it.steps;
 
+import de.ma_vin.ape.users.controller.auth.TokenResponse;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import lombok.Data;
@@ -19,7 +20,7 @@ public class CucumberShared {
 
     private String principalPassword;
 
-    //private AuthorizationResponse authorizationResponse;
+    private TokenResponse tokenResponse;
 
     private Map<String, ITransportable> createdObjects = new HashMap<>();
 
@@ -46,8 +47,7 @@ public class CucumberShared {
     }
 
     public String getAccessToken() {
-        // return authorizationResponse.getAccess_token();
-        return null;
+        return tokenResponse == null ? null : tokenResponse.getAccessToken();
     }
 
     public boolean containsKey(String key) {

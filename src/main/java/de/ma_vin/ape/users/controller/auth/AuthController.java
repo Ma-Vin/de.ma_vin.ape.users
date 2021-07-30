@@ -2,6 +2,8 @@ package de.ma_vin.ape.users.controller.auth;
 
 import de.ma_vin.ape.users.exceptions.AuthTokenException;
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
+import de.ma_vin.ape.users.security.jwt.JsonWebToken;
+import de.ma_vin.ape.users.security.jwt.Payload;
 import de.ma_vin.ape.users.security.service.AuthorizeCodeService;
 import de.ma_vin.ape.users.security.service.TokenIssuerService;
 import de.ma_vin.ape.utils.properties.SystemProperties;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
@@ -46,6 +50,7 @@ public class AuthController {
         };
     }
 
+    @SuppressWarnings("java:S107")
     @PostMapping("/token")
     public @ResponseBody
     TokenResponse token(HttpServletResponse response
@@ -65,6 +70,36 @@ public class AuthController {
             case REFRESH_TOKEN -> handleTokenRefreshToken(refreshToken, clientId);
             default -> throw new AuthTokenException("Not supported grant type:" + grantType, HttpServletResponse.SC_NOT_IMPLEMENTED);
         };
+    }
+
+    @PostMapping("/introspection")
+    public @ResponseBody
+    IntrospectionResponse introspection(@RequestParam String token, @RequestParam(required = false, name = "token_type_hint") String tokenTypeHint) {
+        Optional<JsonWebToken> decodedToken = tokenIssuerService.getToken(token);
+        if (decodedToken.isEmpty()) {
+            throw new AuthTokenException("The token is not known or not valid anymore", HttpServletResponse.SC_UNAUTHORIZED);
+
+        }
+        Payload payload = decodedToken.get().getPayload();
+
+        IntrospectionResponse response = new IntrospectionResponse();
+        response.setActive(Boolean.TRUE);
+        response.setTokenType(decodedToken.get().getHeader().getTyp());
+        response.setUsername(payload.getSub());
+        response.setSub(payload.getSub());
+        response.setAud(payload.getAud());
+        response.setExp(getLocalDateTimeToLong(payload.getExp()));
+        response.setIat(getLocalDateTimeToLong(payload.getIat()));
+        response.setNbf(getLocalDateTimeToLong(payload.getNbf()));
+        // TODO: Not the client id is expected
+        //response.setIss(payload.getIss());
+        response.setJti(payload.getJti());
+
+        return response;
+    }
+
+    private Long getLocalDateTimeToLong(LocalDateTime dateTime) {
+        return dateTime != null ? dateTime.atZone(ZoneId.systemDefault()).toEpochSecond() : null;
     }
 
     /**
