@@ -462,27 +462,6 @@ public class BaseGroupServiceTest {
         verify(privilegeToBaseGroupRepository, never()).save(any());
     }
 
-    @DisplayName("Add a base to privilege group without result at saving")
-    @Test
-    public void testAddBaseToPrivilegeGroupNoSavingResult() {
-        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
-        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
-        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
-        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-
-        when(privilegeGroupRepository.findById(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.of(privilegeGroupDao));
-        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
-        when(privilegeToBaseGroupRepository.save(any())).thenReturn(null);
-
-        boolean added = cut.addBaseToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION, Role.CONTRIBUTOR);
-
-        assertFalse(added, "The base group should not be added to the privilege group");
-
-        verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
-        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
-        verify(privilegeToBaseGroupRepository).save(any());
-    }
-
     @DisplayName("Remove a base from privilege group")
     @Test
     public void testRemoveBaseFromPrivilegeGroup() {
@@ -577,27 +556,6 @@ public class BaseGroupServiceTest {
         verify(baseGroupRepository).findById(eq(PARENT_BASE_GROUP_ID));
         verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
         verify(baseToBaseGroupRepository, never()).save(any());
-    }
-
-    @DisplayName("Add a base to base group without result at saving")
-    @Test
-    public void testAddBaseToBaseGroupNoSavingResult() {
-        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
-        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
-        when(parentBaseGroupDao.getId()).thenReturn(PARENT_BASE_GROUP_ID);
-        when(parentBaseGroupDao.getIdentification()).thenReturn(PARENT_BASE_GROUP_IDENTIFICATION);
-
-        when(baseGroupRepository.findById(eq(PARENT_BASE_GROUP_ID))).thenReturn(Optional.of(parentBaseGroupDao));
-        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
-        when(baseToBaseGroupRepository.save(any())).thenReturn(null);
-
-        boolean added = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
-
-        assertFalse(added, "The base group should not be added to the other base group");
-
-        verify(baseGroupRepository).findById(eq(PARENT_BASE_GROUP_ID));
-        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
-        verify(baseToBaseGroupRepository).save(any());
     }
 
     @DisplayName("Remove a base from base group")

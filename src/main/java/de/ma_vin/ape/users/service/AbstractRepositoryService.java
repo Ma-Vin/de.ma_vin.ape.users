@@ -66,13 +66,7 @@ public abstract class AbstractRepositoryService {
 
         T connection = connectionCreator.create(parentDao.get(), childDao.get());
 
-        T stored = parentToChildRepository.save(connection);
-        if (stored == null) {
-            log.error("{} with identification \"{}\" was not added to {} with identification \"{}\""
-                    , childClassName, childIdentification, parentClassName, parentIdentification);
-            return false;
-        }
-
+        parentToChildRepository.save(connection);
         log.debug("{} with identification \"{}\" was added to {} with identification \"{}\""
                 , childClassName, childIdentification, parentClassName, parentIdentification);
         return true;

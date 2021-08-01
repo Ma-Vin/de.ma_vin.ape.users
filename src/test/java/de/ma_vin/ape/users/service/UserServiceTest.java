@@ -771,24 +771,6 @@ public class UserServiceTest {
         verify(privilegeGroupToUserRepository, never()).save(any());
     }
 
-    @DisplayName("Add user to privilege group without result at saving")
-    @Test
-    public void testAddUserToPrivilegeGroupNoSavingResult() {
-        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
-        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-
-        when(privilegeGroupRepository.findById(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.of(privilegeGroupDao));
-        when(privilegeGroupToUserRepository.save(any())).thenReturn(null);
-
-        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR);
-
-        assertFalse(added, "The user should not be added to the privilege group");
-
-        verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
-        verify(userRepository).findById(eq(USER_ID));
-        verify(privilegeGroupToUserRepository).save(any());
-    }
-
     @DisplayName("Add user to base group")
     @Test
     public void testAddUserToBaseGroup() {
@@ -839,24 +821,6 @@ public class UserServiceTest {
         verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
         verify(userRepository).findById(eq(USER_ID));
         verify(baseGroupToUserRepository, never()).save(any());
-    }
-
-    @DisplayName("Add user to base group without result at saving")
-    @Test
-    public void testAddUserToBaseGroupNoSavingResult() {
-        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
-        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
-
-        when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
-        when(baseGroupToUserRepository.save(any())).thenReturn(null);
-
-        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
-
-        assertFalse(added, "The user should not be added to the base group");
-
-        verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
-        verify(userRepository).findById(eq(USER_ID));
-        verify(baseGroupToUserRepository).save(any());
     }
 
     @DisplayName("Remove user from privilege group")
