@@ -114,4 +114,10 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performPatchWithAuthorization("/user/removeUserFromPrivilegeGroup", getIdentification(privilegeGroupAlias)
                 , getIdentification(userAlias)));
     }
+
+    @When("Controller is called to set the password {string} of user with the identification of the alias {string}")
+    public void callControllerToSetUsersPassword(String password, String userAlias) {
+        shared.setResultActions(performPatchWithAuthorization("/user/setUserPassword", getIdentification(userAlias)
+                , password));
+    }
 }

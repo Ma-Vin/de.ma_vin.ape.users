@@ -26,6 +26,7 @@ db:
   user:
     isToInitialize: true
     isCommonGroupToInitialize: true
+    initUserWithDefaultPwd: true
 tokenSecret: SomeSecret
 tokenExpiresInSeconds: 300
 refreshTokenExpiresInSeconds: 900

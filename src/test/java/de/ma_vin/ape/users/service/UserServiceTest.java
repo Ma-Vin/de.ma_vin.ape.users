@@ -2,6 +2,7 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
+import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToBaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToUserDao;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.*;
 
@@ -39,6 +41,7 @@ public class UserServiceTest {
     public static final Long USER_IMAGE_ID = 6L;
     public static final Long USER_SMALL_IMAGE_ID = 7L;
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
+    public static final String USER_PASSWORD = "1 Dummy Password!";
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String ADMIN_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ADMIN_GROUP_ID, AdminGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
@@ -66,7 +69,7 @@ public class UserServiceTest {
     @Mock
     private BaseGroupService baseGroupService;
     @Mock
-    private User user;
+    private UserExt user;
     @Mock
     private UserResource image;
     @Mock
@@ -83,6 +86,8 @@ public class UserServiceTest {
     private BaseGroupDao baseGroupDao;
     @Mock
     private BaseGroupExt baseGroup;
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
 
     @BeforeEach
     public void setUp() {
@@ -97,6 +102,7 @@ public class UserServiceTest {
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
         cut.setUserResourceService(userResourceService);
         cut.setBaseGroupService(baseGroupService);
+        cut.setPasswordEncoder(passwordEncoder);
 
         initDefaultUserMock();
     }
@@ -104,8 +110,10 @@ public class UserServiceTest {
     private void initDefaultUserMock() {
         when(userDao.getId()).thenReturn(USER_ID);
         when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDao.getPassword()).thenReturn(USER_PASSWORD);
 
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(user.getPassword()).thenReturn(USER_PASSWORD);
 
         when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
     }
@@ -921,5 +929,174 @@ public class UserServiceTest {
         assertFalse(removed, "The user should not be removed from the base group");
 
         verify(baseGroupToUserRepository).deleteByBaseGroupAndUser(any(), any());
+    }
+
+    @DisplayName("Set a password for an user")
+    @Test
+    public void testSetPassword() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
+        assertTrue(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_"), "The password should be set");
+
+        verify(passwordEncoder).matches(eq("ABCDabcd1_"), any());
+        verify(userRepository).save(any());
+    }
+
+    @DisplayName("Set a password for an user and old does not exists")
+    @Test
+    public void testSetPasswordOldNull() {
+        when(userDao.getPassword()).thenReturn(null);
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
+        assertTrue(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_"), "The password should be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but same again")
+    @Test
+    public void testSetPasswordEqualsOldOne() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq(USER_PASSWORD), any())).thenReturn(Boolean.TRUE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, USER_PASSWORD), "The password should not be set");
+
+        verify(passwordEncoder).matches(eq(USER_PASSWORD), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but to short")
+    @Test
+    public void testSetPasswordToShort() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq("ABCabcd1_"), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCabcd1_"), "The password should not be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but no upper character")
+    @Test
+    public void testSetPasswordNoUpperCharacter() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq("abcdabcd1_"), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "abcdabcd1_"), "The password should not be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but no lower character")
+    @Test
+    public void testSetPasswordNoLowerCharacter() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq("ABCDABCD1_"), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDABCD1_"), "The password should not be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but no number")
+    @Test
+    public void testSetPasswordNoNumber() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq("ABCDabcde_"), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcde_"), "The password should not be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but no special sign")
+    @Test
+    public void testSetPasswordNoNSpecialSign() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq("ABCDabcd12"), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd12"), "The password should not be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but user not found")
+    @Test
+    public void testSetPasswordUserNotFound() {
+        when(userRepository.findById(any())).thenReturn(Optional.empty());
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_"), "The password should not be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but user not saved")
+    @Test
+    public void testSetPasswordUserNotSaved() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_"), "The password should not be set");
+
+        verify(passwordEncoder).matches(eq("ABCDabcd1_"), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but null")
+    @Test
+    public void testSetPasswordButNull() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(any(), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, null), "The password should not be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set a password for an user, but empty")
+    @Test
+    public void testSetPasswordButEmpty() {
+        when(userRepository.save(any())).then(a -> a.getArgument(0));
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(passwordEncoder.matches(any(), any())).thenReturn(Boolean.FALSE);
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, ""), "The password should not be set");
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(userRepository, never()).save(any());
     }
 }

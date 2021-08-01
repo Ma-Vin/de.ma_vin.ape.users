@@ -71,6 +71,14 @@ public class UserController extends AbstractDefaultOperationController {
         );
     }
 
+    @PatchMapping("/setUserPassword/{userIdentification}")
+    public ResponseWrapper<Boolean> setUserPassword(@PathVariable String userIdentification, @RequestBody String rawPassword) {
+        if (userService.setPassword(userIdentification, rawPassword)) {
+            return createSuccessResponse(Boolean.TRUE);
+        }
+        return createEmptyResponseWithError(String.format("The password could be set at user with identification %s", userIdentification));
+    }
+
     private Searcher<User> getNonGlobalAdminSearcher() {
         return identificationToDelete -> {
             Optional<User> searchResult = userService.findUser(identificationToDelete);

@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.controller;
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.checkFatal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -41,6 +42,7 @@ public class UserControllerTest {
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, User.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
+    public static final String USER_PASSWORD = "1 Dummy Password!";
 
     private AutoCloseable openMocks;
 
@@ -631,5 +633,30 @@ public class UserControllerTest {
 
         verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
         verify(privilegeGroupExt, never()).getUsersByRole(any(), any());
+    }
+
+    @DisplayName("Set users password")
+    @Test
+    public void testSetUserPassword() {
+        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD))).thenReturn(Boolean.TRUE);
+
+        ResponseWrapper<Boolean> response = cut.setUserPassword(USER_IDENTIFICATION, USER_PASSWORD);
+
+        checkOk(response);
+
+        assertTrue(response.getResponse(), "The result should be successful");
+        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD));
+    }
+
+    @DisplayName("Set users password, but failed")
+    @Test
+    public void testSetUserPasswordFailed() {
+        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD))).thenReturn(Boolean.FALSE);
+
+        ResponseWrapper<Boolean> response = cut.setUserPassword(USER_IDENTIFICATION, USER_PASSWORD);
+
+        checkError(response);
+
+        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD));
     }
 }

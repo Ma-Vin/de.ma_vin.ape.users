@@ -134,8 +134,14 @@ Feature: Testing methods of the user controller
     Then The result is Ok and Json
     And The status of the result should be "ERROR"
 
-
   Scenario: Unauthorized
     Given Use an unknown token
     When The Controller is called to create an user with first name "New" and last name "User" at common group "common"
     Then The result is a 4xx
+
+  Scenario: Set Password
+    Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"
+    When Controller is called to set the password "Abcdefg123_!" of user with the identification of the alias "user"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is true

@@ -2,6 +2,7 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
+import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.dao.group.*;
 import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
@@ -16,6 +17,8 @@ import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -47,6 +50,11 @@ public class UserService extends AbstractRepositoryService {
     private BaseGroupToUserRepository baseGroupToUserRepository;
     @Autowired
     private BaseGroupService baseGroupService;
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    @Value("${db.user.initUserWithDefaultPwd}")
+    private boolean initUserWithDefaultPwd;
 
     /**
      * Deletes a user from repository
@@ -365,5 +373,88 @@ public class UserService extends AbstractRepositoryService {
     public boolean removeUserFromBaseGroup(String baseGroupIdentification, String userIdentification) {
         return remove(baseGroupIdentification, userIdentification, BaseGroup.class.getSimpleName(), User.class.getSimpleName()
                 , BaseGroup.ID_PREFIX, User.ID_PREFIX, BaseGroupDao::new, UserDao::new, baseGroupToUserRepository::deleteByBaseGroupAndUser);
+    }
+
+    /**
+     * Set the password of an user
+     */
+    public boolean setPassword(String userIdentification, String rawPassword) {
+        Optional<User> user = findUser(userIdentification);
+        if (user.isEmpty()) {
+            log.error("The user with identification {} does not exists. The password could not be set", userIdentification);
+            return false;
+        }
+        if (!isPasswordRequirementFulfilled(rawPassword, user.get().getPassword(), userIdentification)) {
+            log.error("The password for user {} does not fulfill requirements", userIdentification);
+            return false;
+        }
+        ((UserExt) user.get()).setRawPassword(passwordEncoder, rawPassword);
+        if (save(user.get()).isPresent()) {
+            log.debug("The password for user {} was changed", userIdentification);
+            return true;
+        }
+        log.error("The password for user {} was not changed", userIdentification);
+        return false;
+    }
+
+    /**
+     * Checks if the password fulfill the requirements
+     *
+     * @param rawPassword        the password to check
+     * @param oldPassword        the previous password
+     * @param userIdentification Identification of the user whose password is set
+     * @return {@code true} if the password contains a lower and upper alphabet character, a special sign, a number,
+     * has at least 10 characters and does not equal the previous one. Otherwise {@code false}.
+     */
+    private boolean isPasswordRequirementFulfilled(String rawPassword, String oldPassword, String userIdentification) {
+        final String ALPHABET_LOWER = "abcdefghijklmnopqrstuvwxyz";
+        final String ALPHABET_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        final String SPECIAL_SIGNS = "!#$%()*+,-./:;=?@[]^_{|}~";
+        final String NUMBERS = "0123456789";
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            log.debug("The password for user {} is empty", userIdentification);
+            return false;
+        }
+        if (rawPassword.length() < 10) {
+            log.debug("The password for user {} is to short", userIdentification);
+            return false;
+        }
+        if (!containsAtLeastOne(rawPassword, ALPHABET_LOWER)) {
+            log.debug("The password for user {} should contain at least one lower alphabet character", userIdentification);
+            return false;
+        }
+        if (!containsAtLeastOne(rawPassword, ALPHABET_UPPER)) {
+            log.debug("The password for user {} should contain at least one upper alphabet character", userIdentification);
+            return false;
+        }
+        if (!containsAtLeastOne(rawPassword, SPECIAL_SIGNS)) {
+            log.debug("The password for user {} should contain at least one special sign character", userIdentification);
+            return false;
+        }
+        if (!containsAtLeastOne(rawPassword, NUMBERS)) {
+            log.debug("The password for user {} should contain at least one number", userIdentification);
+            return false;
+        }
+        if (oldPassword != null && passwordEncoder.matches(rawPassword, oldPassword)) {
+            log.debug("The password for user {} equals the old onw", userIdentification);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks whether given characters are contained at a given text
+     *
+     * @param textToCheck                     text which should contain at least one of the character set
+     * @param atLeastOneCharShouldBeContained the character set
+     * @return {@code true} if at least character was found. Otherwise {@code false}
+     */
+    private boolean containsAtLeastOne(String textToCheck, String atLeastOneCharShouldBeContained) {
+        for (int i = 0; i < atLeastOneCharShouldBeContained.length(); i++) {
+            if (textToCheck.contains(atLeastOneCharShouldBeContained.substring(i, i + 1))) {
+                return true;
+            }
+        }
+        return false;
     }
 }
