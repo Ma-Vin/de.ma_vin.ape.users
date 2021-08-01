@@ -246,7 +246,7 @@ public class AuthController {
             response.setRefreshToken(tokenPair.get().getRefreshToken().getEncodedToken());
             response.setTokenType(TOKEN_TYPE);
             response.setScope(tokenPair.get().getScope());
-            response.setExpiresIn(Long.valueOf(ChronoUnit.SECONDS.between(SystemProperties.getSystemDateTime(), tokenPair.get().getToken().getPayload().getExp())).intValue());
+            response.setExpiresIn(Long.valueOf(ChronoUnit.SECONDS.between(SystemProperties.getSystemDateTime(), tokenPair.get().getToken().getPayload().getExp())));
         } catch (JwtGeneratingException e) {
             throw new AuthTokenException(String.format("Could not authenticate user %s for client %s, because of jwt generating failures", username, clientId), e
                     , HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

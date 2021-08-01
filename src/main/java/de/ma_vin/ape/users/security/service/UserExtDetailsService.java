@@ -15,7 +15,7 @@ public class UserExtDetailsService implements UserDetailsService {
     UserService userService;
 
     @Override
-    public UserDetails loadUserByUsername(String userIdentification) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String userIdentification) {
         return (UserExt) userService.findUser(userIdentification).orElseThrow(
                 () -> new UsernameNotFoundException(String.format("The User with identification %s does not exist", userIdentification))
         );

@@ -243,7 +243,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
         verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
@@ -271,7 +271,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
         verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
@@ -299,7 +299,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
         verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
@@ -420,7 +420,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
@@ -450,7 +450,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
@@ -480,7 +480,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
@@ -645,7 +645,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(tokenIssuerService).issue(eq(CLIENT_ID), eq(USER_ID), eq(USER_PWD), eq(SCOPE));
     }
@@ -705,7 +705,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(tokenIssuerService).issueClient(eq(CLIENT_ID), eq(SCOPE));
     }
@@ -765,7 +765,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getScope(), "There should be any scope");
         assertEquals(SCOPE, tokenResponse.getScope(), "Wrong scope");
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
-        assertEquals(Integer.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
+        assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(tokenIssuerService).refresh(eq(REFRESH_TOKEN));
     }

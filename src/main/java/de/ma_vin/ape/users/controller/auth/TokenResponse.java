@@ -27,7 +27,7 @@ public class TokenResponse {
      * If omitted, the authorization server SHOULD provide the expiration time via other means or document the default value.
      */
     @JsonProperty("expires_in")
-    private Integer expiresIn;
+    private Long expiresIn;
 
     /**
      * OPTIONAL.  The refresh token, which can be used to obtain new access tokens using the same authorization grant as described in Section 6..

@@ -144,7 +144,7 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
         response.setAccessToken(JsonWebTokenTest.VALID_TOKEN);
         response.setRefreshToken(JsonWebTokenTest.VALID_TOKEN);
         response.setScope("read");
-        response.setExpiresIn(100);
+        response.setExpiresIn(100L);
         shared.setTokenResponse(response);
     }
 

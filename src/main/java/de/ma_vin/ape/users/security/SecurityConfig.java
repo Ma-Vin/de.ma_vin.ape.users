@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -18,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -26,12 +24,9 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Autowired
-    private ClientCheckFilter clientCheckFilter;
-
     @Bean
-    public FilterRegistrationBean<ClientCheckFilter> clientCheckFilterRegistrationBean() {
-        FilterRegistrationBean<ClientCheckFilter> registrationBean = new FilterRegistrationBean();
+    public FilterRegistrationBean<ClientCheckFilter> clientCheckFilterRegistrationBean(ClientCheckFilter clientCheckFilter) {
+        FilterRegistrationBean<ClientCheckFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(clientCheckFilter);
         registrationBean.addUrlPatterns("/oauth/token");
         registrationBean.setOrder(2);
@@ -41,12 +36,16 @@ public class SecurityConfig {
     @Configuration
     @Order(4)
     public static class OAuthAuthorizeConfig extends WebSecurityConfigurerAdapter {
+
         @Autowired
         private UserExtDetailsService userExtDetailsService;
 
+        @Autowired
+        private BCryptPasswordEncoder passwordEncoder;
+
         @Override
         protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-            auth.userDetailsService(userExtDetailsService);
+            auth.userDetailsService(userExtDetailsService).passwordEncoder(passwordEncoder);
         }
 
         @Override
@@ -61,19 +60,23 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.antMatcher("/oauth/token").authorizeRequests().anyRequest().permitAll().and().csrf().disable();
+            http.antMatcher("/oauth/token").authorizeRequests().anyRequest().permitAll();
         }
     }
 
     @Configuration
     @Order(2)
     public static class OAuthIntrospectionConfig extends WebSecurityConfigurerAdapter {
+
         @Autowired
         private ClientDetailService clientDetailService;
 
+        @Autowired
+        private BCryptPasswordEncoder passwordEncoder;
+
         @Override
         protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-            auth.userDetailsService(clientDetailService);
+            auth.userDetailsService(clientDetailService).passwordEncoder(passwordEncoder);
         }
 
         @Override
@@ -103,7 +106,7 @@ public class SecurityConfig {
                             oauth2 -> oauth2.opaqueToken(token -> token.introspectionUri(this.introspectionUri)
                                     .introspectionClientCredentials(this.clientId, this.clientSecret)
                             )
-                    ).csrf().disable();
+                    );
         }
     }
 }
