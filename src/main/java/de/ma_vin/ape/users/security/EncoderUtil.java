@@ -11,6 +11,9 @@ import java.util.Base64;
 
 public class EncoderUtil {
 
+    private EncoderUtil() {
+    }
+
     public static String encode(String message, String secret, String alg) throws CryptException {
         try {
             byte[] encrypted = switch (alg) {
