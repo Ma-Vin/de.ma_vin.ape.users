@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.*;
@@ -50,7 +51,7 @@ public class ClientCheckFilterTest {
         cut = new ClientCheckFilter();
         authClients = new AuthClients();
         authClients.setClients(new ArrayList<>());
-        authClients.getClients().add(new AuthClients.Client(CLIENT_ID, CLIENT_SECRET));
+        authClients.getClients().add(new AuthClients.Client(CLIENT_ID, CLIENT_SECRET, Collections.emptyList()));
         cut.setAuthClients(authClients);
     }
 

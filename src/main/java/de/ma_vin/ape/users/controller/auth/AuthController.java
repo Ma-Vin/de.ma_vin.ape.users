@@ -2,6 +2,7 @@ package de.ma_vin.ape.users.controller.auth;
 
 import de.ma_vin.ape.users.exceptions.AuthTokenException;
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
+import de.ma_vin.ape.users.properties.AuthClients;
 import de.ma_vin.ape.users.security.jwt.JsonWebToken;
 import de.ma_vin.ape.users.security.jwt.Payload;
 import de.ma_vin.ape.users.security.service.AuthorizeCodeService;
@@ -29,6 +30,9 @@ import java.util.Optional;
 public class AuthController {
 
     public static final String TOKEN_TYPE = "bearer";
+
+    @Autowired
+    AuthClients authClients;
 
     @Autowired
     private TokenIssuerService tokenIssuerService;
@@ -138,6 +142,13 @@ public class AuthController {
     private void redirect(HttpServletResponse response, String redirectUri, String clientId) {
         if (redirectUri == null || redirectUri.trim().isEmpty()) {
             return;
+        }
+        if (authClients.getClients().stream()
+                .filter(c -> c.getClientId().equals(clientId))
+                .flatMap(c -> c.getRedirects().stream())
+                .noneMatch(r -> redirectUri.toLowerCase().startsWith(r.getRedirectStart().toLowerCase()))) {
+            throw new AuthTokenException(String.format("The redirection uri %s is not allowed for client %s", redirectUri, clientId)
+                    , HttpServletResponse.SC_FORBIDDEN);
         }
         try {
             response.sendRedirect(redirectUri);

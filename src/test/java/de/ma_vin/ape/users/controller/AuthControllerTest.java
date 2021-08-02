@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.controller;
 import de.ma_vin.ape.users.controller.auth.*;
 import de.ma_vin.ape.users.exceptions.AuthTokenException;
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
+import de.ma_vin.ape.users.properties.AuthClients;
 import de.ma_vin.ape.users.security.jwt.Header;
 import de.ma_vin.ape.users.security.jwt.JsonWebToken;
 import de.ma_vin.ape.users.security.jwt.Payload;
@@ -39,7 +40,8 @@ public class AuthControllerTest {
     public static final String USER_ID = "DummyUserId";
     public static final String USER_PWD = "DummyUserPwd";
     public static final String CLIENT_ID = "DummyClientId";
-    public static final String REDIRECT_URL = "DummyRedirection";
+    public static final String CLIENT_SECRET = "DummyClientSecret";
+    public static final String REDIRECT_URL = "http://localhost:8080/";
     public static final String SCOPE = "DummyScope";
     public static final String STATE = "DummyState";
     public static final String CODE = "DummyCode";
@@ -48,6 +50,10 @@ public class AuthControllerTest {
 
     private AuthController cut;
     private AutoCloseable openMocks;
+
+    private AuthClients authClients;
+    private AuthClients.Client client;
+    private AuthClients.Redirect redirect;
 
     @Mock
     private TokenIssuerService tokenIssuerService;
@@ -106,6 +112,15 @@ public class AuthControllerTest {
         when(codeInfo.getClientId()).thenReturn(CLIENT_ID);
         when(codeInfo.getScope()).thenReturn(SCOPE);
         when(codeInfo.getExpiresAt()).thenReturn(SystemProperties.getSystemDateTime().plus(5L, ChronoUnit.SECONDS));
+
+        authClients = new AuthClients();
+        client = new AuthClients.Client();
+        client.setClientId(CLIENT_ID);
+        client.setSecret(CLIENT_SECRET);
+        authClients.getClients().add(client);
+        redirect = new AuthClients.Redirect(REDIRECT_URL);
+        client.getRedirects().add(redirect);
+        cut.setAuthClients(authClients);
     }
 
     @AfterEach
@@ -221,6 +236,28 @@ public class AuthControllerTest {
         verify(tokenIssuerService, never()).issueImplicit(any(), any(), any());
         try {
             verify(response).sendRedirect(eq(REDIRECT_URL));
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @DisplayName("Authorize a code response type but not allowed target of redirection")
+    @Test
+    public void testAuthorizeCodeRedirectionTargetNotAllowed() {
+        when(authorizeCodeService.issue(any(), any(), any())).thenReturn(Optional.of(CODE));
+        redirect.setRedirectStart("http://somethingElse:8080/");
+
+        try {
+            cut.authorize(principal, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
+            fail("There should be an AuthTokenException");
+        } catch (AuthTokenException e) {
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getHttpStatus(), "Wrong error status");
+        }
+
+        verify(authorizeCodeService).issue(eq(USER_ID), eq(CLIENT_ID), eq(SCOPE));
+        verify(tokenIssuerService, never()).issueImplicit(any(), any(), any());
+        try {
+            verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
             fail(e.getMessage());
         }
@@ -352,6 +389,28 @@ public class AuthControllerTest {
         verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
         try {
             verify(response).sendRedirect(eq(REDIRECT_URL));
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @DisplayName("Authorize a code response type but not allowed target of redirection")
+    @Test
+    public void testAuthorizeImplicitRedirectionTargetNotAllowed() {
+        when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
+        redirect.setRedirectStart("http://somethingElse:8080/");
+
+        try {
+            cut.authorize(principal, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
+            fail("There should be an AuthTokenException");
+        } catch (AuthTokenException e) {
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getHttpStatus(), "Wrong error status");
+        }
+
+        verify(authorizeCodeService, never()).issue(any(), any(), any());
+        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        try {
+            verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
             fail(e.getMessage());
         }
@@ -593,6 +652,32 @@ public class AuthControllerTest {
         verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
         try {
             verify(response).sendRedirect(eq(REDIRECT_URL));
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @DisplayName("Issue token of authorization code grant type but not allowed target of redirection")
+    @Test
+    public void testTokenAuthorizationCodeRedirectionTargetNotAllowed() {
+        when(authorizeCodeService.isValid(any())).thenReturn(Boolean.TRUE);
+        when(authorizeCodeService.getCodeInfo(any())).thenReturn(Optional.of(codeInfo));
+        when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
+        redirect.setRedirectStart("http://somethingElse:8080/");
+
+        try {
+            cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+                    , REDIRECT_URL, CLIENT_ID, null, null, null);
+            fail("There should be an AuthTokenException");
+        } catch (AuthTokenException e) {
+            assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getHttpStatus(), "Wrong error status");
+        }
+
+        verify(authorizeCodeService).isValid(eq(CODE));
+        verify(authorizeCodeService).getCodeInfo(eq(CODE));
+        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        try {
+            verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
             fail(e.getMessage());
         }

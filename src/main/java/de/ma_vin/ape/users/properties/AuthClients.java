@@ -26,6 +26,7 @@ public class AuthClients {
     public static class Client {
         private String clientId;
         private String secret;
+        private List<Redirect> redirects = new ArrayList<>();
 
         /**
          * @return the secret encoded as URL and Filename safe type base64.
@@ -33,5 +34,12 @@ public class AuthClients {
         public String getBase64UrlEncodedSecret() {
             return Base64.getUrlEncoder().encodeToString(secret.getBytes(StandardCharsets.UTF_8));
         }
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Redirect {
+        private String redirectStart;
     }
 }
