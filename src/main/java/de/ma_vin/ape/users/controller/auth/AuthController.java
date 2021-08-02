@@ -146,16 +146,17 @@ public class AuthController {
         if (authClients.getClients().stream()
                 .filter(c -> c.getClientId().equals(clientId))
                 .flatMap(c -> c.getRedirects().stream())
-                .noneMatch(r -> redirectUri.toLowerCase().startsWith(r.getRedirectStart().toLowerCase()))) {
-            throw new AuthTokenException(String.format("The redirection uri %s is not allowed for client %s", redirectUri, clientId)
-                    , HttpServletResponse.SC_FORBIDDEN);
+                .anyMatch(r -> redirectUri.toLowerCase().startsWith(r.getRedirectStart().toLowerCase()))) {
+            try {
+                response.sendRedirect(redirectUri);
+                return;
+            } catch (IOException e) {
+                throw new AuthTokenException(String.format("Could not redirect authenticate code to %s for client %s", redirectUri, clientId)
+                        , HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         }
-        try {
-            response.sendRedirect(redirectUri);
-        } catch (IOException e) {
-            throw new AuthTokenException(String.format("Could not redirect authenticate code to %s for client %s", redirectUri, clientId)
-                    , HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
+        throw new AuthTokenException(String.format("The redirection uri %s is not allowed for client %s", redirectUri, clientId)
+                , HttpServletResponse.SC_FORBIDDEN);
     }
 
     /**
