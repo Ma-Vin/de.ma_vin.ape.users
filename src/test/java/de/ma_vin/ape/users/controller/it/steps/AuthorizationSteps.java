@@ -137,6 +137,12 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
         shared.setTokenResponse(TestUtil.getObjectMapper().readValue(tokenResponse.getContentAsString(), TokenResponse.class));
     }
 
+    @Given("There is token for user with alias {string} and password {string}")
+    public void callControllerToTokenWithAlias(String userAlias, String userPwd) throws Exception {
+        callControllerToToken(shared.getCreatedObjects().get(userAlias).getIdentification(), userPwd);
+    }
+
+
     @Given("Use an unknown token")
     public void setUnknownToken() {
         TokenResponse response = new TokenResponse();

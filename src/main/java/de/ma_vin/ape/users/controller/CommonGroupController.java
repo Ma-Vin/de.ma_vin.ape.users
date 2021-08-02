@@ -10,6 +10,7 @@ import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -23,7 +24,7 @@ public class CommonGroupController extends AbstractDefaultOperationController {
     @Autowired
     private CommonGroupService commonGroupService;
 
-    // TODO: @PreAuthorize("hasAuthority('GlobalAdmin')")
+    @PreAuthorize("isGlobalAdmin()")
     @PostMapping("/createCommonGroup")
     public @ResponseBody
     ResponseWrapper<CommonGroupDto> createCommonGroup(@RequestParam String groupName) {
@@ -34,6 +35,7 @@ public class CommonGroupController extends AbstractDefaultOperationController {
         return ResponseUtil.createSuccessResponse(GroupTransportMapper.convertToCommonGroupDto(result.get()));
     }
 
+    @PreAuthorize("isGlobalAdmin()")
     @DeleteMapping("/deleteCommonGroup/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> deleteCommonGroup(@PathVariable String commonGroupIdentification) {
