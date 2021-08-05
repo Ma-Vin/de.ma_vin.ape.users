@@ -457,4 +457,29 @@ public class UserService extends AbstractRepositoryService {
         }
         return false;
     }
+
+    /**
+     * Sets the role of an user at common group
+     *
+     * @param userIdentification identification of user whose role should be changed
+     * @param role               role to set
+     */
+    public boolean setRole(String userIdentification, Role role) {
+        Optional<User> user = findUser(userIdentification);
+        if (user.isEmpty()) {
+            log.debug("The user {} could not be found and the role {} was not set", userIdentification, role.getDescription());
+            return false;
+        }
+        if (role.equals(user.get().getRole())) {
+            log.debug("The user {} gets the same role {} again", userIdentification, role.getDescription());
+            return true;
+        }
+        user.get().setRole(role);
+        if (save(user.get()).isEmpty()) {
+            log.error("The role {} was set not at user {}", role.getDescription(), userIdentification);
+            return false;
+        }
+        log.debug("The role {} was set at user {}", role.getDescription(), userIdentification);
+        return true;
+    }
 }

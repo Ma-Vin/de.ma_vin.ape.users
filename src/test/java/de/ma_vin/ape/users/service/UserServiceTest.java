@@ -111,9 +111,11 @@ public class UserServiceTest {
         when(userDao.getId()).thenReturn(USER_ID);
         when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userDao.getPassword()).thenReturn(USER_PASSWORD);
+        when(userDao.getRole()).thenReturn(Role.VISITOR);
 
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.getPassword()).thenReturn(USER_PASSWORD);
+        when(user.getRole()).thenReturn(Role.VISITOR);
 
         when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
     }
@@ -558,11 +560,7 @@ public class UserServiceTest {
     @DisplayName("Save existing user at common group")
     @Test
     public void testSaveAtCommonGroupExisting() {
-        when(userRepository.save(any())).then(a -> {
-            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
-            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
-            return a.getArgument(0);
-        });
+        mockSaveAtCommonGroup();
 
         Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
@@ -582,11 +580,7 @@ public class UserServiceTest {
         when(user.getSmallImage()).thenReturn(smallImage);
         when(userDao.getImage()).thenReturn(imageDao);
         when(userDao.getSmallImage()).thenReturn(smallImageDao);
-        when(userRepository.save(any())).then(a -> {
-            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
-            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
-            return a.getArgument(0);
-        });
+        mockSaveAtCommonGroup();
         when(image.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
         when(smallImage.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
         when(imageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
@@ -613,11 +607,7 @@ public class UserServiceTest {
         when(user.getSmallImage()).thenReturn(smallImage);
         when(userDao.getImage()).thenReturn(imageDao);
         when(userDao.getSmallImage()).thenReturn(smallImageDao);
-        when(userRepository.save(any())).then(a -> {
-            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
-            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
-            return a.getArgument(0);
-        });
+        mockSaveAtCommonGroup();
         when(image.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
         when(smallImage.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
         when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
@@ -644,11 +634,7 @@ public class UserServiceTest {
         when(user.getSmallImage()).thenReturn(smallImage);
         when(userDao.getImage()).thenReturn(imageDao);
         when(userDao.getSmallImage()).thenReturn(smallImageDao);
-        when(userRepository.save(any())).then(a -> {
-            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
-            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
-            return a.getArgument(0);
-        });
+        mockSaveAtCommonGroup();
         when(image.getIdentification()).thenReturn(null);
         when(smallImage.getIdentification()).thenReturn(null);
         when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
@@ -675,11 +661,7 @@ public class UserServiceTest {
         when(user.getSmallImage()).thenReturn(null);
         when(userDao.getImage()).thenReturn(imageDao);
         when(userDao.getSmallImage()).thenReturn(smallImageDao);
-        when(userRepository.save(any())).then(a -> {
-            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
-            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
-            return a.getArgument(0);
-        });
+        mockSaveAtCommonGroup();
         when(imageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
         when(imageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
         when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
@@ -701,11 +683,7 @@ public class UserServiceTest {
     @Test
     public void testSaveAtCommonGroupNonExisting() {
         when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.empty());
-        when(userRepository.save(any())).then(a -> {
-            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
-            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
-            return a.getArgument(0);
-        });
+        mockSaveAtCommonGroup();
 
         Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
@@ -1062,5 +1040,76 @@ public class UserServiceTest {
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set role at user")
+    @Test
+    public void testSetRole() {
+        mockSaveAtCommonGroup(Role.ADMIN);
+
+        assertTrue(cut.setRole(USER_IDENTIFICATION, Role.ADMIN), "The result should be true");
+
+        verify(userRepository).save(any());
+    }
+
+    @DisplayName("Set role at user, but the user is not found")
+    @Test
+    public void testSetRoleNotFound() {
+        mockSaveAtCommonGroup(Role.ADMIN);
+
+        assertFalse(cut.setRole(USER_IDENTIFICATION + "_1", Role.ADMIN), "The result should be true");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set role at user, but equal role again")
+    @Test
+    public void testSetRoleEqualRoleAgain() {
+        mockSaveAtCommonGroup(Role.VISITOR);
+
+        assertTrue(cut.setRole(USER_IDENTIFICATION, Role.VISITOR), "The result should be true");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @DisplayName("Set role at user, but save failed because of missing parent")
+    @Test
+    public void testSetRoleSaveFailed() {
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
+            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
+            assertEquals(Role.ADMIN, ((UserDao) a.getArgument(0)).getRole(), "Wrong role at save");
+            return a.getArgument(0);
+        });
+
+        assertFalse(cut.setRole(USER_IDENTIFICATION, Role.ADMIN), "The result should be true");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    private void mockSaveAtCommonGroup(Role role) {
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
+            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
+            assertEquals(role, ((UserDao) a.getArgument(0)).getRole(), "Wrong role at save");
+            return a.getArgument(0);
+        });
+    }
+
+
+    private void mockSaveAtCommonGroup() {
+        when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
+            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
+            return a.getArgument(0);
+        });
     }
 }
