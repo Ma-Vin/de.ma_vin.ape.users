@@ -52,6 +52,10 @@
                 </entity>
                 <entity baseName="PrivilegeGroup" parent="AbstractGroup" identificationPrefix="PG"
                         description="Group which holds information about privileges of basic groups and users">
+                    <fields>
+                        <field fieldName="commonGroupId" type="String" models="DOMAIN"
+                               shortDescription="identification of the parent common group"/>
+                    </fields>
                     <references>
                         <reference referenceName="admins" targetEntity="User" isList="true">
                             <nonOwnerFilterField filterFieldPackage="de.ma_vin.ape.users.enums" filterFieldType="Role"
@@ -97,6 +101,10 @@
                 </entity>
                 <entity baseName="BaseGroup" parent="AbstractGroup" identificationPrefix="BG"
                         description="Basic group which contains only other basic groups and memberships of users without roles">
+                    <fields>
+                        <field fieldName="commonGroupId" type="String" models="DOMAIN"
+                               shortDescription="identification of the parent common group"/>
+                    </fields>
                     <references>
                         <reference referenceName="users" targetEntity="User" isList="true"/>
                         <reference referenceName="subBaseGroups" targetEntity="BaseGroup" isList="true"/>
@@ -140,6 +148,8 @@
                                models="DOMAIN_DAO"/>
                         <field fieldName="isGlobalAdmin" type="boolean" models="DOMAIN"
                                shortDescription="indicator whether the is a global admin or not"/>
+                        <field fieldName="commonGroupId" type="String" models="DOMAIN"
+                               shortDescription="identification of the parent common group"/>
                     </fields>
                     <references>
                         <reference referenceName="image" targetEntity="UserResource"/>

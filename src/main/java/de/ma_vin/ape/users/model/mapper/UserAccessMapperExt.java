@@ -12,5 +12,6 @@ public class UserAccessMapperExt extends UserAccessMapper {
     protected void setUserValues(UserDao dao, User domain) {
         super.setUserValues(dao, domain);
         domain.setGlobalAdmin(dao.getParentAdminGroup() != null);
+        domain.setCommonGroupId(dao.getParentCommonGroup() != null ? dao.getParentCommonGroup().getIdentification() : null);
     }
 }
