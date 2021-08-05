@@ -2,7 +2,6 @@ package de.ma_vin.ape.users.security.service;
 
 import de.ma_vin.ape.users.enums.GroupType;
 import de.ma_vin.ape.users.enums.Role;
-import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
@@ -33,7 +32,7 @@ public class UserPermissionService {
      * Determines whether a user is global admin
      *
      * @param username username to check
-     * @return {@true} if there exits a user with the given username exists and is a member of admin group. Otherwise {@code false}
+     * @return {@code true} if there exits a user with the given username exists and is a member of admin group. Otherwise {@code false}
      */
     public boolean isGlobalAdmin(Optional<String> username) {
         return username.isPresent() && userService.findUser(username.get()).map(User::isGlobalAdmin).orElse(Boolean.FALSE);
