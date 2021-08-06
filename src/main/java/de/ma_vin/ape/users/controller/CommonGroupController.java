@@ -45,6 +45,7 @@ public class CommonGroupController extends AbstractDefaultOperationController {
                 , identificationToCheck -> commonGroupService.commonGroupExits(identificationToCheck));
     }
 
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getCommonGroup/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<CommonGroupDto> getCommonGroup(@PathVariable String commonGroupIdentification) {
@@ -54,6 +55,7 @@ public class CommonGroupController extends AbstractDefaultOperationController {
         );
     }
 
+    @PreAuthorize("isAdmin(#commonGroupIdentification, 'COMMON')")
     @PutMapping("/updateCommonGroup/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<CommonGroupDto> updateCommonGroup(@RequestBody CommonGroupDto commonGroup, @PathVariable String commonGroupIdentification) {

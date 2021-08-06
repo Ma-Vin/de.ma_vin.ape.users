@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 public class UserSteps extends AbstractIntegrationTestSteps {
+
     @Given("There exists an user with first name {string} and last name {string} with alias {string} at common group {string}")
     public void createUser(String firstName, String lastName, String userAlias, String commonGroupAlias) throws Exception {
         if (!shared.containsKey(commonGroupAlias)) {
@@ -43,6 +44,15 @@ public class UserSteps extends AbstractIntegrationTestSteps {
     @Given("The {string} of the user with alias {string} is set to {string}")
     public void setUserValue(String property, String alias, String valueToSet) {
         setStringValue(property, alias, valueToSet);
+    }
+
+    @Given("There exists an user with first name {string}, last name {string}, password {string} and role {roleValue} with alias {string} at common group {string}")
+    public void createUser(String firstName, String lastName, String password, Role role, String userAlias, String commonGroupAlias) throws Exception {
+        createUser(firstName, lastName, userAlias, commonGroupAlias);
+        callControllerToSetUsersPassword(password, userAlias);
+        checkResponseExistsAndOk();
+        callControllerToSetUsersRole(role, userAlias);
+        checkResponseExistsAndOk();
     }
 
     @When("The Controller is called to create an user with first name {string} and last name {string} at common group {string}")
@@ -125,5 +135,10 @@ public class UserSteps extends AbstractIntegrationTestSteps {
     public void callControllerToSetUsersRole(Role role, String userAlias) throws JsonProcessingException {
         shared.setResultActions(performPatchWithAuthorization("/user/setUserRole", getIdentification(userAlias)
                 , TestUtil.getObjectMapper().writeValueAsString(role)));
+    }
+
+    private void checkResponseExistsAndOk() throws Exception {
+        shared.getResultActions().andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
     }
 }

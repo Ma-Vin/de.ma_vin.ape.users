@@ -6,6 +6,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.Then;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultMatcher;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsAnything.anything;
@@ -35,9 +36,9 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
         shared.getResultActions().andExpect(status().is3xxRedirection()).andExpect(header().string("Location", redirectedTo));
     }
 
-    @Then("The result is a 4xx")
-    public void checkResponseIs4xx() throws Exception {
-        shared.getResultActions().andExpect(status().is4xxClientError());
+    @Then("The result is a {httpCodeRange}")
+    public void checkResponseIsHttpCode(ResultMatcher codeMatcher) throws Exception {
+        shared.getResultActions().andExpect(codeMatcher);
     }
 
     @Then("The status of the result should be {string}")
@@ -138,5 +139,17 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
     @ParameterType(value = "ADMIN||MANAGER||CONTRIBUTOR||VISITOR|BLOCKED|NOT_RELEVANT")
     public Role roleValue(String value) {
         return Role.valueOf(value);
+    }
+
+    @ParameterType(value = "1xx|2xx|3xx|4xx|5xx")
+    public ResultMatcher httpCodeRange(String value) {
+        return switch (value) {
+            case "1xx" -> status().is1xxInformational();
+            case "2xx" -> status().is2xxSuccessful();
+            case "3xx" -> status().is3xxRedirection();
+            case "4xx" -> status().is4xxClientError();
+            case "5xx" -> status().is5xxServerError();
+            default -> null;
+        };
     }
 }
