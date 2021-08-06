@@ -145,3 +145,10 @@ Feature: Testing methods of the user controller
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The response is true
+
+  Scenario: Update role of user at common group
+    Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"
+    When Controller is called to set the role ADMIN of user with the identification of the alias "user"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is true

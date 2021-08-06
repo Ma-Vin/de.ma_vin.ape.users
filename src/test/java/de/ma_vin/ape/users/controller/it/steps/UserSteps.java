@@ -120,4 +120,10 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performPatchWithAuthorization("/user/setUserPassword", getIdentification(userAlias)
                 , password));
     }
+
+    @When("Controller is called to set the role {roleValue} of user with the identification of the alias {string}")
+    public void callControllerToSetUsersRole(Role role, String userAlias) throws JsonProcessingException {
+        shared.setResultActions(performPatchWithAuthorization("/user/setUserRole", getIdentification(userAlias)
+                , TestUtil.getObjectMapper().writeValueAsString(role)));
+    }
 }

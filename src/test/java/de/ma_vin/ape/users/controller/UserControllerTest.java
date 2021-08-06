@@ -659,4 +659,29 @@ public class UserControllerTest {
 
         verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD));
     }
+
+    @DisplayName("Set users role")
+    @Test
+    public void testSetUserRole() {
+        when(userService.setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN))).thenReturn(Boolean.TRUE);
+
+        ResponseWrapper<Boolean> response = cut.setUserRole(USER_IDENTIFICATION, Role.ADMIN);
+
+        checkOk(response);
+
+        assertTrue(response.getResponse(), "The result should be successful");
+        verify(userService).setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN));
+    }
+
+    @DisplayName("Set users role, but failed")
+    @Test
+    public void testSetUserRoleFailed() {
+        when(userService.setPassword(eq(USER_IDENTIFICATION), any())).thenReturn(Boolean.FALSE);
+
+        ResponseWrapper<Boolean> response = cut.setUserRole(USER_IDENTIFICATION, Role.ADMIN);
+
+        checkError(response);
+
+        verify(userService).setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN));
+    }
 }

@@ -76,7 +76,15 @@ public class UserController extends AbstractDefaultOperationController {
         if (userService.setPassword(userIdentification, rawPassword)) {
             return createSuccessResponse(Boolean.TRUE);
         }
-        return createEmptyResponseWithError(String.format("The password could be set at user with identification %s", userIdentification));
+        return createEmptyResponseWithError(String.format("The password could not be set at user with identification %s", userIdentification));
+    }
+
+    @PatchMapping("/setUserRole/{userIdentification}")
+    public ResponseWrapper<Boolean> setUserRole(@PathVariable String userIdentification, @RequestBody Role role) {
+        if (userService.setRole(userIdentification, role)) {
+            return createSuccessResponse(Boolean.TRUE);
+        }
+        return createEmptyResponseWithError(String.format("The role could not be set at user with identification %s", userIdentification));
     }
 
     private Searcher<User> getNonGlobalAdminSearcher() {
