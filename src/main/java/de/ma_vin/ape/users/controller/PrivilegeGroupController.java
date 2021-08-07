@@ -11,6 +11,7 @@ import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
     @Autowired
     private PrivilegeGroupService privilegeGroupService;
 
+    @PreAuthorize("isManager(#commonGroupIdentification, 'COMMON')")
     @PostMapping("/createPrivilegeGroup")
     public @ResponseBody
     ResponseWrapper<PrivilegeGroupDto> createPrivilegeGroup(@RequestParam String groupName, @RequestParam String commonGroupIdentification) {
@@ -38,6 +40,7 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
         return ResponseUtil.createSuccessResponse(GroupTransportMapper.convertToPrivilegeGroupDto(result.get()));
     }
 
+    @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @DeleteMapping("/deletePrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> deletePrivilegeGroup(@PathVariable String privilegeGroupIdentification) {
@@ -47,6 +50,7 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
                 , identificationToCheck -> privilegeGroupService.privilegeGroupExits(identificationToCheck));
     }
 
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/getPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<PrivilegeGroupDto> getPrivilegeGroup(@PathVariable String privilegeGroupIdentification) {
@@ -56,6 +60,7 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
         );
     }
 
+    @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PutMapping("/updatePrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<PrivilegeGroupDto> updatePrivilegeGroup(@RequestBody PrivilegeGroupDto privilegeGroup, @PathVariable String privilegeGroupIdentification) {
@@ -67,6 +72,7 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
         );
     }
 
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllPrivilegeGroups/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<PrivilegeGroupDto>> getAllPrivilegeGroups(@PathVariable String commonGroupIdentification) {
