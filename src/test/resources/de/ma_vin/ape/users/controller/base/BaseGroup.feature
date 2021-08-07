@@ -42,7 +42,7 @@ Feature: Testing methods of the base group controller
 
   Scenario: Add and remove sub base groups
     Given There exists a base group with name "Parent Base Group Name" with alias "parentBase" at common group "common"
-    Given There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
     When Controller is called to add the base group with alias "subBase" to base group with alias "parentBase"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -63,7 +63,7 @@ Feature: Testing methods of the base group controller
 
   Scenario: Add and remove base groups at privilege one
     Given There exists a privilege group with name "Parent Privilege Group Name" with alias "parentPrivilege" at common group "common"
-    Given There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
     When Controller is called to add the base group with alias "subBase" as MANAGER to privilege group with alias "parentPrivilege"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -84,7 +84,7 @@ Feature: Testing methods of the base group controller
 
   Scenario: Delete base group
     Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"
-    Given There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
     When Controller is called to add the base group with alias "subBase" to base group with alias "base"
     Then The result is Ok and Json
     When Controller is called to delete the base group with the identification of the alias "base"
@@ -102,3 +102,124 @@ Feature: Testing methods of the base group controller
     Given Use an unknown token
     When The Controller is called to create a base group with name "New Base Group" at common group "common"
     Then The result is a 4xx
+
+  Scenario Outline: Check <role> privilege to create a base group
+    Given There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
+    And There is token for user with alias "user" and password "1 Dummy Password!"
+    When The Controller is called to create a base group with name "New Base Group" at common group "common"
+    Then The result is a <httpCodeRange>
+    Examples:
+      | role        | httpCodeRange |
+      | ADMIN       | 2xx           |
+      | MANAGER     | 2xx           |
+      | CONTRIBUTOR | 4xx           |
+      | VISITOR     | 4xx           |
+      | BLOCKED     | 4xx           |
+
+  Scenario Outline: Check <role> privilege to delete a base group
+    Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"
+    And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
+    And There is token for user with alias "user" and password "1 Dummy Password!"
+    When Controller is called to delete the base group with the identification of the alias "base"
+    Then The result is a <httpCodeRange>
+    Examples:
+      | role        | httpCodeRange |
+      | ADMIN       | 2xx           |
+      | MANAGER     | 2xx           |
+      | CONTRIBUTOR | 4xx           |
+      | VISITOR     | 4xx           |
+      | BLOCKED     | 4xx           |
+
+  Scenario Outline: Check <role> privilege to get base group
+    Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"
+    And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
+    And There is token for user with alias "user" and password "1 Dummy Password!"
+    When Controller is called to get the base group with the identification of the alias "base"
+    Then The result is a <httpCodeRange>
+    When Controller is called to get all base groups from common group with alias "common"
+    Then The result is a <httpCodeRange>
+    Examples:
+      | role        | httpCodeRange |
+      | ADMIN       | 2xx           |
+      | MANAGER     | 2xx           |
+      | CONTRIBUTOR | 2xx           |
+      | VISITOR     | 2xx           |
+      | BLOCKED     | 4xx           |
+
+  Scenario Outline: Check <role> privilege to update base group
+    Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"
+    And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
+    And There is token for user with alias "user" and password "1 Dummy Password!"
+    And The "description" of the base group with alias "base" is set to <value>
+    When Controller is called to update the base group with the identification of the alias "base"
+    Then The result is a <httpCodeRange>
+    Examples:
+      | role        | httpCodeRange | value         |
+      | ADMIN       | 2xx           | "admin"       |
+      | MANAGER     | 2xx           | "manager"     |
+      | CONTRIBUTOR | 4xx           | "contributor" |
+      | VISITOR     | 4xx           | "visitor"     |
+      | BLOCKED     | 4xx           | "blocked"     |
+
+  Scenario Outline: Check <role> privilege to add and remove base group at privilege one
+    Given There exists a privilege group with name "Parent Privilege Group Name" with alias "parentPrivilege" at common group "common"
+    And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    And There exists a base group with name "Another Sub Base Group Name" with alias "anotherSubBase" at common group "common"
+    When Controller is called to add the base group with alias "subBase" as MANAGER to privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
+    And There is token for user with alias "user" and password "1 Dummy Password!"
+    When Controller is called to add the base group with alias "anotherSubBase" as MANAGER to privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRange>
+    When Controller is called to remove the base group with alias "subBase" from privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRange>
+    Examples:
+      | role        | httpCodeRange |
+      | ADMIN       | 2xx           |
+      | MANAGER     | 2xx           |
+      | CONTRIBUTOR | 4xx           |
+      | VISITOR     | 4xx           |
+      | BLOCKED     | 4xx           |
+
+  Scenario Outline: Check <role> privilege to add and remove base group at base one
+    Given There exists a base group with name "Parent Base Group Name" with alias "parentBase" at common group "common"
+    And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    And There exists a base group with name "Another Sub Base Group Name" with alias "anotherSubBase" at common group "common"
+    When Controller is called to add the base group with alias "subBase" to base group with alias "parentBase"
+    Then The result is Ok and Json
+    And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
+    And There is token for user with alias "user" and password "1 Dummy Password!"
+    When Controller is called to add the base group with alias "anotherSubBase" to base group with alias "parentBase"
+    Then The result is a <httpCodeRange>
+    When Controller is called to remove the base group with alias "subBase" from base group with alias "parentBase"
+    Then The result is a <httpCodeRange>
+    Examples:
+      | role        | httpCodeRange |
+      | ADMIN       | 2xx           |
+      | MANAGER     | 2xx           |
+      | CONTRIBUTOR | 2xx           |
+      | VISITOR     | 4xx           |
+      | BLOCKED     | 4xx           |
+
+  Scenario Outline: Check <role> privilege to get sub base groups
+    Given There exists a privilege group with name "Parent Privilege Group Name" with alias "parentPrivilege" at common group "common"
+    And There exists a base group with name "Parent Base Group Name" with alias "parentBase" at common group "common"
+    And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    And There exists a base group with name "Another Sub Base Group Name" with alias "anotherSubBase" at common group "common"
+    When Controller is called to add the base group with alias "subBase" as MANAGER to privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    When Controller is called to add the base group with alias "anotherSubBase" to base group with alias "parentBase"
+    Then The result is Ok and Json
+    Given There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
+    And There is token for user with alias "user" and password "1 Dummy Password!"
+    When Controller is called to get all sub base groups of privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRange>
+    When Controller is called to get all sub groups of base group with alias "parentBase"
+    Then The result is a <httpCodeRange>
+    Examples:
+      | role        | httpCodeRange |
+      | ADMIN       | 2xx           |
+      | MANAGER     | 2xx           |
+      | CONTRIBUTOR | 2xx           |
+      | VISITOR     | 2xx           |
+      | BLOCKED     | 4xx           |

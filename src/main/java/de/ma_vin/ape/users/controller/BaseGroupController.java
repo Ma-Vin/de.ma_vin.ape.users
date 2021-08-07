@@ -12,6 +12,7 @@ import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @Autowired
     private BaseGroupService baseGroupService;
 
+    @PreAuthorize("isManager(#commonGroupIdentification, 'COMMON')")
     @PostMapping("/createBaseGroup")
     public @ResponseBody
     ResponseWrapper<BaseGroupDto> createBaseGroup(@RequestParam String groupName, @RequestParam String commonGroupIdentification) {
@@ -37,6 +39,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
         return createSuccessResponse(GroupTransportMapper.convertToBaseGroupDto(result.get()));
     }
 
+    @PreAuthorize("isManager(#baseGroupIdentification, 'BASE')")
     @DeleteMapping("/deleteBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> deleteBaseGroup(@PathVariable String baseGroupIdentification) {
@@ -46,6 +49,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , identificationToCheck -> baseGroupService.baseGroupExits(identificationToCheck));
     }
 
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
     @GetMapping("/getBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<BaseGroupDto> getBaseGroup(@PathVariable String baseGroupIdentification) {
@@ -55,6 +59,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
         );
     }
 
+    @PreAuthorize("isManager(#baseGroupIdentification, 'BASE')")
     @PutMapping("/updateBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<BaseGroupDto> updateBaseGroup(@RequestBody BaseGroupDto baseGroup, @PathVariable String baseGroupIdentification) {
@@ -66,6 +71,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
         );
     }
 
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllBaseGroups/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<BaseGroupDto>> getAllBaseGroups(@PathVariable String commonGroupIdentification) {
@@ -76,6 +82,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
         return createSuccessResponse(result);
     }
 
+    @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PatchMapping("/addBaseToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addBaseToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody BaseGroupIdRoleDto baseGroupRole) {
@@ -85,6 +92,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , baseGroupRole.getBaseGroupIdentification(), baseGroupRole.getRole().getDescription(), privilegeGroupIdentification));
     }
 
+    @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PatchMapping("/removeBaseFromPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> removeBaseFromPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody String baseGroupIdentification) {
@@ -94,6 +102,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , baseGroupIdentification, privilegeGroupIdentification));
     }
 
+    @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/findAllBaseAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification) {
@@ -103,6 +112,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
         return createSuccessResponse(result);
     }
 
+    @PreAuthorize("isContributor(#parentGroupIdentification, 'BASE')")
     @PatchMapping("/addBaseToBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addBaseToBaseGroup(@PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {
@@ -112,6 +122,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , baseGroupIdentification, parentGroupIdentification));
     }
 
+    @PreAuthorize("isContributor(#parentGroupIdentification, 'BASE')")
     @PatchMapping("/removeBaseFromBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> removeBaseFromBaseGroup(@PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {
@@ -121,6 +132,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , baseGroupIdentification, parentGroupIdentification));
     }
 
+    @PreAuthorize("isVisitor(#parentGroupIdentification, 'BASE')")
     @GetMapping("/findAllBaseAtBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<BaseGroupDto>> findAllBaseAtBaseGroup(@PathVariable String parentGroupIdentification) {
