@@ -1,6 +1,6 @@
 package de.ma_vin.ape.users.security.expression;
 
-import de.ma_vin.ape.users.enums.GroupType;
+import de.ma_vin.ape.users.enums.IdentificationType;
 import de.ma_vin.ape.users.security.service.UserPermissionService;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,45 +57,66 @@ public class ControllerMethodSecurityExpressionRoot extends SecurityExpressionRo
     /**
      * Checks whether the principal has admin permissions
      *
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
      * @return {@code true} if the username from oauth2 principal can be identified as admin. Otherwise {@code false}
      */
-    public boolean isAdmin(String groupIdentification, GroupType groupType) {
-        return userPermissionService.isAdmin(getUsername(), groupIdentification, groupType);
+    public boolean isAdmin(String identification, IdentificationType identificationType) {
+        return userPermissionService.isAdmin(getUsername(), identification, identificationType);
     }
 
     /**
      * Checks whether the principal has manager permissions
      *
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
      * @return {@code true} if the username from oauth2 principal can be identified as manager. Otherwise {@code false}
      */
-    public boolean isManager(String groupIdentification, GroupType groupType) {
-        return userPermissionService.isManager(getUsername(), groupIdentification, groupType);
+    public boolean isManager(String identification, IdentificationType identificationType) {
+        return userPermissionService.isManager(getUsername(), identification, identificationType);
     }
 
     /**
      * Checks whether the principal has contributor permissions
      *
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
      * @return {@code true} if the username from oauth2 principal can be identified as contributor. Otherwise {@code false}
      */
-    public boolean isContributor(String groupIdentification, GroupType groupType) {
-        return userPermissionService.isContributor(getUsername(), groupIdentification, groupType);
+    public boolean isContributor(String identification, IdentificationType identificationType) {
+        return userPermissionService.isContributor(getUsername(), identification, identificationType);
     }
 
     /**
      * Checks whether the principal has visitor permissions
      *
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
      * @return {@code true} if the username from oauth2 principal can be identified as visitor. Otherwise {@code false}
      */
-    public boolean isVisitor(String groupIdentification, GroupType groupType) {
-        return userPermissionService.isVisitor(getUsername(), groupIdentification, groupType);
+    public boolean isVisitor(String identification, IdentificationType identificationType) {
+        return userPermissionService.isVisitor(getUsername(), identification, identificationType);
+    }
+
+    /**
+     * Checks whether the principal is blocked or not
+     *
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
+     * @return {@code true} if the username from oauth2 principal can be identified as blocked. Otherwise {@code false}
+     */
+    public boolean isBlocked(String identification, IdentificationType identificationType) {
+        return userPermissionService.isBlocked(getUsername(), identification, identificationType);
+    }
+
+    /**
+     * Checks whether the principal has the equal name/id
+     *
+     * @param userIdentification identification of the user to compare with principal
+     * @return {@code true} if the username from oauth2 principal can be identified with the given user identification. Otherwise {@code false}
+     */
+    public boolean isPrincipalItself(String userIdentification) {
+        return getUsername().stream().anyMatch(u -> u.equals(userIdentification)) && !isBlocked(userIdentification, IdentificationType.USER);
     }
 
     private Optional<String> getUsername() {

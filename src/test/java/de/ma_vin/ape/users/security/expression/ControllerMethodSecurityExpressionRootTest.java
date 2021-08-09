@@ -1,6 +1,6 @@
 package de.ma_vin.ape.users.security.expression;
 
-import de.ma_vin.ape.users.enums.GroupType;
+import de.ma_vin.ape.users.enums.IdentificationType;
 import de.ma_vin.ape.users.security.service.UserPermissionService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +50,7 @@ public class ControllerMethodSecurityExpressionRootTest {
         principal = new DefaultOAuth2AuthenticatedPrincipal(PRINCIPAL_NAME, attributes, null);
 
         when(authentication.getPrincipal()).thenReturn(principal);
+        when(userPermissionService.isBlocked(any(), any(), any())).thenReturn(Boolean.FALSE);
     }
 
     @AfterEach
@@ -92,128 +93,198 @@ public class ControllerMethodSecurityExpressionRootTest {
     @DisplayName("Check if the principal is an admin")
     @Test
     public void testIsAdmin() {
-        when(userPermissionService.isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.TRUE);
+        when(userPermissionService.isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
 
-        assertTrue(cut.isAdmin(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should be identified as an admin");
+        assertTrue(cut.isAdmin(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as an admin");
 
-        verify(userPermissionService).isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService).isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is an admin, but is not")
     @Test
     public void testIsAdminButIsNot() {
-        when(userPermissionService.isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.FALSE);
+        when(userPermissionService.isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.FALSE);
 
-        assertFalse(cut.isAdmin(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should be identified as an admin");
+        assertFalse(cut.isAdmin(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as an admin");
 
-        verify(userPermissionService).isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService).isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is an admin, but not DefaultOAuth2AuthenticatedPrincipal")
     @Test
     public void testIsAdminNotDefaultOAuth2AuthenticatedPrincipal() {
-        when(userPermissionService.isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.TRUE);
+        when(userPermissionService.isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
         OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
-        assertFalse(cut.isAdmin(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should not be identified as an admin");
+        assertFalse(cut.isAdmin(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as an admin");
 
-        verify(userPermissionService, never()).isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService, never()).isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a manager")
     @Test
     public void testIsManager() {
-        when(userPermissionService.isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.TRUE);
+        when(userPermissionService.isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
 
-        assertTrue(cut.isManager(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should be identified as a manager");
+        assertTrue(cut.isManager(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as a manager");
 
-        verify(userPermissionService).isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService).isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a manager, but is not")
     @Test
     public void testIsManagerButIsNot() {
-        when(userPermissionService.isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.FALSE);
+        when(userPermissionService.isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.FALSE);
 
-        assertFalse(cut.isManager(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should be identified as a manager");
+        assertFalse(cut.isManager(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as a manager");
 
-        verify(userPermissionService).isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService).isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a manager, but not DefaultOAuth2AuthenticatedPrincipal")
     @Test
     public void testIsManagerNotDefaultOAuth2AuthenticatedPrincipal() {
-        when(userPermissionService.isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.TRUE);
+        when(userPermissionService.isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
         OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
-        assertFalse(cut.isManager(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should not be identified as a manager");
+        assertFalse(cut.isManager(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as a manager");
 
-        verify(userPermissionService, never()).isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService, never()).isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a contributor")
     @Test
     public void testIsContributor() {
-        when(userPermissionService.isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.TRUE);
+        when(userPermissionService.isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
 
-        assertTrue(cut.isContributor(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should be identified as a contributor");
+        assertTrue(cut.isContributor(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as a contributor");
 
-        verify(userPermissionService).isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService).isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a contributor, but is not")
     @Test
     public void testIsContributorButIsNot() {
-        when(userPermissionService.isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.FALSE);
+        when(userPermissionService.isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.FALSE);
 
-        assertFalse(cut.isContributor(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should be identified as a contributor");
+        assertFalse(cut.isContributor(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as a contributor");
 
-        verify(userPermissionService).isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService).isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a contributor, but not DefaultOAuth2AuthenticatedPrincipal")
     @Test
     public void testIsContributorNotDefaultOAuth2AuthenticatedPrincipal() {
-        when(userPermissionService.isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.TRUE);
+        when(userPermissionService.isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
         OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
-        assertFalse(cut.isContributor(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should not be identified as a contributor");
+        assertFalse(cut.isContributor(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as a contributor");
 
-        verify(userPermissionService, never()).isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService, never()).isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a visitor")
     @Test
-    public void testisVisitor() {
-        when(userPermissionService.isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.TRUE);
+    public void testIsVisitor() {
+        when(userPermissionService.isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
 
-        assertTrue(cut.isVisitor(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should be identified as a visitor");
+        assertTrue(cut.isVisitor(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as a visitor");
 
-        verify(userPermissionService).isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService).isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a visitor, but is not")
     @Test
-    public void testisVisitorButIsNot() {
-        when(userPermissionService.isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.FALSE);
+    public void testIsVisitorButIsNot() {
+        when(userPermissionService.isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.FALSE);
 
-        assertFalse(cut.isVisitor(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should be identified as a visitor");
+        assertFalse(cut.isVisitor(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as a visitor");
 
-        verify(userPermissionService).isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService).isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
     }
 
     @DisplayName("Check if the principal is a visitor, but not DefaultOAuth2AuthenticatedPrincipal")
     @Test
-    public void testisVisitorNotDefaultOAuth2AuthenticatedPrincipal() {
-        when(userPermissionService.isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE))).thenReturn(Boolean.TRUE);
+    public void testIsVisitorNotDefaultOAuth2AuthenticatedPrincipal() {
+        when(userPermissionService.isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
         OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
-        assertFalse(cut.isVisitor(GROUP_IDENTIFICATION, GroupType.BASE), "The principal should not be identified as a visitor");
+        assertFalse(cut.isVisitor(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as a visitor");
 
-        verify(userPermissionService, never()).isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(GroupType.BASE));
+        verify(userPermissionService, never()).isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
+    }
+
+    @DisplayName("Check if the principal is blocked")
+    @Test
+    public void testIsBlocked() {
+        when(userPermissionService.isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
+
+        assertTrue(cut.isBlocked(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as a blocked");
+
+        verify(userPermissionService).isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
+    }
+
+    @DisplayName("Check if the principal is blocked, but is not")
+    @Test
+    public void testIsBlockedButIsNot() {
+        when(userPermissionService.isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.FALSE);
+
+        assertFalse(cut.isBlocked(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should be identified as a blocked");
+
+        verify(userPermissionService).isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
+    }
+
+    @DisplayName("Check if the principal  is blocked, but not DefaultOAuth2AuthenticatedPrincipal")
+    @Test
+    public void testIsBlockedNotDefaultOAuth2AuthenticatedPrincipal() {
+        when(userPermissionService.isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
+        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        when(authentication.getPrincipal()).thenReturn(principal);
+
+        assertFalse(cut.isBlocked(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as a blocked");
+
+        verify(userPermissionService, never()).isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE));
+    }
+
+    @DisplayName("Check if the principal is the given user identification itself")
+    @Test
+    public void testIsPrincipalItself() {
+        assertTrue(cut.isPrincipalItself(PRINCIPAL_NAME), "The user identification should be identified as principal");
+
+        verify(userPermissionService).isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(PRINCIPAL_NAME), eq(IdentificationType.USER));
+    }
+
+    @DisplayName("Check if the principal is not the given user identification itself")
+    @Test
+    public void testIsPrincipalItselfButIsNot() {
+        principal = new DefaultOAuth2AuthenticatedPrincipal(PRINCIPAL_NAME + "_1", attributes, null);
+        when(authentication.getPrincipal()).thenReturn(principal);
+        assertFalse(cut.isPrincipalItself(PRINCIPAL_NAME), "The user identification should not be identified as principal");
+
+        verify(userPermissionService, never()).isBlocked(any(), any(), any());
+    }
+
+    @DisplayName("Check if the principal is the given user identification itself, but is blocked")
+    @Test
+    public void testIsPrincipalItselfButBlocked() {
+        when(userPermissionService.isBlocked(eq(Optional.of(PRINCIPAL_NAME)), any(), any())).thenReturn(Boolean.TRUE);
+        assertFalse(cut.isPrincipalItself(PRINCIPAL_NAME), "The user identification should not be identified as principal");
+
+        verify(userPermissionService).isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(PRINCIPAL_NAME), eq(IdentificationType.USER));
+    }
+
+    @DisplayName("Check if the principal is the given user identification itself, but not DefaultOAuth2AuthenticatedPrincipal")
+    @Test
+    public void testIsPrincipalItselfNotDefaultOAuth2AuthenticatedPrincipal() {
+        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        when(authentication.getPrincipal()).thenReturn(principal);
+
+        assertFalse(cut.isPrincipalItself(PRINCIPAL_NAME), "The user identification should not be identified as principal");
+
+        verify(userPermissionService, never()).isBlocked(any(), any(), any());
     }
 }

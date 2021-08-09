@@ -1,6 +1,6 @@
 package de.ma_vin.ape.users.security.service;
 
-import de.ma_vin.ape.users.enums.GroupType;
+import de.ma_vin.ape.users.enums.IdentificationType;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
@@ -41,74 +41,106 @@ public class UserPermissionService {
     /**
      * Checks whether the principal has admin permissions
      *
-     * @param username            username to check
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
+     * @param username           username to check
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
      * @return {@code true} if the username from oauth2 principal can be identified as admin. Otherwise {@code false}
      */
-    public boolean isAdmin(Optional<String> username, String groupIdentification, GroupType groupType) {
-        return hasUserRole(username, groupIdentification, groupType, Role.ADMIN);
+    public boolean isAdmin(Optional<String> username, String identification, IdentificationType identificationType) {
+        return hasUserRole(username, identification, identificationType, Role.ADMIN);
     }
 
     /**
      * Checks whether the principal has manager permissions
      *
-     * @param username            username to check
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
+     * @param username           username to check
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
      * @return {@code true} if the username from oauth2 principal can be identified as manager. Otherwise {@code false}
      */
-    public boolean isManager(Optional<String> username, String groupIdentification, GroupType groupType) {
-        return hasUserRole(username, groupIdentification, groupType, Role.MANAGER);
+    public boolean isManager(Optional<String> username, String identification, IdentificationType identificationType) {
+        return hasUserRole(username, identification, identificationType, Role.MANAGER);
     }
 
     /**
      * Checks whether the principal has contributor permissions
      *
-     * @param username            username to check
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
+     * @param username           username to check
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
      * @return {@code true} if the username from oauth2 principal can be identified as contributor. Otherwise {@code false}
      */
-    public boolean isContributor(Optional<String> username, String groupIdentification, GroupType groupType) {
-        return hasUserRole(username, groupIdentification, groupType, Role.CONTRIBUTOR);
+    public boolean isContributor(Optional<String> username, String identification, IdentificationType identificationType) {
+        return hasUserRole(username, identification, identificationType, Role.CONTRIBUTOR);
     }
 
     /**
      * Checks whether the principal has visitor permissions
      *
-     * @param username            username to check
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
+     * @param username           username to check
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
      * @return {@code true} if the username from oauth2 principal can be identified as visitor. Otherwise {@code false}
      */
-    public boolean isVisitor(Optional<String> username, String groupIdentification, GroupType groupType) {
-        return hasUserRole(username, groupIdentification, groupType, Role.VISITOR);
+    public boolean isVisitor(Optional<String> username, String identification, IdentificationType identificationType) {
+        return hasUserRole(username, identification, identificationType, Role.VISITOR);
     }
 
     /**
      * Checks whether the principal has a given role permissions
      *
-     * @param username            username to check
-     * @param groupIdentification identification of the group where to start search for permissions
-     * @param groupType           type of the group whose identification is given
-     * @param role                role to check
+     * @param username           username to check
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
+     * @param role               role to check
      * @return {@code true} if the username from oauth2 principal can be identified as owner of the given role. Otherwise {@code false}
      */
-    private boolean hasUserRole(Optional<String> username, String groupIdentification, GroupType groupType, Role role) {
+    private boolean hasUserRole(Optional<String> username, String identification, IdentificationType identificationType, Role role) {
         if (username.isEmpty()) {
             return false;
         }
-        Optional<String> commonGroupIdentification = switch (groupType) {
-            case COMMON -> Optional.of(groupIdentification);
-            case BASE -> baseGroupService.findBaseGroup(groupIdentification).map(BaseGroup::getCommonGroupId);
-            case ADMIN -> Optional.empty();
-            case PRIVILEGE -> privilegeGroupService.findPrivilegeGroup(groupIdentification).map(PrivilegeGroup::getCommonGroupId);
-        };
+        Optional<String> commonGroupIdentification = getCommonGroupIdentification(identification, identificationType);
 
         return userService.findUser(username.get())
                 .map(u -> role.getLevel() <= u.getRole().getLevel() &&
                         (u.isGlobalAdmin() || (commonGroupIdentification.isPresent() && commonGroupIdentification.get().equals(u.getCommonGroupId()))))
                 .orElse(Boolean.FALSE);
+    }
+
+    /**
+     * Checks whether the principal is blocked
+     *
+     * @param username           username to check
+     * @param identification     identification of the group or user where to start search for permissions
+     * @param identificationType type of the group whose identification is given
+     * @return {@code true} if the username from oauth2 principal can be identified as blocked. Otherwise {@code false}
+     */
+    public boolean isBlocked(Optional<String> username, String identification, IdentificationType identificationType) {
+        if (username.isEmpty()) {
+            return true;
+        }
+        Optional<String> commonGroupIdentification = getCommonGroupIdentification(identification, identificationType);
+        return userService.findUser(username.get())
+                .map(u -> Role.BLOCKED.equals(u.getRole()) || commonGroupIdentification.isEmpty()
+                        || !commonGroupIdentification.get().equals(u.getCommonGroupId()))
+                .orElse(Boolean.TRUE);
+    }
+
+    /**
+     * Determines the parent common group identification
+     *
+     * @param identification     identification of the group or user where to start search for common group
+     * @param identificationType type of the group whose identification is given
+     * @return identification of common group. Might be empty if not found.
+     */
+    private Optional<String> getCommonGroupIdentification(String identification, IdentificationType identificationType) {
+        return switch (identificationType) {
+            case COMMON -> Optional.of(identification);
+            case BASE -> baseGroupService.findBaseGroup(identification).map(BaseGroup::getCommonGroupId);
+            case ADMIN -> Optional.empty();
+            case PRIVILEGE -> privilegeGroupService.findPrivilegeGroup(identification).map(PrivilegeGroup::getCommonGroupId);
+            case USER -> userService.findUser(identification).map(User::getCommonGroupId);
+        };
+
     }
 }

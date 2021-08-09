@@ -15,6 +15,7 @@ import de.ma_vin.ape.utils.controller.response.ResponseUtil;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -32,6 +33,7 @@ public class UserController extends AbstractDefaultOperationController {
     @Autowired
     private PrivilegeGroupService privilegeGroupService;
 
+    @PreAuthorize("isContributor(#commonGroupIdentification, 'COMMON')")
     @PostMapping("/createUser")
     public @ResponseBody
     ResponseWrapper<UserDto> createUser(@RequestParam String firstName, @RequestParam String lastName, @RequestParam String commonGroupIdentification) {
@@ -42,6 +44,7 @@ public class UserController extends AbstractDefaultOperationController {
         return ResponseUtil.createSuccessResponse(UserTransportMapper.convertToUserDto(result.get()));
     }
 
+    @PreAuthorize("isManager(#userIdentification, 'USER')")
     @DeleteMapping("/deleteUser/{userIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> deleteUser(@PathVariable String userIdentification) {
@@ -51,6 +54,7 @@ public class UserController extends AbstractDefaultOperationController {
                 , identificationToCheck -> userService.userExits(identificationToCheck));
     }
 
+    @PreAuthorize("isVisitor(#userIdentification, 'USER')")
     @GetMapping("/getUser/{userIdentification}")
     public @ResponseBody
     ResponseWrapper<UserDto> getUser(@PathVariable String userIdentification) {
@@ -60,6 +64,7 @@ public class UserController extends AbstractDefaultOperationController {
         );
     }
 
+    @PreAuthorize("isPrincipalItself(#userIdentification) or isManager(#userIdentification, 'USER')")
     @PutMapping("/updateUser/{userIdentification}")
     public @ResponseBody
     ResponseWrapper<UserDto> updateUser(@RequestBody UserDto user, @PathVariable String userIdentification) {
@@ -71,6 +76,7 @@ public class UserController extends AbstractDefaultOperationController {
         );
     }
 
+    @PreAuthorize("isPrincipalItself(#userIdentification) or isAdmin(#userIdentification, 'USER')")
     @PatchMapping("/setUserPassword/{userIdentification}")
     public ResponseWrapper<Boolean> setUserPassword(@PathVariable String userIdentification, @RequestBody String rawPassword) {
         if (userService.setPassword(userIdentification, rawPassword)) {
@@ -79,6 +85,7 @@ public class UserController extends AbstractDefaultOperationController {
         return createEmptyResponseWithError(String.format("The password could not be set at user with identification %s", userIdentification));
     }
 
+    @PreAuthorize("isAdmin(#userIdentification, 'USER')")
     @PatchMapping("/setUserRole/{userIdentification}")
     public ResponseWrapper<Boolean> setUserRole(@PathVariable String userIdentification, @RequestBody Role role) {
         if (userService.setRole(userIdentification, role)) {
@@ -94,6 +101,7 @@ public class UserController extends AbstractDefaultOperationController {
         };
     }
 
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllUsers/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<UserDto>> getAllUsers(@PathVariable String commonGroupIdentification) {
@@ -104,6 +112,7 @@ public class UserController extends AbstractDefaultOperationController {
         return createSuccessResponse(result);
     }
 
+    @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PatchMapping("/addUserToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addUserToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody UserIdRoleDto userRole) {
@@ -119,6 +128,7 @@ public class UserController extends AbstractDefaultOperationController {
                 , userRole.getUserIdentification(), userRole.getRole().getDescription(), privilegeGroupIdentification));
     }
 
+    @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PatchMapping("/removeUserFromPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> removeUserFromPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody String userIdentification) {
@@ -128,6 +138,7 @@ public class UserController extends AbstractDefaultOperationController {
                 , userIdentification, privilegeGroupIdentification));
     }
 
+    @PreAuthorize("isContributor(#baseGroupIdentification, 'BASE')")
     @PatchMapping("/addUserToBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> addUserToBaseGroup(@PathVariable String baseGroupIdentification, @RequestBody String userIdentification) {
@@ -142,6 +153,7 @@ public class UserController extends AbstractDefaultOperationController {
                 , userIdentification, baseGroupIdentification));
     }
 
+    @PreAuthorize("isContributor(#baseGroupIdentification, 'BASE')")
     @PatchMapping("/removeUserFromBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> removeUserFromBaseGroup(@PathVariable String baseGroupIdentification, @RequestBody String userIdentification) {
@@ -151,6 +163,7 @@ public class UserController extends AbstractDefaultOperationController {
                 , userIdentification, baseGroupIdentification));
     }
 
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
     @GetMapping("/getAllUsersFromBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<UserDto>> getAllUsersFromBaseGroup(@PathVariable String baseGroupIdentification, @RequestParam(required = false) Boolean dissolveSubgroups) {
@@ -161,6 +174,7 @@ public class UserController extends AbstractDefaultOperationController {
         return createSuccessResponse(result);
     }
 
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/getAllUsersFromPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<UserRoleDto>> getAllUsersFromPrivilegeGroup(@PathVariable String privilegeGroupIdentification

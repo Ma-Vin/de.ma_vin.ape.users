@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public enum GroupType {
-    ADMIN, BASE, COMMON, PRIVILEGE;
+public enum IdentificationType {
+    ADMIN, BASE, COMMON, PRIVILEGE, USER
 }
