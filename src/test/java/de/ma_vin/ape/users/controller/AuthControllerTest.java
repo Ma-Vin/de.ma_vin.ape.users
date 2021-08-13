@@ -15,8 +15,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.springframework.beans.CachedIntrospectionResults;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
@@ -41,6 +41,7 @@ public class AuthControllerTest {
     public static final String USER_PWD = "DummyUserPwd";
     public static final String CLIENT_ID = "DummyClientId";
     public static final String CLIENT_SECRET = "DummyClientSecret";
+    public static final String ISSUER_URL = "http://localhost/dummy";
     public static final String REDIRECT_URL = "http://localhost:8080/";
     public static final String SCOPE = "DummyScope";
     public static final String STATE = "DummyState";
@@ -59,6 +60,8 @@ public class AuthControllerTest {
     private TokenIssuerService tokenIssuerService;
     @Mock
     private AuthorizeCodeService authorizeCodeService;
+    @Mock
+    private HttpServletRequest request;
     @Mock
     private HttpServletResponse response;
     @Mock
@@ -87,6 +90,8 @@ public class AuthControllerTest {
         cut.setTokenIssuerService(tokenIssuerService);
 
         when(principal.getName()).thenReturn(USER_ID);
+
+        when(request.getRequestURL()).thenReturn(new StringBuffer(ISSUER_URL));
 
         when(tokenInfo.getToken()).thenReturn(token);
         when(tokenInfo.getRefreshToken()).thenReturn(refreshToken);
@@ -133,7 +138,7 @@ public class AuthControllerTest {
     public void testAuthorizeCode() {
         when(authorizeCodeService.issue(any(), any(), any())).thenReturn(Optional.of(CODE));
 
-        Object result = cut.authorize(principal, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
+        Object result = cut.authorize(principal, request, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
 
         assertNotNull(result, "There should be any result");
         assertTrue(result instanceof AuthorizationResponse, "Result should be an instance of AuthorizationResponse");
@@ -155,7 +160,7 @@ public class AuthControllerTest {
     public void testAuthorizeCodeNoRedirection() {
         when(authorizeCodeService.issue(any(), any(), any())).thenReturn(Optional.of(CODE));
 
-        Object result = cut.authorize(principal, response, ResponseType.CODE.getTypeName(), CLIENT_ID, null, SCOPE, STATE);
+        Object result = cut.authorize(principal, request, response, ResponseType.CODE.getTypeName(), CLIENT_ID, null, SCOPE, STATE);
 
         assertNotNull(result, "There should be any result");
         assertTrue(result instanceof AuthorizationResponse, "Result should be an instance of AuthorizationResponse");
@@ -177,7 +182,7 @@ public class AuthControllerTest {
     public void testAuthorizeCodeEmptyRedirection() {
         when(authorizeCodeService.issue(any(), any(), any())).thenReturn(Optional.of(CODE));
 
-        Object result = cut.authorize(principal, response, ResponseType.CODE.getTypeName(), CLIENT_ID, "", SCOPE, STATE);
+        Object result = cut.authorize(principal, request, response, ResponseType.CODE.getTypeName(), CLIENT_ID, "", SCOPE, STATE);
 
         assertNotNull(result, "There should be any result");
         assertTrue(result instanceof AuthorizationResponse, "Result should be an instance of AuthorizationResponse");
@@ -200,7 +205,7 @@ public class AuthControllerTest {
         when(authorizeCodeService.issue(any(), any(), any())).thenReturn(Optional.empty());
 
         try {
-            cut.authorize(principal, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
+            cut.authorize(principal, request, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_UNAUTHORIZED, e.getHttpStatus(), "Wrong error status");
@@ -226,7 +231,7 @@ public class AuthControllerTest {
         }
 
         try {
-            cut.authorize(principal, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
+            cut.authorize(principal, request, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getHttpStatus(), "Wrong error status");
@@ -248,7 +253,7 @@ public class AuthControllerTest {
         redirect.setRedirectStart("http://somethingElse:8080/");
 
         try {
-            cut.authorize(principal, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
+            cut.authorize(principal, request, response, ResponseType.CODE.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getHttpStatus(), "Wrong error status");
@@ -268,7 +273,7 @@ public class AuthControllerTest {
     public void testAuthorizeImplicit() {
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
-        Object result = cut.authorize(principal, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
+        Object result = cut.authorize(principal, request, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
 
         assertNotNull(result, "There should be any result");
         assertTrue(result instanceof TokenResponse, "Result should be an instance of AuthorizationResponse");
@@ -283,7 +288,7 @@ public class AuthControllerTest {
         assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -296,7 +301,7 @@ public class AuthControllerTest {
     public void testAuthorizeImplicitNoRedirection() {
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
-        Object result = cut.authorize(principal, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, null, SCOPE, null);
+        Object result = cut.authorize(principal, request, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, null, SCOPE, null);
 
         assertNotNull(result, "There should be any result");
         assertTrue(result instanceof TokenResponse, "Result should be an instance of AuthorizationResponse");
@@ -311,7 +316,7 @@ public class AuthControllerTest {
         assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -324,7 +329,7 @@ public class AuthControllerTest {
     public void testAuthorizeImplicitEmptyRedirection() {
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
-        Object result = cut.authorize(principal, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, "", SCOPE, null);
+        Object result = cut.authorize(principal, request, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, "", SCOPE, null);
 
         assertNotNull(result, "There should be any result");
         assertTrue(result instanceof TokenResponse, "Result should be an instance of AuthorizationResponse");
@@ -339,7 +344,7 @@ public class AuthControllerTest {
         assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -353,14 +358,14 @@ public class AuthControllerTest {
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.empty());
 
         try {
-            cut.authorize(principal, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
+            cut.authorize(principal, request, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_UNAUTHORIZED, e.getHttpStatus(), "Wrong error status");
         }
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -379,14 +384,14 @@ public class AuthControllerTest {
         }
 
         try {
-            cut.authorize(principal, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
+            cut.authorize(principal, request, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getHttpStatus(), "Wrong error status");
         }
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -401,14 +406,14 @@ public class AuthControllerTest {
         redirect.setRedirectStart("http://somethingElse:8080/");
 
         try {
-            cut.authorize(principal, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
+            cut.authorize(principal, request, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_FORBIDDEN, e.getHttpStatus(), "Wrong error status");
         }
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -427,14 +432,14 @@ public class AuthControllerTest {
         }
 
         try {
-            cut.authorize(principal, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
+            cut.authorize(principal, request, response, ResponseType.TOKEN.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getHttpStatus(), "Wrong error status");
         }
 
         verify(authorizeCodeService, never()).issue(any(), any(), any());
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -446,7 +451,7 @@ public class AuthControllerTest {
     @Test
     public void testAuthorizeNotSupported() {
         try {
-            cut.authorize(principal, response, ResponseType.NOT_SUPPORTED.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
+            cut.authorize(principal, request, response, ResponseType.NOT_SUPPORTED.getTypeName(), CLIENT_ID, REDIRECT_URL, SCOPE, STATE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_NOT_IMPLEMENTED, e.getHttpStatus(), "Wrong error status");
@@ -468,7 +473,7 @@ public class AuthControllerTest {
         when(authorizeCodeService.getCodeInfo(any())).thenReturn(Optional.of(codeInfo));
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
-        TokenResponse tokenResponse = cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+        TokenResponse tokenResponse = cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                 , REDIRECT_URL, CLIENT_ID, null, null, null);
 
         assertNotNull(tokenResponse, "There should be any result");
@@ -483,7 +488,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -498,7 +503,7 @@ public class AuthControllerTest {
         when(authorizeCodeService.getCodeInfo(any())).thenReturn(Optional.of(codeInfo));
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
-        TokenResponse tokenResponse = cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+        TokenResponse tokenResponse = cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                 , null, CLIENT_ID, null, null, null);
 
         assertNotNull(tokenResponse, "There should be any result");
@@ -513,7 +518,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(any());
         } catch (IOException e) {
@@ -528,7 +533,7 @@ public class AuthControllerTest {
         when(authorizeCodeService.getCodeInfo(any())).thenReturn(Optional.of(codeInfo));
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
-        TokenResponse tokenResponse = cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+        TokenResponse tokenResponse = cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                 , "", CLIENT_ID, null, null, null);
 
         assertNotNull(tokenResponse, "There should be any result");
@@ -543,7 +548,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(any());
         } catch (IOException e) {
@@ -559,7 +564,7 @@ public class AuthControllerTest {
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
         try {
-            cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+            cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                     , REDIRECT_URL, CLIENT_ID, null, null, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -568,7 +573,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService, never()).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService, never()).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService, never()).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -584,7 +589,7 @@ public class AuthControllerTest {
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
         try {
-            cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+            cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                     , REDIRECT_URL, CLIENT_ID, null, null, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -593,7 +598,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService, never()).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService, never()).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -609,7 +614,7 @@ public class AuthControllerTest {
         when(tokenIssuerService.issueImplicit(any(), any(), any())).thenReturn(Optional.empty());
 
         try {
-            cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+            cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                     , REDIRECT_URL, CLIENT_ID, null, null, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -618,7 +623,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -640,7 +645,7 @@ public class AuthControllerTest {
         }
 
         try {
-            cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+            cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                     , REDIRECT_URL, CLIENT_ID, null, null, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -649,7 +654,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -666,7 +671,7 @@ public class AuthControllerTest {
         redirect.setRedirectStart("http://somethingElse:8080/");
 
         try {
-            cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+            cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                     , REDIRECT_URL, CLIENT_ID, null, null, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -675,7 +680,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -697,7 +702,7 @@ public class AuthControllerTest {
         }
 
         try {
-            cut.token(response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
+            cut.token(request, response, GrantType.AUTHORIZATION_CODE.getTypeName(), CODE, null
                     , REDIRECT_URL, CLIENT_ID, null, null, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -706,7 +711,7 @@ public class AuthControllerTest {
 
         verify(authorizeCodeService).isValid(eq(CODE));
         verify(authorizeCodeService).getCodeInfo(eq(CODE));
-        verify(tokenIssuerService).issueImplicit(eq(CLIENT_ID), eq(USER_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueImplicit(eq(ISSUER_URL), eq(USER_ID), eq(SCOPE));
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));
         } catch (IOException e) {
@@ -719,7 +724,7 @@ public class AuthControllerTest {
     public void testTokenPassword() {
         when(tokenIssuerService.issue(any(), any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
-        TokenResponse tokenResponse = cut.token(response, GrantType.PASSWORD.getTypeName(), null, null
+        TokenResponse tokenResponse = cut.token(request, response, GrantType.PASSWORD.getTypeName(), null, null
                 , null, CLIENT_ID, USER_ID, USER_PWD, SCOPE);
 
         assertNotNull(tokenResponse, "There should be any result");
@@ -732,7 +737,7 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
         assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
-        verify(tokenIssuerService).issue(eq(CLIENT_ID), eq(USER_ID), eq(USER_PWD), eq(SCOPE));
+        verify(tokenIssuerService).issue(eq(ISSUER_URL), eq(USER_ID), eq(USER_PWD), eq(SCOPE));
     }
 
 
@@ -742,14 +747,14 @@ public class AuthControllerTest {
         when(tokenIssuerService.issue(any(), any(), any(), any())).thenReturn(Optional.empty());
 
         try {
-            cut.token(response, GrantType.PASSWORD.getTypeName(), null, null
+            cut.token(request, response, GrantType.PASSWORD.getTypeName(), null, null
                     , null, CLIENT_ID, USER_ID, USER_PWD, SCOPE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_UNAUTHORIZED, e.getHttpStatus(), "Wrong error status");
         }
 
-        verify(tokenIssuerService).issue(eq(CLIENT_ID), eq(USER_ID), eq(USER_PWD), eq(SCOPE));
+        verify(tokenIssuerService).issue(eq(ISSUER_URL), eq(USER_ID), eq(USER_PWD), eq(SCOPE));
     }
 
     @DisplayName("Issue token of password grant type but not successful encoding")
@@ -764,22 +769,22 @@ public class AuthControllerTest {
         }
 
         try {
-            cut.token(response, GrantType.PASSWORD.getTypeName(), null, null
+            cut.token(request, response, GrantType.PASSWORD.getTypeName(), null, null
                     , null, CLIENT_ID, USER_ID, USER_PWD, SCOPE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getHttpStatus(), "Wrong error status");
         }
 
-        verify(tokenIssuerService).issue(eq(CLIENT_ID), eq(USER_ID), eq(USER_PWD), eq(SCOPE));
+        verify(tokenIssuerService).issue(eq(ISSUER_URL), eq(USER_ID), eq(USER_PWD), eq(SCOPE));
     }
 
     @DisplayName("Issue token of client grant type")
     @Test
     public void testTokenClient() {
-        when(tokenIssuerService.issueClient(any(), any())).thenReturn(Optional.of(tokenInfo));
+        when(tokenIssuerService.issueClient(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
-        TokenResponse tokenResponse = cut.token(response, GrantType.CLIENT_CREDENTIALS.getTypeName(), null, null
+        TokenResponse tokenResponse = cut.token(request, response, GrantType.CLIENT_CREDENTIALS.getTypeName(), null, null
                 , null, CLIENT_ID, null, null, SCOPE);
 
         assertNotNull(tokenResponse, "There should be any result");
@@ -792,30 +797,30 @@ public class AuthControllerTest {
         assertNotNull(tokenResponse.getExpiresIn(), "There should be any expiration");
         assertEquals(Long.valueOf(10), tokenResponse.getExpiresIn(), "Wrong expiration");
 
-        verify(tokenIssuerService).issueClient(eq(CLIENT_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueClient(eq(ISSUER_URL), eq(CLIENT_ID), eq(SCOPE));
     }
 
 
     @DisplayName("Issue token of client grant type but not successful")
     @Test
     public void testTokenClientNotSuccessful() {
-        when(tokenIssuerService.issueClient(any(), any())).thenReturn(Optional.empty());
+        when(tokenIssuerService.issueClient(any(), any(), any())).thenReturn(Optional.empty());
 
         try {
-            cut.token(response, GrantType.CLIENT_CREDENTIALS.getTypeName(), null, null
+            cut.token(request, response, GrantType.CLIENT_CREDENTIALS.getTypeName(), null, null
                     , null, CLIENT_ID, null, null, SCOPE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_UNAUTHORIZED, e.getHttpStatus(), "Wrong error status");
         }
 
-        verify(tokenIssuerService).issueClient(eq(CLIENT_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueClient(eq(ISSUER_URL), eq(CLIENT_ID), eq(SCOPE));
     }
 
     @DisplayName("Issue token of client grant type but not successful encoding")
     @Test
     public void testTokenClientEncodingNotSuccessful() {
-        when(tokenIssuerService.issueClient(any(), any())).thenReturn(Optional.of(tokenInfo));
+        when(tokenIssuerService.issueClient(any(), any(), any())).thenReturn(Optional.of(tokenInfo));
 
         try {
             when(token.getEncodedToken()).thenThrow(new JwtGeneratingException("EncodedToken"));
@@ -824,14 +829,14 @@ public class AuthControllerTest {
         }
 
         try {
-            cut.token(response, GrantType.CLIENT_CREDENTIALS.getTypeName(), null, null
+            cut.token(request, response, GrantType.CLIENT_CREDENTIALS.getTypeName(), null, null
                     , null, CLIENT_ID, null, null, SCOPE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
             assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getHttpStatus(), "Wrong error status");
         }
 
-        verify(tokenIssuerService).issueClient(eq(CLIENT_ID), eq(SCOPE));
+        verify(tokenIssuerService).issueClient(eq(ISSUER_URL), eq(CLIENT_ID), eq(SCOPE));
     }
 
     @DisplayName("Issue token of refresh grant type")
@@ -839,7 +844,7 @@ public class AuthControllerTest {
     public void testTokenRefresh() {
         when(tokenIssuerService.refresh(any())).thenReturn(Optional.of(tokenInfo));
 
-        TokenResponse tokenResponse = cut.token(response, GrantType.REFRESH_TOKEN.getTypeName(), null, REFRESH_TOKEN
+        TokenResponse tokenResponse = cut.token(request, response, GrantType.REFRESH_TOKEN.getTypeName(), null, REFRESH_TOKEN
                 , null, CLIENT_ID, null, null, null);
 
         assertNotNull(tokenResponse, "There should be any result");
@@ -861,7 +866,7 @@ public class AuthControllerTest {
         when(tokenIssuerService.refresh(any())).thenReturn(Optional.empty());
 
         try {
-            cut.token(response, GrantType.REFRESH_TOKEN.getTypeName(), null, REFRESH_TOKEN
+            cut.token(request, response, GrantType.REFRESH_TOKEN.getTypeName(), null, REFRESH_TOKEN
                     , null, CLIENT_ID, null, null, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -883,7 +888,7 @@ public class AuthControllerTest {
         }
 
         try {
-            cut.token(response, GrantType.REFRESH_TOKEN.getTypeName(), null, REFRESH_TOKEN
+            cut.token(request, response, GrantType.REFRESH_TOKEN.getTypeName(), null, REFRESH_TOKEN
                     , null, CLIENT_ID, null, null, null);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -898,7 +903,7 @@ public class AuthControllerTest {
     @Test
     public void testTokenNotSupported() {
         try {
-            cut.token(response, GrantType.NOT_SUPPORTED.getTypeName(), CODE, REFRESH_TOKEN
+            cut.token(request, response, GrantType.NOT_SUPPORTED.getTypeName(), CODE, REFRESH_TOKEN
                     , REDIRECT_URL, CLIENT_ID, USER_ID, USER_PWD, SCOPE);
             fail("There should be an AuthTokenException");
         } catch (AuthTokenException e) {
@@ -907,7 +912,7 @@ public class AuthControllerTest {
 
         verify(tokenIssuerService, never()).issueImplicit(any(), any(), any());
         verify(tokenIssuerService, never()).refresh(any());
-        verify(tokenIssuerService, never()).issueClient(any(), any());
+        verify(tokenIssuerService, never()).issueClient(any(), any(), any());
         verify(tokenIssuerService, never()).issue(any(), any(), any(), any());
         try {
             verify(response, never()).sendRedirect(eq(REDIRECT_URL));

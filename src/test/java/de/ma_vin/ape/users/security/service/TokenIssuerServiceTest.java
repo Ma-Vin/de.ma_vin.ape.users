@@ -36,6 +36,7 @@ public class TokenIssuerServiceTest {
     private static final Long TOKEN_EXPIRATION = 60L;
     private static final Long REFRESH_TOKEN_EXPIRATION = TOKEN_EXPIRATION + 60L;
     private static final String CLIENT_ID = "DummyClientId";
+    private static final String CLIENT_URL = "http://localhost/oauth/token";
     private static final String USER_ID = IdGenerator.generateIdentification(1L, User.ID_PREFIX);
     private static final String USER_PWD = "DummyPwd";
     private static final String USER_URL_ENCODED_PWD = "RHVtbXlQd2Q=";
@@ -223,7 +224,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_PWD);
         when(encoder.matches(eq(USER_URL_DECODED_PWD), eq(USER_PWD))).thenReturn(Boolean.TRUE);
 
-        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_ID, USER_ID, USER_URL_ENCODED_PWD);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_URL, USER_ID, USER_URL_ENCODED_PWD);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
         assertNotNull(result.get().getToken(), "The token should not be null");
@@ -240,7 +241,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_PWD);
         when(encoder.matches(eq(USER_URL_DECODED_PWD), eq(USER_PWD))).thenReturn(Boolean.TRUE);
 
-        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_ID, USER_ID, USER_URL_ENCODED_PWD, "read|Write");
+        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_URL, USER_ID, USER_URL_ENCODED_PWD, "read|Write");
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
         assertNotNull(result.get().getToken(), "The token should not be null");
@@ -257,7 +258,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_PWD);
         when(encoder.matches(eq(USER_URL_DECODED_PWD), eq(USER_PWD))).thenReturn(Boolean.TRUE);
 
-        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_ID, USER_ID, USER_URL_ENCODED_PWD);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_URL, USER_ID, USER_URL_ENCODED_PWD);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -272,7 +273,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_PWD);
         when(encoder.matches(eq(USER_URL_DECODED_PWD), eq(USER_PWD))).thenReturn(Boolean.FALSE);
 
-        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_ID, USER_ID, USER_URL_ENCODED_PWD);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issue(CLIENT_URL, USER_ID, USER_URL_ENCODED_PWD);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -287,7 +288,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_URL_ENCODED_PWD);
         when(encoder.encode(eq(USER_PWD))).thenReturn(USER_URL_ENCODED_PWD);
 
-        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_ID, USER_ID);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_URL, USER_ID);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
         assertNotNull(result.get().getToken(), "The token should not be null");
@@ -304,7 +305,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_URL_ENCODED_PWD);
         when(encoder.encode(eq(USER_PWD))).thenReturn(USER_URL_ENCODED_PWD);
 
-        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_ID, USER_ID, "read|Write");
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_URL, USER_ID, "read|Write");
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
         assertNotNull(result.get().getToken(), "The token should not be null");
@@ -321,7 +322,7 @@ public class TokenIssuerServiceTest {
         when(userDao.getPassword()).thenReturn(USER_URL_ENCODED_PWD);
         when(encoder.encode(eq(USER_PWD))).thenReturn(USER_URL_ENCODED_PWD);
 
-        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_ID, USER_ID, USER_PWD);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueImplicit(CLIENT_URL, USER_ID, USER_PWD);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -332,7 +333,7 @@ public class TokenIssuerServiceTest {
     @DisplayName("Issue a new pair of client token and refresh token with user and password")
     @Test
     public void testIssueClientToken() {
-        Optional<TokenIssuerService.TokenInfo> result = cut.issueClient(CLIENT_ID);
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueClient(CLIENT_URL, CLIENT_ID);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
         assertNotNull(result.get().getToken(), "The token should not be null");
@@ -342,7 +343,7 @@ public class TokenIssuerServiceTest {
     @DisplayName("Issue a new pair of client token and refresh token with user, password and scope")
     @Test
     public void testIssueClientTokenWithScope() {
-        Optional<TokenIssuerService.TokenInfo> result = cut.issueClient(CLIENT_ID, "read|Write");
+        Optional<TokenIssuerService.TokenInfo> result = cut.issueClient(CLIENT_URL, CLIENT_ID, "read|Write");
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
         assertNotNull(result.get().getToken(), "The token should not be null");

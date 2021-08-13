@@ -105,25 +105,25 @@ public class TokenIssuerService {
     /**
      * Issues a new Token and corresponding refresh token
      *
-     * @param clientId id of the client who is issuing
-     * @param username name of user whose is issued for
-     * @param password the password of the user
+     * @param issuerUrl url of the principal who is issuing
+     * @param username  name of user whose is issued for
+     * @param password  the password of the user
      * @return new {@link Optional} of a pair token and refresh token
      */
-    public Optional<TokenInfo> issue(String clientId, String username, String password) {
-        return issue(clientId, username, password, null);
+    public Optional<TokenInfo> issue(String issuerUrl, String username, String password) {
+        return issue(issuerUrl, username, password, null);
     }
 
     /**
      * Issues a new Token and corresponding refresh token
      *
-     * @param clientId id of the client who is issuing
-     * @param username name of user whose is issued for
-     * @param password the password of the user
-     * @param scopes   the scope of the issued token
+     * @param issuerUrl url of the principal who is issuing
+     * @param username  name of user whose is issued for
+     * @param password  the password of the user
+     * @param scopes    the scope of the issued token
      * @return new {@link Optional} of a pair token and refresh token
      */
-    public Optional<TokenInfo> issue(String clientId, String username, String password, String scopes) {
+    public Optional<TokenInfo> issue(String issuerUrl, String username, String password, String scopes) {
         Optional<UserDao> user = userRepository.findById(IdGenerator.generateId(username, User.ID_PREFIX));
         if (user.isEmpty()) {
             log.warn("The user {} is unknown while issuing token", username);
@@ -133,67 +133,69 @@ public class TokenIssuerService {
             log.warn("Wrong password for user {} while issuing token", username);
             return Optional.empty();
         }
-        return issueInternal(clientId, username, scopes);
+        return issueInternal(issuerUrl, username, scopes);
     }
 
     /**
      * Issues a new implicit Token and corresponding refresh token
      *
-     * @param clientId id of the client who is issuing
-     * @param username name of user whose is issued for
+     * @param issuerUrl url of the principal who is issuing
+     * @param username  name of user whose is issued for
      * @return new {@link Optional} of a pair token and refresh token
      */
-    public Optional<TokenInfo> issueImplicit(String clientId, String username) {
-        return issueImplicit(clientId, username, null);
+    public Optional<TokenInfo> issueImplicit(String issuerUrl, String username) {
+        return issueImplicit(issuerUrl, username, null);
     }
 
     /**
      * Issues a new implicit Token and corresponding refresh token
      *
-     * @param clientId id of the client who is issuing
-     * @param username name of user whose is issued for
-     * @param scopes   the scope of the issued token
+     * @param issuerUrl url of the principal who is issuing
+     * @param username  name of user whose is issued for
+     * @param scopes    the scope of the issued token
      * @return new {@link Optional} of a pair token and refresh token
      */
-    public Optional<TokenInfo> issueImplicit(String clientId, String username, String scopes) {
+    public Optional<TokenInfo> issueImplicit(String issuerUrl, String username, String scopes) {
         Optional<UserDao> user = userRepository.findById(IdGenerator.generateId(username, User.ID_PREFIX));
         if (user.isEmpty()) {
             log.warn("The user {} is unknown while issuing token", username);
             return Optional.empty();
         }
-        return issueInternal(clientId, username, scopes);
+        return issueInternal(issuerUrl, username, scopes);
     }
 
     /**
      * Issues a new client Token and corresponding refresh token
      *
-     * @param clientId id of the client who is issuing
+     * @param issuerUrl url of the principal who is issuing
+     * @param clientId  id of the client
      * @return new {@link Optional} of a pair token and refresh token
      */
-    public Optional<TokenInfo> issueClient(String clientId) {
-        return issueClient(clientId, null);
+    public Optional<TokenInfo> issueClient(String issuerUrl, String clientId) {
+        return issueClient(issuerUrl, clientId, null);
     }
 
     /**
      * Issues a new client Token and corresponding refresh token
      *
-     * @param clientId id of the client who is issuing
-     * @param scopes   the scope of the issued token
+     * @param issuerUrl url of the principal who is issuing
+     * @param clientId  id of the client
+     * @param scopes    the scope of the issued token
      * @return new {@link Optional} of a pair token and refresh token
      */
-    public Optional<TokenInfo> issueClient(String clientId, String scopes) {
-        return issueInternal(clientId, clientId, scopes);
+    public Optional<TokenInfo> issueClient(String issuerUrl, String clientId, String scopes) {
+        return issueInternal(issuerUrl, clientId, scopes);
     }
 
     /**
      * Issues a new Token and corresponding refresh token
      *
-     * @param clientId id of the client who is issuing
-     * @param username name of user whose is issued for
-     * @param scopes   the scopes of the issued token
+     * @param issuerUrl url of the principal who is issuing
+     * @param username  name of user whose is issued for
+     * @param scopes    the scopes of the issued token
      * @return new {@link Optional} of a pair token and refresh token
      */
-    private Optional<TokenInfo> issueInternal(String clientId, String username, String scopes) {
+    private Optional<TokenInfo> issueInternal(String issuerUrl, String username, String scopes) {
         LocalDateTime now = SystemProperties.getSystemDateTime();
 
         String uuid = UUID.randomUUID().toString();
@@ -201,8 +203,8 @@ public class TokenIssuerService {
             uuid = UUID.randomUUID().toString();
         }
 
-        Payload payload = new Payload(clientId, username, null, now.plus(tokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
-        Payload refreshPayload = new Payload(clientId, username, null, now.plus(refreshTokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
+        Payload payload = new Payload(issuerUrl, username, null, now.plus(tokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
+        Payload refreshPayload = new Payload(issuerUrl, username, null, now.plus(refreshTokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
 
         TokenInfo tokenInfo = new TokenInfo(uuid, refreshPayload.getExp()
                 , new JsonWebToken(encodingAlgorithm, secret, payload)

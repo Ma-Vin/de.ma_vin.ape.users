@@ -12,6 +12,7 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
@@ -41,7 +42,8 @@ public class AuthController {
 
     @GetMapping("/authorize")
     public @ResponseBody
-    Object authorize(Principal principal, HttpServletResponse response, @RequestParam("response_type") String responseType
+    Object authorize(Principal principal, HttpServletRequest request, HttpServletResponse response
+            , @RequestParam("response_type") String responseType
             , @RequestParam(name = "client_id") String clientId
             , @RequestParam(name = "redirect_uri", required = false) String redirectUri
             , @RequestParam(required = false) String scope
@@ -49,7 +51,7 @@ public class AuthController {
 
         return switch (ResponseType.getByTypeName(responseType)) {
             case CODE -> handleAuthorizeCode(response, principal.getName(), clientId, redirectUri, scope, state);
-            case TOKEN -> handleAuthorizeToken(response, principal.getName(), clientId, redirectUri, scope);
+            case TOKEN -> handleAuthorizeToken(request, response, principal.getName(), clientId, redirectUri, scope);
             default -> throw new AuthTokenException("Not supported response type:" + responseType, HttpServletResponse.SC_NOT_IMPLEMENTED);
         };
     }
@@ -57,7 +59,7 @@ public class AuthController {
     @SuppressWarnings("java:S107")
     @PostMapping("/token")
     public @ResponseBody
-    TokenResponse token(HttpServletResponse response
+    TokenResponse token(HttpServletRequest request, HttpServletResponse response
             , @RequestParam(name = "grant_type") String grantType
             , @RequestParam(required = false) String code
             , @RequestParam(name = "refresh_token", required = false) String refreshToken
@@ -68,9 +70,9 @@ public class AuthController {
             , @RequestParam(required = false) String scope) {
 
         return switch (GrantType.getByTypeName(grantType)) {
-            case AUTHORIZATION_CODE -> handleTokenAuthorizationCode(response, code, redirectUri, clientId);
-            case PASSWORD -> handleTokenPassword(username, password, clientId, scope);
-            case CLIENT_CREDENTIALS -> handleTokenClient(clientId, scope);
+            case AUTHORIZATION_CODE -> handleTokenAuthorizationCode(request, response, code, redirectUri, clientId);
+            case PASSWORD -> handleTokenPassword(request, username, password, clientId, scope);
+            case CLIENT_CREDENTIALS -> handleTokenClient(request, clientId, scope);
             case REFRESH_TOKEN -> handleTokenRefreshToken(refreshToken, clientId);
             default -> throw new AuthTokenException("Not supported grant type:" + grantType, HttpServletResponse.SC_NOT_IMPLEMENTED);
         };
@@ -95,8 +97,7 @@ public class AuthController {
         response.setExp(getLocalDateTimeToLong(payload.getExp()));
         response.setIat(getLocalDateTimeToLong(payload.getIat()));
         response.setNbf(getLocalDateTimeToLong(payload.getNbf()));
-        // TODO: Not the client id is expected
-        //response.setIss(payload.getIss());
+        response.setIss(payload.getIss());
         response.setJti(payload.getJti());
 
         return response;
@@ -161,6 +162,7 @@ public class AuthController {
     /**
      * Implicit Grant
      *
+     * @param request     http request
      * @param response    http response where to set a status if an error occurs or a redirection
      * @param username    id of the user for whom a code is generated (not part of common specification)
      * @param clientId    REQUIRED. The client identifier as described in Section 2.2.
@@ -168,8 +170,8 @@ public class AuthController {
      * @param scope       OPTIONAL. The scope of the access request as described by Section 3.3.
      * @return a token and refresh token
      */
-    private TokenResponse handleAuthorizeToken(HttpServletResponse response, String username, String clientId, String redirectUri, String scope) {
-        Optional<TokenIssuerService.TokenInfo> tokenPair = tokenIssuerService.issueImplicit(clientId, username, scope);
+    private TokenResponse handleAuthorizeToken(HttpServletRequest request, HttpServletResponse response, String username, String clientId, String redirectUri, String scope) {
+        Optional<TokenIssuerService.TokenInfo> tokenPair = tokenIssuerService.issueImplicit(request.getRequestURL().toString(), username, scope);
         TokenResponse result = createTokenResponse(tokenPair, username, clientId);
         redirect(response, redirectUri, clientId);
         return result;
@@ -185,7 +187,7 @@ public class AuthController {
      * @param clientId    REQUIRED, if the client is not authenticating with the authorization server as described in Section 3.2.1.
      * @return a token and refresh token
      */
-    private TokenResponse handleTokenAuthorizationCode(HttpServletResponse response, String code, String redirectUri, String clientId) {
+    private TokenResponse handleTokenAuthorizationCode(HttpServletRequest request, HttpServletResponse response, String code, String redirectUri, String clientId) {
         if (!authorizeCodeService.isValid(code)) {
             throw new AuthTokenException(String.format("The authenticate code %s is not valid for client %s", code, clientId)
                     , HttpServletResponse.SC_UNAUTHORIZED);
@@ -194,7 +196,7 @@ public class AuthController {
                 .orElseThrow(() -> new AuthTokenException(String.format("The authenticate code %s is not valid for client %s", code, clientId)
                         , HttpServletResponse.SC_UNAUTHORIZED));
 
-        Optional<TokenIssuerService.TokenInfo> tokenPair = tokenIssuerService.issueImplicit(clientId, codeInfo.getUserId(), codeInfo.getScope());
+        Optional<TokenIssuerService.TokenInfo> tokenPair = tokenIssuerService.issueImplicit(request.getRequestURL().toString(), codeInfo.getUserId(), codeInfo.getScope());
 
         TokenResponse tokenResponse = createTokenResponse(tokenPair, codeInfo.getUserId(), clientId);
         redirect(response, redirectUri, clientId);
@@ -210,8 +212,8 @@ public class AuthController {
      * @param scope    OPTIONAL. The scope of the access request as described by Section 3.3.
      * @return a token and refresh token
      */
-    private TokenResponse handleTokenPassword(String username, String password, String clientId, String scope) {
-        Optional<TokenIssuerService.TokenInfo> tokenPair = tokenIssuerService.issue(clientId, username, password, scope);
+    private TokenResponse handleTokenPassword(HttpServletRequest request, String username, String password, String clientId, String scope) {
+        Optional<TokenIssuerService.TokenInfo> tokenPair = tokenIssuerService.issue(request.getRequestURL().toString(), username, password, scope);
         return createTokenResponse(tokenPair, username, clientId);
     }
 
@@ -222,8 +224,8 @@ public class AuthController {
      * @param scope    OPTIONAL. The scope of the access request as described by Section 3.3.
      * @return A new pair of tokens
      */
-    private TokenResponse handleTokenClient(String clientId, String scope) {
-        Optional<TokenIssuerService.TokenInfo> tokenPair = tokenIssuerService.issueClient(clientId, scope);
+    private TokenResponse handleTokenClient(HttpServletRequest request, String clientId, String scope) {
+        Optional<TokenIssuerService.TokenInfo> tokenPair = tokenIssuerService.issueClient(request.getRequestURL().toString(), clientId, scope);
         return createTokenResponse(tokenPair, clientId, clientId);
     }
 
