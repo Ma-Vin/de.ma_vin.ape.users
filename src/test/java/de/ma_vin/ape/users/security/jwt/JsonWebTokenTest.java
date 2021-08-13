@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.security.jwt;
 
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,11 +41,14 @@ public class JsonWebTokenTest {
     public void setUp() {
         openMocks = openMocks(this);
         cut = new JsonWebToken(header, payload, signature);
+
+        SystemProperties.setZoneId("Europe/Berlin");
     }
 
     @AfterEach
     public void tearDown() throws Exception {
         openMocks.close();
+        SystemProperties.setZoneId((ZoneId) null);
     }
 
     @DisplayName("Get a encoded token")

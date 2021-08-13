@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.security.jwt;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,7 +22,7 @@ import java.util.Base64;
 @NoArgsConstructor
 public class Payload {
 
-    private static final ZoneId defaultZoneId = ZoneId.systemDefault();
+    private static final ZoneId defaultZoneId = SystemProperties.getZoneId();
 
     /**
      * Constructor

@@ -22,7 +22,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
@@ -932,7 +931,7 @@ public class AuthControllerTest {
         assertEquals(USER_ID, result.getUsername(), "Wrong username");
         assertEquals(USER_ID, result.getSub(), "Wrong sub");
         assertEquals(SystemProperties.getSystemDateTime().plus(10L, ChronoUnit.SECONDS)
-                .atZone(ZoneId.systemDefault()).toEpochSecond(), result.getExp(), "Wrong expiration");
+                .atZone(SystemProperties.getZoneId()).toEpochSecond(), result.getExp(), "Wrong expiration");
 
         verify(tokenIssuerService).getToken(eq(TOKEN));
     }

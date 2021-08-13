@@ -2,11 +2,13 @@ package de.ma_vin.ape.users.security.jwt;
 
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
 import de.ma_vin.ape.utils.properties.SystemProperties;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,9 +23,17 @@ public class PayloadTest {
 
     @BeforeEach
     public void setUp() {
+        SystemProperties.setZoneId("Europe/Berlin");
+
         cut = new Payload("Me", "Me", null, LocalDateTime.of(2021, 7, 2, 0, 0), null
                 , LocalDateTime.of(2021, 7, 1, 0, 0), "abc");
     }
+
+    @AfterEach
+    public void tearDown() {
+        SystemProperties.setZoneId((ZoneId) null);
+    }
+
 
     @DisplayName("Get the base64 url encoded token")
     @Test
