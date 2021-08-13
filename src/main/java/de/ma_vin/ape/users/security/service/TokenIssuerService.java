@@ -81,23 +81,29 @@ public class TokenIssuerService {
         if (refreshToken.isEmpty()) {
             return Optional.empty();
         }
-        TokenInfo tokenInfo = inMemoryTokens.get(refreshToken.get().getPayload().getJti());
+        TokenInfo tokenInfo = inMemoryTokens.remove(refreshToken.get().getPayload().getJti());
 
         LocalDateTime now = SystemProperties.getSystemDateTime();
-        if (refreshToken.get().getPayload().getExp().isBefore(now)) {
+        if (refreshToken.get().getPayload().getExpAsLocalDateTime().isBefore(now)) {
             log.warn("The token {} is expired already", encodedRefreshToken);
             return Optional.empty();
         }
 
-        tokenInfo.getToken().getPayload().setIat(now);
-        tokenInfo.getToken().getPayload().setNbf(now);
-        tokenInfo.getToken().getPayload().setExp(now.plus(tokenExpiresInSeconds, ChronoUnit.SECONDS));
+        String uuid = getUUID();
 
-        tokenInfo.getRefreshToken().getPayload().setIat(now);
-        tokenInfo.getRefreshToken().getPayload().setNbf(now);
-        tokenInfo.getRefreshToken().getPayload().setExp(now.plus(refreshTokenExpiresInSeconds, ChronoUnit.SECONDS));
+        tokenInfo.getToken().getPayload().setIatAsLocalDateTime(now);
+        tokenInfo.getToken().getPayload().setNbfAsLocalDateTime(now);
+        tokenInfo.getToken().getPayload().setExpAsLocalDateTime(now.plus(tokenExpiresInSeconds, ChronoUnit.SECONDS));
+        tokenInfo.getToken().getPayload().setJti(uuid);
 
-        tokenInfo.setExpiresAtLeast(tokenInfo.getRefreshToken().getPayload().getExp());
+        tokenInfo.getRefreshToken().getPayload().setIatAsLocalDateTime(now);
+        tokenInfo.getRefreshToken().getPayload().setNbfAsLocalDateTime(now);
+        tokenInfo.getRefreshToken().getPayload().setExpAsLocalDateTime(now.plus(refreshTokenExpiresInSeconds, ChronoUnit.SECONDS));
+        tokenInfo.getRefreshToken().getPayload().setJti(uuid);
+
+        tokenInfo.setExpiresAtLeast(tokenInfo.getRefreshToken().getPayload().getExpAsLocalDateTime());
+
+        inMemoryTokens.put(uuid, tokenInfo);
 
         return Optional.of(tokenInfo);
     }
@@ -198,15 +204,12 @@ public class TokenIssuerService {
     private Optional<TokenInfo> issueInternal(String issuerUrl, String username, String scopes) {
         LocalDateTime now = SystemProperties.getSystemDateTime();
 
-        String uuid = UUID.randomUUID().toString();
-        while (inMemoryTokens.containsKey(uuid)) {
-            uuid = UUID.randomUUID().toString();
-        }
+        String uuid = getUUID();
 
         Payload payload = new Payload(issuerUrl, username, null, now.plus(tokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
         Payload refreshPayload = new Payload(issuerUrl, username, null, now.plus(refreshTokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
 
-        TokenInfo tokenInfo = new TokenInfo(uuid, refreshPayload.getExp()
+        TokenInfo tokenInfo = new TokenInfo(uuid, refreshPayload.getExpAsLocalDateTime()
                 , new JsonWebToken(encodingAlgorithm, secret, payload)
                 , new JsonWebToken(encodingAlgorithm, secret, refreshPayload)
                 , scopes);
@@ -214,6 +217,14 @@ public class TokenIssuerService {
         inMemoryTokens.put(uuid, tokenInfo);
 
         return Optional.of(tokenInfo);
+    }
+
+    private String getUUID() {
+        String uuid = UUID.randomUUID().toString();
+        while (inMemoryTokens.containsKey(uuid)) {
+            uuid = UUID.randomUUID().toString();
+        }
+        return uuid;
     }
 
     /**
@@ -289,7 +300,7 @@ public class TokenIssuerService {
             log.error("The {} {} has the wrong scope {}", logText, encodedToken, scope);
             return Optional.empty();
         }
-        if (referenceToken.getPayload().getExp().isBefore(now)) {
+        if (referenceToken.getPayload().getExpAsLocalDateTime().isBefore(now)) {
             log.error("The {} {} is expired", logText, encodedToken);
             return Optional.empty();
         }

@@ -8,7 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
 
 /**
@@ -18,6 +20,24 @@ import java.util.Base64;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Payload {
+
+    private static final ZoneId defaultZoneId = ZoneId.systemDefault();
+
+    /**
+     * Constructor
+     *
+     * @param iss Issuer
+     * @param sub Subject
+     * @param aud Audience
+     * @param exp Expiration Time
+     * @param nbf Not Before
+     * @param iat Issued At
+     * @param jti JWT ID
+     */
+    public Payload(String iss, String sub, String aud, LocalDateTime exp, LocalDateTime nbf, LocalDateTime iat, String jti) {
+        this(iss, sub, aud, getLocalDateTimeToLong(exp), getLocalDateTimeToLong(nbf), getLocalDateTimeToLong(iat), jti
+                , defaultZoneId.toString());
+    }
 
     /**
      * (Issuer) Claim
@@ -62,7 +82,7 @@ public class Payload {
      * Its value MUST be a number containing a NumericDate value.
      * Use of this claim is OPTIONAL.
      */
-    private LocalDateTime exp;
+    private Long exp;
 
     /**
      * (Not Before) Claim
@@ -73,7 +93,7 @@ public class Payload {
      * Its value MUST be a number containing a NumericDate value.
      * Use of this claim is OPTIONAL.
      */
-    private LocalDateTime nbf;
+    private Long nbf;
 
     /**
      * (Issued At) Claim
@@ -83,7 +103,7 @@ public class Payload {
      * Its value MUST be a number containing a NumericDate value.
      * Use of this claim is OPTIONAL.
      */
-    private LocalDateTime iat;
+    private Long iat;
 
     /**
      * (JWT ID) Claim
@@ -97,6 +117,41 @@ public class Payload {
      */
     private String jti;
 
+    /**
+     * The
+     */
+    private String timeZone;
+
+    @JsonIgnore
+    public void setExpAsLocalDateTime(LocalDateTime exp) {
+        this.exp = getLocalDateTimeToLong(exp);
+    }
+
+    @JsonIgnore
+    public void setNbfAsLocalDateTime(LocalDateTime nbf) {
+        this.nbf = getLocalDateTimeToLong(nbf);
+    }
+
+    @JsonIgnore
+    public void setIatAsLocalDateTime(LocalDateTime iat) {
+        this.iat = getLocalDateTimeToLong(iat);
+    }
+
+    @JsonIgnore
+    public LocalDateTime getExpAsLocalDateTime() {
+        return exp != null ? LocalDateTime.ofInstant(Instant.ofEpochSecond(exp), defaultZoneId) : null;
+    }
+
+    @JsonIgnore
+    public LocalDateTime getNbfAsLocalDateTime() {
+        return nbf != null ? LocalDateTime.ofInstant(Instant.ofEpochSecond(nbf), defaultZoneId) : null;
+    }
+
+    @JsonIgnore
+    public LocalDateTime getIatAsLocalDateTime() {
+        return iat != null ? LocalDateTime.ofInstant(Instant.ofEpochSecond(iat), defaultZoneId) : null;
+    }
+
     @JsonIgnore
     private String getJson() throws JwtGeneratingException {
         try {
@@ -109,5 +164,15 @@ public class Payload {
     @JsonIgnore
     public String getJsonBase64UrlEncoded() throws JwtGeneratingException {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(getJson().getBytes(StandardCharsets.UTF_8));
+    }
+
+    @JsonIgnore
+    public static Long getLocalDateTimeToLong(LocalDateTime dateTime) {
+        return getLocalDateTimeToLong(dateTime, defaultZoneId);
+    }
+
+    @JsonIgnore
+    public static Long getLocalDateTimeToLong(LocalDateTime dateTime, ZoneId zoneId) {
+        return dateTime != null ? dateTime.atZone(zoneId).toEpochSecond() : null;
     }
 }

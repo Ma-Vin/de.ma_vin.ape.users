@@ -16,9 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 
@@ -94,17 +91,13 @@ public class AuthController {
         response.setUsername(payload.getSub());
         response.setSub(payload.getSub());
         response.setAud(payload.getAud());
-        response.setExp(getLocalDateTimeToLong(payload.getExp()));
-        response.setIat(getLocalDateTimeToLong(payload.getIat()));
-        response.setNbf(getLocalDateTimeToLong(payload.getNbf()));
+        response.setExp(payload.getExp());
+        response.setIat(payload.getIat());
+        response.setNbf(payload.getNbf());
         response.setIss(payload.getIss());
         response.setJti(payload.getJti());
 
         return response;
-    }
-
-    private Long getLocalDateTimeToLong(LocalDateTime dateTime) {
-        return dateTime != null ? dateTime.atZone(ZoneId.systemDefault()).toEpochSecond() : null;
     }
 
     /**
@@ -259,7 +252,7 @@ public class AuthController {
             response.setRefreshToken(tokenPair.get().getRefreshToken().getEncodedToken());
             response.setTokenType(TOKEN_TYPE);
             response.setScope(tokenPair.get().getScope());
-            response.setExpiresIn(Long.valueOf(ChronoUnit.SECONDS.between(SystemProperties.getSystemDateTime(), tokenPair.get().getToken().getPayload().getExp())));
+            response.setExpiresIn(tokenPair.get().getToken().getPayload().getExp() - Payload.getLocalDateTimeToLong(SystemProperties.getSystemDateTime()));
         } catch (JwtGeneratingException e) {
             throw new AuthTokenException(String.format("Could not authenticate user %s for client %s, because of jwt generating failures", username, clientId), e
                     , HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

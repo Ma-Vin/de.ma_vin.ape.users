@@ -108,9 +108,9 @@ public class AuthControllerTest {
             fail(e.getMessage());
         }
 
-        when(payload.getExp()).thenReturn(SystemProperties.getSystemDateTime().plus(10L, ChronoUnit.SECONDS));
+        when(payload.getExp()).thenReturn(Payload.getLocalDateTimeToLong(SystemProperties.getSystemDateTime().plus(10L, ChronoUnit.SECONDS)));
         when(payload.getSub()).thenReturn(USER_ID);
-        when(refreshPayload.getExp()).thenReturn(SystemProperties.getSystemDateTime().plus(20L, ChronoUnit.SECONDS));
+        when(refreshPayload.getExp()).thenReturn(Payload.getLocalDateTimeToLong(SystemProperties.getSystemDateTime().plus(20L, ChronoUnit.SECONDS)));
 
         when(codeInfo.getUserId()).thenReturn(USER_ID);
         when(codeInfo.getCode()).thenReturn(CODE);

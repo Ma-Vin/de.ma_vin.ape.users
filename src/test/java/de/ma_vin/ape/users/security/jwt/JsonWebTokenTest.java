@@ -22,8 +22,8 @@ public class JsonWebTokenTest {
     private static final String SECRET = "SomeDummySecret";
     public static final String VALID_TOKEN = String.format("%s.%s.%s"
             , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0"
-            , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9"
-            , "doe9MklLVlTbn8HLnFWJWjBylOxgrGtQ9uD9IxQ0YYY");
+            , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOjE2MjUxNzY4MDAsIm5iZiI6bnVsbCwiaWF0IjoxNjI1MDkwNDAwLCJqdGkiOiJhYmMiLCJ0aW1lWm9uZSI6IkV1cm9wZS9CZXJsaW4ifQ"
+            , "CA5ztwdM1kypkDJyQ7gP3PDCXoNyaMq873T8yt6iaOs");
 
     private AutoCloseable openMocks;
     private JsonWebToken cut;
@@ -67,11 +67,10 @@ public class JsonWebTokenTest {
     @DisplayName("Verify a token which has the wrong number of elements")
     @Test
     public void testVerifyWrongNumberOfElements() {
-        assertFalse(JsonWebToken.verify("eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0=.eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9", SECRET), "The token should not be valid");
         assertFalse(JsonWebToken.verify(
                 String.format("%s.%s"
-                        , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0="
-                        , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9")
+                        , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0"
+                        , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOjE2MjUxNzY4MDAsIm5iZiI6bnVsbCwiaWF0IjoxNjI1MDkwNDAwLCJqdGkiOiJhYmMiLCJ0aW1lWm9uZSI6IkV1cm9wZS9CZXJsaW4ifQ")
                 , SECRET)
                 , "The token should not be valid");
 
@@ -83,8 +82,8 @@ public class JsonWebTokenTest {
         assertFalse(JsonWebToken.verify(
                 String.format("%s.%s.%s"
                         , "abc"
-                        , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9"
-                        , "u2411rtXkLeOnjpOoyceBBcRY3UPcxwCa-8JqBGaiKw=")
+                        , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOjE2MjUxNzY4MDAsIm5iZiI6bnVsbCwiaWF0IjoxNjI1MDkwNDAwLCJqdGkiOiJhYmMiLCJ0aW1lWm9uZSI6IkV1cm9wZS9CZXJsaW4ifQ"
+                        , "CA5ztwdM1kypkDJyQ7gP3PDCXoNyaMq873T8yt6iaOs")
                 , SECRET)
                 , "The token should not be valid");
     }
@@ -145,7 +144,7 @@ public class JsonWebTokenTest {
                 JsonWebToken.decodeToken(
                         String.format("%s.%s.%s"
                                 , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6ImFiYyJ9"
-                                , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9"
+                                , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOjE2MjUxNzY4MDAsIm5iZiI6bnVsbCwiaWF0IjoxNjI1MDkwNDAwLCJqdGkiOiJhYmMiLCJ0aW1lWm9uZSI6IkV1cm9wZS9CZXJsaW4ifQ"
                                 , "ahjJKEXAJso3AeHbfxxM70BQg-cqIWu_mo9Lr9nSu_M=")
                         , SECRET).isEmpty()
                 , "The token should not be present");
@@ -158,12 +157,7 @@ public class JsonWebTokenTest {
         Payload expectedPayload = new Payload("Me", "Me", null, LocalDateTime.of(2021, 7, 2, 0, 0)
                 , null, LocalDateTime.of(2021, 7, 1, 0, 0), "abc");
 
-        Optional<JsonWebToken> result = JsonWebToken.decodeToken(
-                String.format("%s.%s.%s"
-                        , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0"
-                        , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOlsyMDIxLDcsMiwwLDBdLCJuYmYiOm51bGwsImlhdCI6WzIwMjEsNywxLDAsMF0sImp0aSI6ImFiYyJ9"
-                        , "doe9MklLVlTbn8HLnFWJWjBylOxgrGtQ9uD9IxQ0YYY")
-                , SECRET);
+        Optional<JsonWebToken> result = JsonWebToken.decodeToken(VALID_TOKEN, SECRET);
         assertTrue(result.isPresent(), "The token should be present");
         assertEquals(expectedHeader, result.get().getHeader(), "Wrong Header");
         assertEquals(expectedPayload, result.get().getPayload(), "Wrong Payload");

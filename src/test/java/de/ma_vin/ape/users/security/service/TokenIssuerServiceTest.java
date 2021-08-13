@@ -111,7 +111,7 @@ public class TokenIssuerServiceTest {
     @DisplayName("The encoded token is invalid cause the token is expired")
     @Test
     public void testIsValidExpired() throws JwtGeneratingException {
-        SystemProperties.getInstance().setTestingDateTime(payload.getExp().plus(1, ChronoUnit.SECONDS));
+        SystemProperties.getInstance().setTestingDateTime(payload.getExpAsLocalDateTime().plus(1, ChronoUnit.SECONDS));
         String encodedToken = token.getEncodedToken();
 
         cut.getInMemoryTokens().put("abc", tokenInfo);
@@ -179,7 +179,7 @@ public class TokenIssuerServiceTest {
     @DisplayName("The encoded token could not be determined cause the token is expired")
     @Test
     public void testGetTokenExpired() throws JwtGeneratingException {
-        SystemProperties.getInstance().setTestingDateTime(payload.getExp().plus(1, ChronoUnit.SECONDS));
+        SystemProperties.getInstance().setTestingDateTime(payload.getExpAsLocalDateTime().plus(1, ChronoUnit.SECONDS));
         String encodedToken = token.getEncodedToken();
 
         cut.getInMemoryTokens().put("abc", tokenInfo);
@@ -383,7 +383,7 @@ public class TokenIssuerServiceTest {
     @Test
     public void testRefreshExpiredToken() throws JwtGeneratingException {
         String encodedRefreshToken = refreshToken.getEncodedToken();
-        SystemProperties.getInstance().setTestingDateTime(refreshPayload.getExp().plus(30L, ChronoUnit.MINUTES));
+        SystemProperties.getInstance().setTestingDateTime(refreshPayload.getExpAsLocalDateTime().plus(30L, ChronoUnit.MINUTES));
 
         cut.getInMemoryTokens().put("abc", tokenInfo);
 
