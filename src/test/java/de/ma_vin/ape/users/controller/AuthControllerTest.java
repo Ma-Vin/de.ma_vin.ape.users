@@ -81,6 +81,7 @@ public class AuthControllerTest {
     @BeforeEach
     public void setUp() {
         SystemProperties.getInstance().setTestingDateTime(LocalDateTime.of(2021, 7, 1, 12, 0));
+        SystemProperties.setZoneId("Europe/Berlin");
 
         openMocks = openMocks(this);
 
@@ -107,9 +108,11 @@ public class AuthControllerTest {
             fail(e.getMessage());
         }
 
-        when(payload.getExp()).thenReturn(Payload.getLocalDateTimeToLong(SystemProperties.getSystemDateTime().plus(10L, ChronoUnit.SECONDS)));
+        when(payload.getExp()).thenReturn(Payload.getLocalDateTimeToLong(SystemProperties.getSystemDateTime().plus(10L, ChronoUnit.SECONDS)
+                , SystemProperties.getZoneId()));
         when(payload.getSub()).thenReturn(USER_ID);
-        when(refreshPayload.getExp()).thenReturn(Payload.getLocalDateTimeToLong(SystemProperties.getSystemDateTime().plus(20L, ChronoUnit.SECONDS)));
+        when(refreshPayload.getExp()).thenReturn(Payload.getLocalDateTimeToLong(SystemProperties.getSystemDateTime().plus(20L, ChronoUnit.SECONDS)
+                , SystemProperties.getZoneId()));
 
         when(codeInfo.getUserId()).thenReturn(USER_ID);
         when(codeInfo.getCode()).thenReturn(CODE);
