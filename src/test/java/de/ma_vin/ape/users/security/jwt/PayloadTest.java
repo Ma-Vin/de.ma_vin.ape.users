@@ -24,6 +24,7 @@ public class PayloadTest {
     @BeforeEach
     public void setUp() {
         SystemProperties.setZoneId("Europe/Berlin");
+        Payload.reInitZoneId();
 
         cut = new Payload("Me", "Me", null, LocalDateTime.of(2021, 7, 2, 0, 0), null
                 , LocalDateTime.of(2021, 7, 1, 0, 0), "abc");

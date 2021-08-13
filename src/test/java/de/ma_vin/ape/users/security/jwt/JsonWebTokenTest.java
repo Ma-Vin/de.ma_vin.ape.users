@@ -39,10 +39,11 @@ public class JsonWebTokenTest {
 
     @BeforeEach
     public void setUp() {
+        SystemProperties.setZoneId("Europe/Berlin");
+        Payload.reInitZoneId();
+
         openMocks = openMocks(this);
         cut = new JsonWebToken(header, payload, signature);
-
-        SystemProperties.setZoneId("Europe/Berlin");
     }
 
     @AfterEach

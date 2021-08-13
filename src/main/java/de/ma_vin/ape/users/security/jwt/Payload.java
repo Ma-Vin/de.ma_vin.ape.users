@@ -22,7 +22,11 @@ import java.util.Base64;
 @NoArgsConstructor
 public class Payload {
 
-    private static final ZoneId defaultZoneId = SystemProperties.getZoneId();
+    private static ZoneId defaultZoneId = SystemProperties.getZoneId();
+
+    protected static void reInitZoneId(){
+        Payload.defaultZoneId = SystemProperties.getZoneId();
+    }
 
     /**
      * Constructor
