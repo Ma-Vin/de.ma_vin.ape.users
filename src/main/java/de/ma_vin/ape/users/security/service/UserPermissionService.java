@@ -8,10 +8,12 @@ import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.service.BaseGroupService;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.users.service.UserService;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -102,8 +104,9 @@ public class UserPermissionService {
         Optional<String> commonGroupIdentification = getCommonGroupIdentification(identification, identificationType);
 
         return userService.findUser(username.get())
-                .map(u -> role.getLevel() <= u.getRole().getLevel() &&
-                        (u.isGlobalAdmin() || (commonGroupIdentification.isPresent() && commonGroupIdentification.get().equals(u.getCommonGroupId()))))
+                .map(u -> role.getLevel() <= u.getRole().getLevel()
+                        && (u.isGlobalAdmin() || (commonGroupIdentification.isPresent() && commonGroupIdentification.get().equals(u.getCommonGroupId())))
+                        && isUserValid(u))
                 .orElse(Boolean.FALSE);
     }
 
@@ -141,6 +144,17 @@ public class UserPermissionService {
             case PRIVILEGE -> privilegeGroupService.findPrivilegeGroup(identification).map(PrivilegeGroup::getCommonGroupId);
             case USER -> userService.findUser(identification).map(User::getCommonGroupId);
         };
+    }
 
+    /**
+     * Checks the valid from and to date times of a user regarding to the system date time
+     *
+     * @param user user whose valid dates should be checked
+     * @return {@code true} if the system date time is within the interval {@link User#getValidFrom()} and {@link User#getValidTo()}.
+     * Otherwise {@code false}
+     */
+    private boolean isUserValid(User user) {
+        LocalDateTime now = SystemProperties.getSystemDateTime();
+        return (user.getValidFrom() == null || !user.getValidFrom().isAfter(now)) && (user.getValidTo() == null || !user.getValidTo().isBefore(now));
     }
 }

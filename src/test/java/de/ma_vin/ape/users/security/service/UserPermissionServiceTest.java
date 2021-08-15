@@ -8,12 +8,14 @@ import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.service.BaseGroupService;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.users.service.UserService;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -81,6 +83,8 @@ public class UserPermissionServiceTest {
         when(userService.findUser(eq(USER_REQUEST_IDENTIFICATION))).thenReturn(Optional.of(userRequest));
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
+
+        SystemProperties.getInstance().setTestingDateTime(LocalDateTime.of(2021,8,15,16,31,50));
     }
 
     @AfterEach
@@ -248,6 +252,39 @@ public class UserPermissionServiceTest {
         checkFindUser();
     }
 
+    @DisplayName("Check if the username is an admin, with valid from and to date times")
+    @Test
+    public void testIsAdminValidFromAndTo() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertTrue(cut.isAdmin(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should be an admin");
+
+        checkFindDefault();
+    }
+
+    @DisplayName("Check if the username is an admin, with invalid from date time")
+    @Test
+    public void testIsAdminValidFromFuture() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().plusSeconds(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertFalse(cut.isAdmin(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should not be an admin");
+
+        checkFindDefault();
+    }
+
+    @DisplayName("Check if the username is an admin, with invalid to date time")
+    @Test
+    public void testIsAdminValidToPast() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().minusSeconds(1L));
+        assertFalse(cut.isAdmin(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should not be an admin");
+
+        checkFindDefault();
+    }
+
     @DisplayName("Check if the username is a manager")
     @Test
     public void testIsManager() {
@@ -370,6 +407,39 @@ public class UserPermissionServiceTest {
                 , "The user should not be a manager");
 
         checkFindUser();
+    }
+
+    @DisplayName("Check if the username is a manager, with valid from and to date times")
+    @Test
+    public void testIsManagerValidFromAndTo() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertTrue(cut.isManager(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should be an admin");
+
+        checkFindDefault();
+    }
+
+    @DisplayName("Check if the username is a manager, with invalid from date time")
+    @Test
+    public void testIsManagerValidFromFuture() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().plusSeconds(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertFalse(cut.isManager(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should not be an admin");
+
+        checkFindDefault();
+    }
+
+    @DisplayName("Check if the username is a manager, with invalid to date time")
+    @Test
+    public void testIsManagerValidToPast() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().minusSeconds(1L));
+        assertFalse(cut.isManager(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should not be an admin");
+
+        checkFindDefault();
     }
 
     @DisplayName("Check if the username is a contributor")
@@ -496,6 +566,39 @@ public class UserPermissionServiceTest {
         checkFindUser();
     }
 
+    @DisplayName("Check if the username is a contributor, with valid from and to date times")
+    @Test
+    public void testIsContributorValidFromAndTo() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertTrue(cut.isContributor(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should be an admin");
+
+        checkFindDefault();
+    }
+
+    @DisplayName("Check if the username is a contributor, with invalid from date time")
+    @Test
+    public void testIsContributorValidFromFuture() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().plusSeconds(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertFalse(cut.isContributor(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should not be an admin");
+
+        checkFindDefault();
+    }
+
+    @DisplayName("Check if the username is a contributor, with invalid to date time")
+    @Test
+    public void testIsContributorValidToPast() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().minusSeconds(1L));
+        assertFalse(cut.isContributor(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should not be an admin");
+
+        checkFindDefault();
+    }
+
     @DisplayName("Check if the username is a visitor")
     @Test
     public void testIsVisitor() {
@@ -618,6 +721,39 @@ public class UserPermissionServiceTest {
                 , "The user should not be a visitor");
 
         checkFindUser();
+    }
+
+    @DisplayName("Check if the username is a visitor, with valid from and to date times")
+    @Test
+    public void testIsVisitorValidFromAndTo() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertTrue(cut.isVisitor(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should be an admin");
+
+        checkFindDefault();
+    }
+
+    @DisplayName("Check if the username is a visitor, with invalid from date time")
+    @Test
+    public void testIsVisitorValidFromFuture() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().plusSeconds(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertFalse(cut.isVisitor(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should not be an admin");
+
+        checkFindDefault();
+    }
+
+    @DisplayName("Check if the username is a visitor, with invalid to date time")
+    @Test
+    public void testIsVisitorValidToPast() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().minusSeconds(1L));
+        assertFalse(cut.isVisitor(Optional.of(USER_IDENTIFICATION), COMMON_GROUP_IDENTIFICATION, IdentificationType.COMMON)
+                , "The user should not be an admin");
+
+        checkFindDefault();
     }
 
     @DisplayName("Check if the username is blocked")
