@@ -106,6 +106,11 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
         shared.getResultActions().andExpect(jsonPath("response", is(responseValue)));
     }
 
+    @Then("The response is {int}")
+    public void checkProperty(int responseValue) throws Exception {
+        shared.getResultActions().andExpect(jsonPath("response", is(responseValue)));
+    }
+
     @Then("There is any identification at response")
     public void checkIdentificationExists() throws Exception {
         shared.getResultActions().andExpect(jsonPath("response.identification", anything()));

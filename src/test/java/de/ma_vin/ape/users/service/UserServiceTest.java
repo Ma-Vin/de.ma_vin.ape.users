@@ -177,9 +177,97 @@ public class UserServiceTest {
         verify(userRepository).findById(eq(USER_ID));
     }
 
+    @DisplayName("Count users at admin group")
+    @Test
+    public void testCountUsersAtAdminGroup() {
+        when(userRepository.countByParentAdminGroup(any())).thenReturn(42L);
+
+        Long result = cut.countUsersAtAdminGroup(ADMIN_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(userRepository).countByParentAdminGroup(any());
+    }
+
+    @DisplayName("Count users at admin group")
+    @Test
+    public void testCountUsersAtCommonGroup() {
+        when(userRepository.countByParentCommonGroup(any())).thenReturn(42L);
+
+        Long result = cut.countUsersAtCommonGroup(COMMON_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(userRepository).countByParentCommonGroup(any());
+    }
+
+    @DisplayName("Count users at base group")
+    @Test
+    public void testCountUsersAtBaseGroup() {
+        when(baseGroupToUserRepository.countByBaseGroup(any())).thenReturn(42L);
+
+        Long result = cut.countUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(baseGroupToUserRepository).countByBaseGroup(any());
+    }
+
+    @DisplayName("Count users at privilege group")
+    @Test
+    public void testCountUsersAtPrivilegeGroup() {
+        when(privilegeGroupToUserRepository.countByPrivilegeGroup(any())).thenReturn(42L);
+
+        Long result = cut.countUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeGroupToUserRepository).countByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).countByPrivilegeGroupAndFilterRole(any(), any());
+    }
+
+    @DisplayName("Count users at privilege group without role ")
+    @Test
+    public void testCountUsersAtPrivilegeGroupWithoutRole() {
+        when(privilegeGroupToUserRepository.countByPrivilegeGroup(any())).thenReturn(42L);
+
+        Long result = cut.countUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeGroupToUserRepository).countByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).countByPrivilegeGroupAndFilterRole(any(), any());
+    }
+
+    @DisplayName("Count users at privilege group with role ")
+    @Test
+    public void testCountUsersAtPrivilegeGroupWithRole() {
+        when(privilegeGroupToUserRepository.countByPrivilegeGroupAndFilterRole(any(), eq(Role.MANAGER))).thenReturn(42L);
+
+        Long result = cut.countUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeGroupToUserRepository, never()).countByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository).countByPrivilegeGroupAndFilterRole(any(), any());
+    }
+
+    @DisplayName("Count users at privilege group without role ")
+    @Test
+    public void testCountUsersAtPrivilegeGroupWithoutRoleNotRelevant() {
+        when(privilegeGroupToUserRepository.countByPrivilegeGroup(any())).thenReturn(42L);
+
+        Long result = cut.countUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.NOT_RELEVANT);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeGroupToUserRepository).countByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).countByPrivilegeGroupAndFilterRole(any(), any());
+    }
+
     @DisplayName("Find all users at common group")
     @Test
-    public void testFindAllCommonGroups() {
+    public void testFindAllUsersAtCommonGroups() {
         when(userRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(userDao));
 
         List<User> result = cut.findAllUsersAtCommonGroup(COMMON_GROUP_IDENTIFICATION);
@@ -192,7 +280,7 @@ public class UserServiceTest {
 
     @DisplayName("Find all users at admin group")
     @Test
-    public void testFindAllAdminGroups() {
+    public void testFindAllUsersAtAdminGroups() {
         when(userRepository.findByParentAdminGroup(any())).thenReturn(Collections.singletonList(userDao));
 
         List<User> result = cut.findAllUsersAtAdminGroup(ADMIN_GROUP_IDENTIFICATION);

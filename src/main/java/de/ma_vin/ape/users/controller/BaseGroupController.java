@@ -72,6 +72,13 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     }
 
     @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
+    @GetMapping("/countBaseGroups/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countBaseGroups(@PathVariable String commonGroupIdentification) {
+        return createSuccessResponse(baseGroupService.countBaseGroups(commonGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllBaseGroups/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<BaseGroupDto>> getAllBaseGroups(@PathVariable String commonGroupIdentification) {
@@ -103,6 +110,13 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     }
 
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/countBaseAtPrivilegeGroup/{parentGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification) {
+        return createSuccessResponse(baseGroupService.countBasesAtPrivilegeGroup(parentGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/findAllBaseAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification) {
@@ -130,6 +144,13 @@ public class BaseGroupController extends AbstractDefaultOperationController {
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not removed from base group with identification \"%s\""
                 , baseGroupIdentification, parentGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#parentGroupIdentification, 'BASE')")
+    @GetMapping("/countBaseAtBaseGroup/{parentGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countBaseAtBaseGroup(@PathVariable String parentGroupIdentification) {
+        return createSuccessResponse(baseGroupService.countBasesAtBaseGroup(parentGroupIdentification));
     }
 
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'BASE')")

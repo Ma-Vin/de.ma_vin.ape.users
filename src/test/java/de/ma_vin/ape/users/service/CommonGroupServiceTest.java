@@ -141,6 +141,18 @@ public class CommonGroupServiceTest {
         verify(commonGroupRepository).findById(eq(COMMON_GROUP_ID));
     }
 
+    @DisplayName("Count common groups")
+    @Test
+    public void testCountCommonGroups() {
+        when(commonGroupRepository.count()).thenReturn(42L);
+
+        Long result = cut.countCommonGroups();
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(commonGroupRepository).count();
+    }
+
     @DisplayName("Find all common groups")
     @Test
     public void testFindAllCommonGroups() {

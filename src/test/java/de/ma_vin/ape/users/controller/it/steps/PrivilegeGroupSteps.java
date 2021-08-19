@@ -62,6 +62,11 @@ public class PrivilegeGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performDeleteWithAuthorization("/group/privilege/deletePrivilegeGroup", getIdentification(privilegeGroupAlias)));
     }
 
+    @When("Controller is called to count privilege groups at common group with alias {string}")
+    public void callControllerToCountPrivilegeGroup(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/privilege/countPrivilegeGroups", getIdentification(commonGroupAlias)));
+    }
+
     @When("Controller is called to get all privilege groups from common group with alias {string}")
     public void callControllerToGetAllPrivilegeGroups(String commonGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/privilege/getAllPrivilegeGroups", getIdentification(commonGroupAlias)));

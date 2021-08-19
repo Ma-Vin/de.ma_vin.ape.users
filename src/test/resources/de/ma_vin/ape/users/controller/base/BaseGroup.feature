@@ -13,13 +13,17 @@ Feature: Testing methods of the base group controller
     And The "groupName" property at response is "New Base Group"
     And There is any identification at response
 
-  Scenario: Get base group
+  Scenario: Get and count base group
     Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"
     When Controller is called to get the base group with the identification of the alias "base"
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The "groupName" property at response is "Base Group Name"
     And The identification is the same like the one of alias "base"
+    When Controller is called to count base groups at common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
     When Controller is called to get all base groups from common group with alias "common"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -40,13 +44,17 @@ Feature: Testing methods of the base group controller
     And The "description" property at response is "anythingNew"
     And The identification is the same like the one of alias "base"
 
-  Scenario: Add and remove sub base groups
+  Scenario: Add, count and remove sub base groups
     Given There exists a base group with name "Parent Base Group Name" with alias "parentBase" at common group "common"
     And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
     When Controller is called to add the base group with alias "subBase" to base group with alias "parentBase"
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The response is true
+    When Controller is called to count sub base groups at base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
     When Controller is called to get all sub groups of base group with alias "parentBase"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -61,13 +69,17 @@ Feature: Testing methods of the base group controller
     And The status of the result should be "OK"
     And The "identification" property at response position 0 does not exists
 
-  Scenario: Add and remove base groups at privilege one
+  Scenario: Add, count and remove base groups at privilege one
     Given There exists a privilege group with name "Parent Privilege Group Name" with alias "parentPrivilege" at common group "common"
     And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
     When Controller is called to add the base group with alias "subBase" as MANAGER to privilege group with alias "parentPrivilege"
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The response is true
+    When Controller is called to count sub base groups at privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
     When Controller is called to get all sub base groups of privilege group with alias "parentPrivilege"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -130,13 +142,15 @@ Feature: Testing methods of the base group controller
       | VISITOR     | 4xx           |
       | BLOCKED     | 4xx           |
 
-  Scenario Outline: Check <role> privilege to get base group
+  Scenario Outline: Check <role> privilege to get and count base group
     Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"
     And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to get the base group with the identification of the alias "base"
     Then The result is a <httpCodeRange>
     When Controller is called to get all base groups from common group with alias "common"
+    Then The result is a <httpCodeRange>
+    When Controller is called to count base groups at common group with alias "common"
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
@@ -161,7 +175,7 @@ Feature: Testing methods of the base group controller
       | VISITOR     | 4xx           | "visitor"     |
       | BLOCKED     | 4xx           | "blocked"     |
 
-  Scenario Outline: Check <role> privilege to add and remove base group at privilege one
+  Scenario Outline: Check <role> privilege to add, count and remove base group at privilege one
     Given There exists a privilege group with name "Parent Privilege Group Name" with alias "parentPrivilege" at common group "common"
     And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
     And There exists a base group with name "Another Sub Base Group Name" with alias "anotherSubBase" at common group "common"
@@ -171,17 +185,19 @@ Feature: Testing methods of the base group controller
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to add the base group with alias "anotherSubBase" as MANAGER to privilege group with alias "parentPrivilege"
     Then The result is a <httpCodeRange>
+    When Controller is called to count sub base groups at privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRangeCount>
     When Controller is called to remove the base group with alias "subBase" from privilege group with alias "parentPrivilege"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      | role        | httpCodeRange | httpCodeRangeCount |
+      | ADMIN       | 2xx           | 2xx                |
+      | MANAGER     | 2xx           | 2xx                |
+      | CONTRIBUTOR | 4xx           | 2xx                |
+      | VISITOR     | 4xx           | 2xx                |
+      | BLOCKED     | 4xx           | 4xx                |
 
-  Scenario Outline: Check <role> privilege to add and remove base group at base one
+  Scenario Outline: Check <role> privilege to add, count and remove base group at base one
     Given There exists a base group with name "Parent Base Group Name" with alias "parentBase" at common group "common"
     And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
     And There exists a base group with name "Another Sub Base Group Name" with alias "anotherSubBase" at common group "common"
@@ -191,15 +207,17 @@ Feature: Testing methods of the base group controller
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to add the base group with alias "anotherSubBase" to base group with alias "parentBase"
     Then The result is a <httpCodeRange>
+    When Controller is called to count sub base groups at base group with alias "parentBase"
+    Then The result is a <httpCodeRangeCount>
     When Controller is called to remove the base group with alias "subBase" from base group with alias "parentBase"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 2xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      | role        | httpCodeRange | httpCodeRangeCount |
+      | ADMIN       | 2xx           | 2xx                |
+      | MANAGER     | 2xx           | 2xx                |
+      | CONTRIBUTOR | 2xx           | 2xx                |
+      | VISITOR     | 4xx           | 2xx                |
+      | BLOCKED     | 4xx           | 4xx                |
 
   Scenario Outline: Check <role> privilege to get sub base groups
     Given There exists a privilege group with name "Parent Privilege Group Name" with alias "parentPrivilege" at common group "common"

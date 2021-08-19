@@ -140,6 +140,23 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Counts all base groups at a parent common group
+     *
+     * @param parentIdentification identification of the parent
+     * @return number of base groups
+     */
+    public Long countBaseGroups(String parentIdentification) {
+        log.debug(COUNT_START_LOG_MESSAGE, GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        CommonGroupDao parent = new CommonGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        long result = countBaseGroups(parent);
+
+        log.debug(COUNT_RESULT_LOG_MESSAGE, result, GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
      * Searches for all base groups at a parent common group
      *
      * @param parentIdentification identification of the parent
@@ -155,6 +172,23 @@ public class BaseGroupService extends AbstractRepositoryService {
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
         return result;
+    }
+
+    /**
+     * Counts all base groups at an other parent base group
+     *
+     * @param parentIdentification identification of the parent
+     * @return number of base groups
+     */
+    public Long countBasesAtBaseGroup(String parentIdentification) {
+        log.debug(COUNT_START_LOG_MESSAGE, GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
+        BaseGroupDao parent = new BaseGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        long result = countBasesAtBaseGroup(parent);
+
+        log.debug(COUNT_RESULT_LOG_MESSAGE, result, GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
     }
 
     /**
@@ -176,6 +210,23 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Counts all base groups at a parent privilege group
+     *
+     * @param parentIdentification identification of the parent
+     * @return number of base groups
+     */
+    public Long countBasesAtPrivilegeGroup(String parentIdentification) {
+        log.debug(COUNT_START_LOG_MESSAGE, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+        PrivilegeGroupDao parent = new PrivilegeGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        long result = countBasesAtPrivilegeGroup(parent);
+
+        log.debug(COUNT_RESULT_LOG_MESSAGE, result, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
      * Searches for all base groups at a parent privilege group
      *
      * @param parentIdentification identification of the parent
@@ -194,6 +245,16 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Count all base groups
+     *
+     * @param parent parent common group
+     * @return number of base groups
+     */
+    private long countBaseGroups(CommonGroupDao parent) {
+        return baseGroupRepository.countByParentCommonGroup(parent);
+    }
+
+    /**
      * Searches for all base groups
      *
      * @param parent parent common group
@@ -204,6 +265,16 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Count all base groups
+     *
+     * @param parent parent base group
+     * @return number of base groups
+     */
+    private long countBasesAtBaseGroup(BaseGroupDao parent) {
+        return baseToBaseGroupRepository.countByBaseGroup(parent);
+    }
+
+    /**
      * Searches for all base groups
      *
      * @param parent parent base group
@@ -211,6 +282,16 @@ public class BaseGroupService extends AbstractRepositoryService {
      */
     private List<BaseGroupDao> findAllBasesAtBaseGroup(BaseGroupDao parent) {
         return baseToBaseGroupRepository.findAllByBaseGroup(parent).stream().map(BaseGroupToBaseGroupDao::getSubBaseGroup).collect(Collectors.toList());
+    }
+
+    /**
+     * Count all base groups
+     *
+     * @param parent parent privilege group
+     * @return number of base groups
+     */
+    private long countBasesAtPrivilegeGroup(PrivilegeGroupDao parent) {
+        return privilegeToBaseGroupRepository.countByPrivilegeGroup(parent);
     }
 
     /**

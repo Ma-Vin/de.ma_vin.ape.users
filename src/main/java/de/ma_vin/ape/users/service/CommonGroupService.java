@@ -102,6 +102,20 @@ public class CommonGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Counts all common groups
+     *
+     * @return number of common groups
+     */
+    public Long countCommonGroups() {
+        log.debug("Search for all common groups");
+
+        long result = commonGroupRepository.count();
+
+        log.debug("{} common groups found", result);
+        return Long.valueOf(result);
+    }
+
+    /**
      * Searches for all common groups
      *
      * @return List of common groups
@@ -114,7 +128,6 @@ public class CommonGroupService extends AbstractRepositoryService {
         log.debug("{} common groups found", result.size());
         return result;
     }
-
 
     /**
      * Stores an common group

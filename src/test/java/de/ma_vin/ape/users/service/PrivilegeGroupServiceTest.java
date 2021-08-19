@@ -221,6 +221,18 @@ public class PrivilegeGroupServiceTest {
         verify(baseGroupService, never()).loadSubTree(any());
     }
 
+    @DisplayName("Count privilege groups at common group")
+    @Test
+    public void testCountPrivilegeGroups() {
+        when(privilegeGroupRepository.countByParentCommonGroup(any())).thenReturn(42L);
+
+        Long result = cut.countPrivilegeGroups(PRIVILEGE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeGroupRepository).countByParentCommonGroup(any());
+    }
+
     @DisplayName("Find all privilege groups at common group")
     @Test
     public void testFindAllPrivilegeGroups() {

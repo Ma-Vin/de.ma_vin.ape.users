@@ -217,6 +217,18 @@ public class BaseGroupServiceTest {
         verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any());
     }
 
+    @DisplayName("Count base groups at common group")
+    @Test
+    public void testCountBaseGroups() {
+        when(baseGroupRepository.countByParentCommonGroup(any())).thenReturn(42L);
+
+        Long result = cut.countBaseGroups(COMMON_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(baseGroupRepository).countByParentCommonGroup(any());
+    }
+
     @DisplayName("Find all base groups at common group")
     @Test
     public void testFindAllBaseGroups() {
@@ -230,6 +242,18 @@ public class BaseGroupServiceTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupRepository).findByParentCommonGroup(any());
+    }
+
+    @DisplayName("Count base groups at base group")
+    @Test
+    public void testCountBasesAtBaseGroup() {
+        when(baseToBaseGroupRepository.countByBaseGroup(any())).thenReturn(42L);
+
+        Long result = cut.countBasesAtBaseGroup(COMMON_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(baseToBaseGroupRepository).countByBaseGroup(any());
     }
 
     @DisplayName("Find all base groups at base group")
@@ -253,6 +277,18 @@ public class BaseGroupServiceTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseToBaseGroupRepository).findAllByBaseGroup(any());
+    }
+
+    @DisplayName("Count base groups at privilege group")
+    @Test
+    public void testCountBasesAtPrivilegeGroup() {
+        when(privilegeToBaseGroupRepository.countByPrivilegeGroup(any())).thenReturn(42L);
+
+        Long result = cut.countBasesAtPrivilegeGroup(COMMON_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeToBaseGroupRepository).countByPrivilegeGroup(any());
     }
 
     @DisplayName("Find all base groups at privilege group")

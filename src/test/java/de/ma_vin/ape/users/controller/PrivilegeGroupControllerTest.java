@@ -240,6 +240,20 @@ public class PrivilegeGroupControllerTest {
         verify(privilegeGroupService, never()).save(any(), any());
     }
 
+    @DisplayName("Count privilege groups")
+    @Test
+    public void testCountPrivilegeGroups() {
+        when(privilegeGroupService.countPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countPrivilegeGroups(COMMON_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of elements");
+
+        verify(privilegeGroupService).countPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+    }
+
     @DisplayName("Get all privilege groups")
     @Test
     public void testGetAllPrivilegeGroups() {

@@ -31,6 +31,8 @@ public class UserService extends AbstractRepositoryService {
     public static final String ADMIN_OR_COMMON_GROUP_LOG_PARAM = "admin or common group";
     public static final String ADMIN_GROUP_LOG_PARAM = "admin group";
     public static final String COMMON_GROUP_LOG_PARAM = "common group";
+    public static final String BASE_GROUP_LOG_PARAM = "base group";
+    public static final String PRIVILEGE_GROUP_LOG_PARAM = "privilege group";
     public static final String USER_LOG_PARAM = "user";
     public static final String USERS_LOG_PARAM = "users";
 
@@ -120,6 +122,85 @@ public class UserService extends AbstractRepositoryService {
     }
 
     /**
+     * Count all user children of a parent admin group
+     *
+     * @param parentIdentification identification of the parent
+     * @return number of users
+     */
+    public Long countUsersAtAdminGroup(String parentIdentification) {
+        log.debug(COUNT_START_LOG_MESSAGE, USERS_LOG_PARAM, ADMIN_GROUP_LOG_PARAM, parentIdentification);
+        AdminGroupDao parent = new AdminGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        long result = countUsers(parent);
+
+        log.debug(COUNT_RESULT_LOG_MESSAGE, result, USERS_LOG_PARAM, ADMIN_GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
+     * Count all user children of a parent common group
+     *
+     * @param parentIdentification identification of the parent
+     * @return number of users
+     */
+    public Long countUsersAtCommonGroup(String parentIdentification) {
+        log.debug(COUNT_START_LOG_MESSAGE, USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        CommonGroupDao parent = new CommonGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        long result = countUsers(parent);
+
+        log.debug(COUNT_RESULT_LOG_MESSAGE, result, USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
+     * Count all user children of a parent base group
+     *
+     * @param parentIdentification identification of the parent
+     * @return number of users
+     */
+    public Long countUsersAtBaseGroup(String parentIdentification) {
+        log.debug(COUNT_START_LOG_MESSAGE, USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification);
+        BaseGroupDao parent = new BaseGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        long result = countUsers(parent);
+
+        log.debug(COUNT_RESULT_LOG_MESSAGE, result, USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
+     * Count all user children of a parent privilege group
+     *
+     * @param parentIdentification identification of the parent
+     * @return number of users
+     */
+    public Long countUsersAtPrivilegeGroup(String parentIdentification) {
+        return countUsersAtPrivilegeGroup(parentIdentification, null);
+    }
+
+    /**
+     * Count all user children of a parent privilege group
+     *
+     * @param parentIdentification identification of the parent
+     * @param role                 role which the users to count should have
+     * @return number of users
+     */
+    public Long countUsersAtPrivilegeGroup(String parentIdentification, Role role) {
+        log.debug(COUNT_START_LOG_MESSAGE, USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+        PrivilegeGroupDao parent = new PrivilegeGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        long result = countUsers(parent, role);
+
+        log.debug(COUNT_RESULT_LOG_MESSAGE, result, USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
      * Searches for all user children of a parent admin group
      *
      * @param parentIdentification identification of the parent
@@ -136,7 +217,6 @@ public class UserService extends AbstractRepositoryService {
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, ADMIN_GROUP_LOG_PARAM, parentIdentification);
         return result;
     }
-
 
     /**
      * Searches for all user children of a parent common group
@@ -164,7 +244,7 @@ public class UserService extends AbstractRepositoryService {
      * @return List of users
      */
     public List<User> findAllUsersAtBaseGroup(String parentIdentification, boolean dissolveSubgroups) {
-        log.debug(SEARCH_START_LOG_MESSAGE, USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        log.debug(SEARCH_START_LOG_MESSAGE, USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification);
         BaseGroupDao parent = new BaseGroupDao();
         parent.setIdentification(parentIdentification);
 
@@ -177,8 +257,51 @@ public class UserService extends AbstractRepositoryService {
                     .sorted(Comparator.comparing(User::getIdentification)).forEach(result::add);
         }
 
-        log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification);
         return result;
+    }
+
+    /**
+     * Count all user children of a parent admin group
+     *
+     * @param parent parent
+     * @return number of users
+     */
+    private long countUsers(AdminGroupDao parent) {
+        return userRepository.countByParentAdminGroup(parent);
+    }
+
+    /**
+     * Count all user children of a parent admin group
+     *
+     * @param parent parent
+     * @return number of users
+     */
+    private long countUsers(CommonGroupDao parent) {
+        return userRepository.countByParentCommonGroup(parent);
+    }
+
+    /**
+     * Count all user children of a parent base group
+     *
+     * @param parent parent
+     * @return number of users
+     */
+    private long countUsers(BaseGroupDao parent) {
+        return baseGroupToUserRepository.countByBaseGroup(parent);
+    }
+
+    /**
+     * Count all user children of a parent privilege group
+     *
+     * @param parent parent
+     * @param role   role which the users to count should have
+     * @return number of users
+     */
+    private long countUsers(PrivilegeGroupDao parent, Role role) {
+        return role == null || Role.NOT_RELEVANT.equals(role)
+                ? privilegeGroupToUserRepository.countByPrivilegeGroup(parent)
+                : privilegeGroupToUserRepository.countByPrivilegeGroupAndFilterRole(parent, role);
     }
 
     /**

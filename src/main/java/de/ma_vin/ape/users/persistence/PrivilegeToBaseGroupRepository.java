@@ -19,4 +19,6 @@ public interface PrivilegeToBaseGroupRepository extends JpaRepository<PrivilegeG
     long deleteByPrivilegeGroupAndBaseGroup(PrivilegeGroupDao privilegeGroup, BaseGroupDao baseGroup);
 
     List<PrivilegeGroupToBaseGroupDao> findAllByPrivilegeGroup(PrivilegeGroupDao privilegeGroup);
+
+    long countByPrivilegeGroup(PrivilegeGroupDao privilegeGroup);
 }

@@ -78,6 +78,11 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
                 , getIdentification(baseGroupAlias)));
     }
 
+    @When("Controller is called to count sub base groups at base group with alias {string}")
+    public void callControllerToCountBaseAtBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/countBaseAtBaseGroup", getIdentification(baseGroupAlias)));
+    }
+
     @When("Controller is called to get all sub groups of base group with alias {string}")
     public void callControllerToFindAllBaseAtBaseGroup(String baseGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias)));
@@ -102,9 +107,19 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
                 , getIdentification(baseGroupAlias)));
     }
 
+    @When("Controller is called to count sub base groups at privilege group with alias {string}")
+    public void callControllerToCountBaseAtPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/countBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    }
+
     @When("Controller is called to get all sub base groups of privilege group with alias {string}")
-    public void callControllerToFindAllBaseAtPrivilegeGroup(String baseGroupAlias) {
-        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(baseGroupAlias)));
+    public void callControllerToFindAllBaseAtPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    }
+
+    @When("Controller is called to count base groups at common group with alias {string}")
+    public void callControllerToCountBaseGroup(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/countBaseGroups", getIdentification(commonGroupAlias)));
     }
 
     @When("Controller is called to get all base groups from common group with alias {string}")

@@ -14,7 +14,7 @@ Feature: Testing methods of the user controller
     And The "lastName" property at response is "User"
     And There is any identification at response
 
-  Scenario: Get user
+  Scenario: Get and count user
     Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"
     When Controller is called to get the user with the identification of the alias "user"
     Then The result is Ok and Json
@@ -23,6 +23,10 @@ Feature: Testing methods of the user controller
     And The "lastName" property at response is "User"
     And The identification is the same like the one of alias "user"
     Given There exists an user with first name "Another" and last name "User" with alias "anotherUser" at common group "common"
+    When Controller is called to count users at common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 2
     When Controller is called to get all users from common group with identification of "common"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -30,7 +34,7 @@ Feature: Testing methods of the user controller
     And The identification at 1 is the same like the one of alias "anotherUser"
     And The "identification" property at response position 2 does not exists
 
-  Scenario: Add and remove users at base groups
+  Scenario: Add, count and remove users at base groups
     Given There exists an user with first name "Direct" and last name "User" with alias "directUser" at common group "common"
     And There exists an user with first name "Indirect" and last name "User" with alias "indirectUser" at common group "common"
     And There exists a base group with name "Base Group" with alias "base" at common group "common"
@@ -45,6 +49,10 @@ Feature: Testing methods of the user controller
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The response is true
+    When Controller is called to count users at base group with alias "base"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
     When Controller is called to get all user of base group with alias "base" and dissolving sub groups false
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -66,7 +74,7 @@ Feature: Testing methods of the user controller
     And The identification at 0 is the same like the one of alias "indirectUser"
     And The "identification" property at response position 1 does not exists
 
-  Scenario: Add and remove users at privilege groups
+  Scenario: Add, count and remove users at privilege groups
     Given There exists an user with first name "Direct" and last name "User" with alias "directUser" at common group "common"
     And There exists an user with first name "Indirect" and last name "User" with alias "indirectUser" at common group "common"
     And There exists a privilege group with name "Privilege Group" with alias "privilege" at common group "common"
@@ -89,6 +97,14 @@ Feature: Testing methods of the user controller
     And The status of the result should be "OK"
     And The identification of "user" at 0 is the same like the one of alias "indirectUser"
     And At response position 1 does not exists
+    When Controller is called to count users at privilege group with alias "privilege" with role NOT_RELEVANT
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
+    When Controller is called to count users at privilege group with alias "privilege" with role MANAGER
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 0
     When Controller is called to get all user of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups true
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -180,11 +196,13 @@ Feature: Testing methods of the user controller
       | VISITOR     | 4xx           |
       | BLOCKED     | 4xx           |
 
-  Scenario Outline: Check <role> privilege to get an user
+  Scenario Outline: Check <role> privilege to get and count an user
     Given There exists an user with first name "New" and last name "User" with alias "userToGet" at common group "common"
     And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to get the user with the identification of the alias "userToGet"
+    Then The result is a <httpCodeRange>
+    When Controller is called to count users at common group with alias "common"
     Then The result is a <httpCodeRange>
     When Controller is called to get all users from common group with identification of "common"
     Then The result is a <httpCodeRange>
@@ -250,7 +268,7 @@ Feature: Testing methods of the user controller
       | VISITOR     | 4xx           |
       | BLOCKED     | 4xx           |
 
-  Scenario Outline: Check <role> privilege to add and remove user at privilege group
+  Scenario Outline: Check <role> privilege to add, count and remove user at privilege group
     Given There exists a privilege group with name "Privilege Group" with alias "privilege" at common group "common"
     And There exists an user with first name "ToAdd" and last name "User" with alias "userToAdd" at common group "common"
     And There exists an user with first name "Added" and last name "User" with alias "userAdded" at common group "common"
@@ -260,17 +278,19 @@ Feature: Testing methods of the user controller
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to add the user with alias "userToAdd" as MANAGER to privilege group with alias "privilege"
     Then The result is a <httpCodeRange>
+    When Controller is called to count users at privilege group with alias "privilege" with role NOT_RELEVANT
+    Then The result is a <httpCodeRangeCount>
     When Controller is called to remove the user with alias "userAdded" from privilege group with alias "privilege"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      | role        | httpCodeRange | httpCodeRangeCount |
+      | ADMIN       | 2xx           | 2xx                |
+      | MANAGER     | 2xx           | 2xx                |
+      | CONTRIBUTOR | 4xx           | 2xx                |
+      | VISITOR     | 4xx           | 2xx                |
+      | BLOCKED     | 4xx           | 4xx                |
 
-  Scenario Outline: Check <role> privilege to add and remove user at base group
+  Scenario Outline: Check <role> privilege to add, count and remove user at base group
     Given There exists a base group with name "Base Group" with alias "base" at common group "common"
     And There exists an user with first name "ToAdd" and last name "User" with alias "userToAdd" at common group "common"
     And There exists an user with first name "Added" and last name "User" with alias "userAdded" at common group "common"
@@ -280,15 +300,17 @@ Feature: Testing methods of the user controller
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to add the user with alias "userToAdd" to base group with alias "base"
     Then The result is a <httpCodeRange>
+    When Controller is called to count users at base group with alias "base"
+    Then The result is a <httpCodeRangeCount>
     When Controller is called to remove the user with alias "userAdded" from base group with alias "base"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 2xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      | role        | httpCodeRange | httpCodeRangeCount |
+      | ADMIN       | 2xx           | 2xx                |
+      | MANAGER     | 2xx           | 2xx                |
+      | CONTRIBUTOR | 2xx           | 2xx                |
+      | VISITOR     | 4xx           | 2xx                |
+      | BLOCKED     | 4xx           | 4xx                |
 
   Scenario Outline: Check <role> privilege to get sub users
     Given There exists a base group with name "Base Group" with alias "base" at common group "common"

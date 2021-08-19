@@ -487,6 +487,20 @@ public class UserControllerTest {
         verify(userService).removeUserFromBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
     }
 
+    @DisplayName("Count users at common group")
+    @Test
+    public void testCountUsers() {
+        when(userService.countUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countUsers(COMMON_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of result elements");
+
+        verify(userService).countUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+    }
+
     @DisplayName("Get all users from common group")
     @Test
     public void testGetAllUsers() {
@@ -503,6 +517,20 @@ public class UserControllerTest {
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
     }
 
+    @DisplayName("Count users at base group")
+    @Test
+    public void testCountUsersAtBaseGroup() {
+        when(userService.countUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of result elements");
+
+        verify(userService).countUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+    }
+
     @DisplayName("Get all users from base group")
     @Test
     public void testGetAllUsersFromBaseGroup() {
@@ -517,6 +545,20 @@ public class UserControllerTest {
         assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean());
+    }
+
+    @DisplayName("Count users at privilege group")
+    @Test
+    public void testCountUsersAtPrivilegeGroup() {
+        when(userService.countUsersAtPrivilegeGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Role.CONTRIBUTOR))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countUsersAtPrivilegeGroup(BASE_GROUP_IDENTIFICATION, Role.CONTRIBUTOR);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of result elements");
+
+        verify(userService).countUsersAtPrivilegeGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Role.CONTRIBUTOR));
     }
 
     @DisplayName("Get all users from privilege group")

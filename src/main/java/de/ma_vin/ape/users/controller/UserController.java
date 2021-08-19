@@ -102,6 +102,13 @@ public class UserController extends AbstractDefaultOperationController {
     }
 
     @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
+    @GetMapping("/countUsers/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countUsers(@PathVariable String commonGroupIdentification) {
+        return createSuccessResponse(userService.countUsersAtCommonGroup(commonGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllUsers/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<UserDto>> getAllUsers(@PathVariable String commonGroupIdentification) {
@@ -164,6 +171,13 @@ public class UserController extends AbstractDefaultOperationController {
     }
 
     @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
+    @GetMapping("/countUsersAtBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countUsersAtBaseGroup(@PathVariable String baseGroupIdentification) {
+        return createSuccessResponse(userService.countUsersAtBaseGroup(baseGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
     @GetMapping("/getAllUsersFromBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<UserDto>> getAllUsersFromBaseGroup(@PathVariable String baseGroupIdentification, @RequestParam(required = false) Boolean dissolveSubgroups) {
@@ -172,6 +186,13 @@ public class UserController extends AbstractDefaultOperationController {
                 .collect(Collectors.toList());
 
         return createSuccessResponse(result);
+    }
+
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/countUsersAtPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countUsersAtPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestParam(required = false) Role role) {
+        return createSuccessResponse(userService.countUsersAtPrivilegeGroup(privilegeGroupIdentification, role));
     }
 
     @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")

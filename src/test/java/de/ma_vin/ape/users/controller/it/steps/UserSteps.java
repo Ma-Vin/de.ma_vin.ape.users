@@ -77,6 +77,11 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performDeleteWithAuthorization("/user/deleteUser", getIdentification(userAlias)));
     }
 
+    @When("Controller is called to count users at common group with alias {string}")
+    public void callControllerToCountUsers(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/countUsers", getIdentification(commonGroupAlias)));
+    }
+
     @When("Controller is called to get all users from common group with identification of {string}")
     public void callControllerToGetAllUsers(String commonGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/user/getAllUsers", getIdentification(commonGroupAlias)));
@@ -92,6 +97,11 @@ public class UserSteps extends AbstractIntegrationTestSteps {
     public void callControllerToRemoveUserFromBaseGroup(String userAlias, String baseGroupAlias) {
         shared.setResultActions(performPatchWithAuthorization("/user/removeUserFromBaseGroup", getIdentification(baseGroupAlias)
                 , getIdentification(userAlias)));
+    }
+
+    @When("Controller is called to count users at base group with alias {string}")
+    public void callControllerToCountUsersAtBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/countUsersAtBaseGroup", getIdentification(baseGroupAlias)));
     }
 
     @When("Controller is called to get all user of base group with alias {string} and dissolving sub groups {booleanValue}")
@@ -113,10 +123,16 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         }
     }
 
+    @When("Controller is called to count users at privilege group with alias {string} with role {roleValue}")
+    public void callControllerToCountUsersAtPrivilegeGroup(String privilegeGroupAlias, Role role) {
+        MultiValueMap<String, String> countUsers = createValueMap( "role", role.name());
+        shared.setResultActions(performGetWithAuthorization("/user/countUsersAtPrivilegeGroup", getIdentification(privilegeGroupAlias), countUsers));
+    }
+
     @When("Controller is called to get all user of privilege group with alias {string} with role {roleValue} and dissolving sub groups {booleanValue}")
-    public void callControllerToGetAllUsersFromPrivilegeGroup(String baseGroupAlias, Role role, Boolean dissolveSubgroups) {
+    public void callControllerToGetAllUsersFromPrivilegeGroup(String privilegeGroupAlias, Role role, Boolean dissolveSubgroups) {
         MultiValueMap<String, String> findAllUsers = createValueMap("dissolveSubgroups", dissolveSubgroups.toString(), "role", role.name());
-        shared.setResultActions(performGetWithAuthorization("/user/getAllUsersFromPrivilegeGroup", getIdentification(baseGroupAlias), findAllUsers));
+        shared.setResultActions(performGetWithAuthorization("/user/getAllUsersFromPrivilegeGroup", getIdentification(privilegeGroupAlias), findAllUsers));
     }
 
     @When("Controller is called to remove the user with alias {string} from privilege group with alias {string}")

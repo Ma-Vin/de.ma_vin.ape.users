@@ -1,5 +1,6 @@
 package de.ma_vin.ape.users.persistence;
 
+import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupToUserDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
@@ -16,4 +17,8 @@ public interface PrivilegeGroupToUserRepository extends JpaRepository<PrivilegeG
     long deleteByPrivilegeGroupAndUser(PrivilegeGroupDao privilegeGroup, UserDao user);
 
     List<PrivilegeGroupToUserDao> findAllByPrivilegeGroup(PrivilegeGroupDao privilegeGroup);
+
+    long countByPrivilegeGroup(PrivilegeGroupDao privilegeGroup);
+
+    long countByPrivilegeGroupAndFilterRole(PrivilegeGroupDao privilegeGroup, Role filterRole);
 }

@@ -349,6 +349,48 @@ public class BaseGroupControllerTest {
         verify(baseGroupService).removeBaseFromBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
     }
 
+    @DisplayName("Count base groups")
+    @Test
+    public void testCountBaseGroups() {
+        when(baseGroupService.countBaseGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countBaseGroups(COMMON_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of elements");
+
+        verify(baseGroupService).countBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Count base groups at base group")
+    @Test
+    public void testCountBaseAtBaseGroup() {
+        when(baseGroupService.countBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of elements");
+
+        verify(baseGroupService).countBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Count base groups at privilege group")
+    @Test
+    public void testCountBaseAtPrivilegeGroup() {
+        when(baseGroupService.countBasesAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of elements");
+
+        verify(baseGroupService).countBasesAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+    }
+
     @DisplayName("Find all base groups at base group")
     @Test
     public void testFindAllBaseAtBaseGroup() {

@@ -128,6 +128,33 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Counts all privilege groups at a parent common group
+     *
+     * @param parentIdentification identification of the parent
+     * @return number of privilege groups
+     */
+    public Long countPrivilegeGroups(String parentIdentification) {
+        log.debug(COUNT_START_LOG_MESSAGE, GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        CommonGroupDao parent = new CommonGroupDao();
+        parent.setIdentification(parentIdentification);
+
+        long result = countPrivilegeGroups(parent);
+
+        log.debug(COUNT_RESULT_LOG_MESSAGE, result, GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
+     * Counts all privilege groups
+     *
+     * @param parent parent common group
+     * @return List of privilege groups
+     */
+    private long countPrivilegeGroups(CommonGroupDao parent) {
+        return privilegeGroupRepository.countByParentCommonGroup(parent);
+    }
+
+    /**
      * Searches for all privilege groups at a parent common group
      *
      * @param parentIdentification identification of the parent

@@ -22,6 +22,10 @@ public abstract class AbstractRepositoryService {
     public static final String SEARCH_START_LOG_MESSAGE = "Search for {} at {} with identification \"{}\"";
     public static final String SEARCH_RESULT_LOG_MESSAGE = "{} {} are found at {} with identification \"{}\"";
 
+    public static final String COUNT_START_LOG_MESSAGE = "Count {} at {} with identification \"{}\"";
+    public static final String COUNT_RESULT_LOG_MESSAGE = "{} {} are count at {} with identification \"{}\"";
+
+
     /**
      * Adds a child to a parent if its not a direct connection
      *

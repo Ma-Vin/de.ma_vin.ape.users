@@ -13,13 +13,17 @@ Feature: Testing methods of the privilege group controller
     And The "groupName" property at response is "New Privilege Group"
     And There is any identification at response
 
-  Scenario: Get privilege group
+  Scenario: Get and count privilege group
     Given There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"
     When Controller is called to get the privilege group with the identification of the alias "privilege"
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The "groupName" property at response is "Privilege Group Name"
     And The identification is the same like the one of alias "privilege"
+    When Controller is called to count privilege groups at common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
     When Controller is called to get all privilege groups from common group with alias "common"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -88,11 +92,13 @@ Feature: Testing methods of the privilege group controller
       | VISITOR     | 4xx           |
       | BLOCKED     | 4xx           |
 
-  Scenario Outline: Check <role> privilege to get privilege group
+  Scenario Outline: Check <role> privilege to get and count privilege group
     Given There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"
     And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When  Controller is called to get the privilege group with the identification of the alias "privilege"
+    Then The result is a <httpCodeRange>
+    When Controller is called to count privilege groups at common group with alias "common"
     Then The result is a <httpCodeRange>
     When Controller is called to get all privilege groups from common group with alias "common"
     Then The result is a <httpCodeRange>

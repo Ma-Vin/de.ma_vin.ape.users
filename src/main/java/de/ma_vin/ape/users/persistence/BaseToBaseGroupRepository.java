@@ -18,4 +18,6 @@ public interface BaseToBaseGroupRepository extends JpaRepository<BaseGroupToBase
     long deleteByBaseGroupAndSubBaseGroup(BaseGroupDao baseGroup, BaseGroupDao subBaseGroup);
 
     List<BaseGroupToBaseGroupDao> findAllByBaseGroup(BaseGroupDao baseGroup);
+
+    long countByBaseGroup(BaseGroupDao baseGroup);
 }

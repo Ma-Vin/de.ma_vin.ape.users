@@ -73,6 +73,13 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
     }
 
     @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
+    @GetMapping("/countPrivilegeGroups/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countPrivilegeGroups(@PathVariable String commonGroupIdentification) {
+        return createSuccessResponse(privilegeGroupService.countPrivilegeGroups(commonGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllPrivilegeGroups/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<PrivilegeGroupDto>> getAllPrivilegeGroups(@PathVariable String commonGroupIdentification) {
