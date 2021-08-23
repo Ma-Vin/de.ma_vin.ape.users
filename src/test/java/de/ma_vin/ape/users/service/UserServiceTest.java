@@ -2,11 +2,9 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
+import de.ma_vin.ape.users.model.domain.group.PrivilegeGroupExt;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
-import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToBaseGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupToUserDao;
-import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.group.*;
 import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
@@ -69,6 +67,8 @@ public class UserServiceTest {
     @Mock
     private BaseGroupService baseGroupService;
     @Mock
+    private PrivilegeGroupService privilegeGroupService;
+    @Mock
     private UserExt user;
     @Mock
     private UserResource image;
@@ -82,6 +82,8 @@ public class UserServiceTest {
     private UserResourceDao smallImageDao;
     @Mock
     private PrivilegeGroupDao privilegeGroupDao;
+    @Mock
+    private PrivilegeGroupExt privilegeGroup;
     @Mock
     private BaseGroupDao baseGroupDao;
     @Mock
@@ -102,6 +104,7 @@ public class UserServiceTest {
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
         cut.setUserResourceService(userResourceService);
         cut.setBaseGroupService(baseGroupService);
+        cut.setPrivilegeGroupService(privilegeGroupService);
         cut.setPasswordEncoder(passwordEncoder);
 
         initDefaultUserMock();
@@ -269,6 +272,7 @@ public class UserServiceTest {
     @Test
     public void testFindAllUsersAtCommonGroups() {
         when(userRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(userDao));
+        when(userRepository.findByParentCommonGroup(any(), any())).thenReturn(Collections.singletonList(userDao));
 
         List<User> result = cut.findAllUsersAtCommonGroup(COMMON_GROUP_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
@@ -276,6 +280,52 @@ public class UserServiceTest {
         assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(userRepository).findByParentCommonGroup(any());
+        verify(userRepository, never()).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all users at common group with pages")
+    @Test
+    public void testFindAllUsersAtCommonGroupsPageable() {
+        when(userRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(userDao));
+        when(userRepository.findByParentCommonGroup(any(), any())).thenReturn(Collections.singletonList(userDao));
+
+        List<User> result = cut.findAllUsersAtCommonGroup(COMMON_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userRepository, never()).findByParentCommonGroup(any());
+        verify(userRepository).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all users at common group with pages, but missing page")
+    @Test
+    public void testFindAllUsersAtCommonGroupsPageableMissingPage() {
+        when(userRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(userDao));
+        when(userRepository.findByParentCommonGroup(any(), any())).thenReturn(Collections.singletonList(userDao));
+
+        List<User> result = cut.findAllUsersAtCommonGroup(COMMON_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userRepository).findByParentCommonGroup(any());
+        verify(userRepository, never()).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all users at common group with pages, but missing size")
+    @Test
+    public void testFindAllUsersAtCommonGroupsPageableMissingSize() {
+        when(userRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(userDao));
+        when(userRepository.findByParentCommonGroup(any(), any())).thenReturn(Collections.singletonList(userDao));
+
+        List<User> result = cut.findAllUsersAtCommonGroup(COMMON_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userRepository).findByParentCommonGroup(any());
+        verify(userRepository, never()).findByParentCommonGroup(any(), any());
     }
 
     @DisplayName("Find all users at admin group")
@@ -294,27 +344,7 @@ public class UserServiceTest {
     @DisplayName("Find all direct users at base group")
     @Test
     public void testFindAllUsersAtBaseGroup() {
-        Long otherUserId = USER_ID + 1L;
-        String otherUserIdentification = IdGenerator.generateIdentification(otherUserId, User.ID_PREFIX);
-        UserDao otherUserDao = mock(UserDao.class);
-        User otherUser = mock(User.class);
-
-        when(otherUserDao.getId()).thenReturn(otherUserId);
-        when(otherUserDao.getIdentification()).thenReturn(otherUserIdentification);
-        when(otherUser.getIdentification()).thenReturn(otherUserIdentification);
-
-        BaseGroupToUserDao baseGroupToUserDao = mock(BaseGroupToUserDao.class);
-        when(baseGroupToUserDao.getUser()).thenReturn(userDao).thenReturn(otherUserDao);
-        when(baseGroupToUserRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToUserDao))
-                .thenReturn(Collections.singletonList(baseGroupToUserDao));
-
-        BaseGroupToBaseGroupDao baseGroupToBaseGroupDao = mock(BaseGroupToBaseGroupDao.class);
-        when(baseGroupToBaseGroupDao.getSubBaseGroup()).thenReturn(baseGroupDao);
-        when(baseToBaseGroupRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToBaseGroupDao))
-                .thenReturn(Collections.emptyList());
-
-        when(baseGroupService.findBaseGroupTree(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
-        when(baseGroup.getAllUsers()).thenReturn(Set.of(user, otherUser));
+        mockDefaultFindAllUsersAtBaseGroup();
 
         List<User> result = cut.findAllUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION, false);
         assertNotNull(result, "The result should not be null");
@@ -322,6 +352,7 @@ public class UserServiceTest {
         assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
 
         verify(baseGroupToUserRepository).findAllByBaseGroup(any());
+        verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any(), any());
         verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
         verify(baseGroupService, never()).findBaseGroupTree(any());
     }
@@ -358,8 +389,378 @@ public class UserServiceTest {
         assertTrue(result.stream().anyMatch(u -> u.getIdentification().equals(otherUserIdentification)), "The indirect user is missing at result");
 
         verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any());
+        verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any(), any());
         verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
         verify(baseGroupService).findBaseGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at base group with pages")
+    @Test
+    public void testFindAllUsersAtBaseGroupPageable() {
+        mockDefaultFindAllUsersAtBaseGroup();
+
+        List<User> result = cut.findAllUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any());
+        verify(baseGroupToUserRepository).findAllByBaseGroup(any(), any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
+        verify(baseGroupService, never()).findBaseGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at base group with pages, but missing page")
+    @Test
+    public void testFindAllUsersAtBaseGroupPageableMissingPage() {
+        mockDefaultFindAllUsersAtBaseGroup();
+
+        List<User> result = cut.findAllUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(baseGroupToUserRepository).findAllByBaseGroup(any());
+        verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any(), any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
+        verify(baseGroupService, never()).findBaseGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at base group with pages, but missing size")
+    @Test
+    public void testFindAllUsersAtBaseGroupPageableMissingSize() {
+        mockDefaultFindAllUsersAtBaseGroup();
+
+        List<User> result = cut.findAllUsersAtBaseGroup(BASE_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(baseGroupToUserRepository).findAllByBaseGroup(any());
+        verify(baseGroupToUserRepository, never()).findAllByBaseGroup(any(), any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
+        verify(baseGroupService, never()).findBaseGroupTree(any());
+    }
+
+    private void mockDefaultFindAllUsersAtBaseGroup() {
+        Long otherUserId = USER_ID + 1L;
+        String otherUserIdentification = IdGenerator.generateIdentification(otherUserId, User.ID_PREFIX);
+        UserDao otherUserDao = mock(UserDao.class);
+        User otherUser = mock(User.class);
+
+        when(otherUserDao.getId()).thenReturn(otherUserId);
+        when(otherUserDao.getIdentification()).thenReturn(otherUserIdentification);
+        when(otherUser.getIdentification()).thenReturn(otherUserIdentification);
+
+        BaseGroupToUserDao baseGroupToUserDao = mock(BaseGroupToUserDao.class);
+        when(baseGroupToUserDao.getUser()).thenReturn(userDao).thenReturn(otherUserDao);
+        when(baseGroupToUserRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToUserDao))
+                .thenReturn(Collections.singletonList(baseGroupToUserDao));
+        when(baseGroupToUserRepository.findAllByBaseGroup(any(), any())).thenReturn(Collections.singletonList(baseGroupToUserDao))
+                .thenReturn(Collections.singletonList(baseGroupToUserDao));
+
+        BaseGroupToBaseGroupDao baseGroupToBaseGroupDao = mock(BaseGroupToBaseGroupDao.class);
+        when(baseGroupToBaseGroupDao.getSubBaseGroup()).thenReturn(baseGroupDao);
+        when(baseToBaseGroupRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(baseGroupToBaseGroupDao))
+                .thenReturn(Collections.emptyList());
+
+        when(baseGroupService.findBaseGroupTree(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
+        when(baseGroup.getAllUsers()).thenReturn(Set.of(user, otherUser));
+    }
+
+    @DisplayName("Find all direct users at privilege group")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroup() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, false);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService, never()).findPrivilegeGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at privilege group without role")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupWithoutRole() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, false);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService, never()).findPrivilegeGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at privilege group with not relevant role")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupNotRelevantRole() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.NOT_RELEVANT, false);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService, never()).findPrivilegeGroupTree(any());
+    }
+
+    @DisplayName("Find all users at privilege group")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupDissolving() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, true);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService).findPrivilegeGroupTree(any());
+        verify(privilegeGroup).getUsersByRole(eq(Role.MANAGER), any());
+    }
+
+    @DisplayName("Find all users at privilege group without role")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupDissolvingWithoutRole() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, true);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Role.values().length - 1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService).findPrivilegeGroupTree(any());
+        verify(privilegeGroup, times(Role.values().length - 1)).getUsersByRole(any(), any());
+    }
+
+    @DisplayName("Find all users at privilege group with not relevant role")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupDissolvingNotRelevantRole() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.NOT_RELEVANT, true);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Role.values().length - 1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService).findPrivilegeGroupTree(any());
+        verify(privilegeGroup, times(Role.values().length - 1)).getUsersByRole(any(), any());
+    }
+
+    @DisplayName("Find all users at privilege group, but subtree empty")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupDissolvingNoSubtree() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+        when(privilegeGroupService.findPrivilegeGroupTree(any())).thenReturn(Optional.empty());
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, true);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(0, result.size(), "Wrong number of roles at result");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService).findPrivilegeGroupTree(any());
+        verify(privilegeGroup, never()).getUsersByRole(any(), any());
+    }
+
+    @DisplayName("Find all users at privilege group, but wrong type of privilege group")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupDissolvingWrongType() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+        PrivilegeGroup simplePrivilegeGroup = mock(PrivilegeGroup.class);
+        when(simplePrivilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupService.findPrivilegeGroupTree(any())).thenReturn(Optional.of(simplePrivilegeGroup));
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, true);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(0, result.size(), "Wrong number of roles at result");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService).findPrivilegeGroupTree(any());
+        verify(privilegeGroup, never()).getUsersByRole(any(), any());
+    }
+
+    @DisplayName("Find all direct users at privilege group with pages")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupPageable() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService, never()).findPrivilegeGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at privilege group with pages, but missing page")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupPageableMissingPage() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService, never()).findPrivilegeGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at privilege group with pages, but missing size")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupPageableMissingSize() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService, never()).findPrivilegeGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at privilege group with pages and without role")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupPageableWithoutRole() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService, never()).findPrivilegeGroupTree(any());
+    }
+
+    @DisplayName("Find all direct users at privilege group with pages and not relevant role")
+    @Test
+    public void testFindAllUsersAtPrivilegeGroupPageableNotRelevantRole() {
+        mockDefaultFindAllUsersAtPrivilegeGroup();
+
+        Map<Role, List<User>> result = cut.findAllUsersAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.NOT_RELEVANT, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of roles at result");
+        assertNotNull(result.get(Role.MANAGER), String.format("The entry for the role %s should not be empty", Role.MANAGER.getDescription()));
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of users for role at result");
+        assertEquals(USER_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroupAndFilterRole(any(), any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeGroupToUserRepository).findAllByPrivilegeGroup(any(), any());
+        verify(privilegeGroupService, never()).findPrivilegeGroupTree(any());
+    }
+
+    private void mockDefaultFindAllUsersAtPrivilegeGroup() {
+        when(privilegeGroupToUserRepository.findAllByPrivilegeGroupAndFilterRole(any(), any())).then(a -> {
+            if (!Role.MANAGER.equals(a.getArgument(1))) {
+                Collections.emptyList();
+            }
+            PrivilegeGroupToUserDao privilegeGroupToUserDao = mock(PrivilegeGroupToUserDao.class);
+            when(privilegeGroupToUserDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+            when(privilegeGroupToUserDao.getUser()).thenReturn(userDao);
+            when(privilegeGroupToUserDao.getFilterRole()).thenReturn(a.getArgument(1));
+            return Collections.singletonList(privilegeGroupToUserDao);
+        });
+
+        when(privilegeGroupToUserRepository.findAllByPrivilegeGroupAndFilterRole(any(), any(), any())).then(a -> {
+            if (!Role.MANAGER.equals(a.getArgument(1))) {
+                Collections.emptyList();
+            }
+            PrivilegeGroupToUserDao privilegeGroupToUserDao = mock(PrivilegeGroupToUserDao.class);
+            when(privilegeGroupToUserDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+            when(privilegeGroupToUserDao.getUser()).thenReturn(userDao);
+            when(privilegeGroupToUserDao.getFilterRole()).thenReturn(a.getArgument(1));
+            return Collections.singletonList(privilegeGroupToUserDao);
+        });
+
+        when(privilegeGroupToUserRepository.findAllByPrivilegeGroup(any())).then(a -> {
+            PrivilegeGroupToUserDao privilegeGroupToUserDao = mock(PrivilegeGroupToUserDao.class);
+            when(privilegeGroupToUserDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+            when(privilegeGroupToUserDao.getUser()).thenReturn(userDao);
+            when(privilegeGroupToUserDao.getFilterRole()).thenReturn(Role.MANAGER);
+            return Collections.singletonList(privilegeGroupToUserDao);
+        });
+
+        when(privilegeGroupToUserRepository.findAllByPrivilegeGroup(any(), any())).then(a -> {
+            PrivilegeGroupToUserDao privilegeGroupToUserDao = mock(PrivilegeGroupToUserDao.class);
+            when(privilegeGroupToUserDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+            when(privilegeGroupToUserDao.getUser()).thenReturn(userDao);
+            when(privilegeGroupToUserDao.getFilterRole()).thenReturn(Role.MANAGER);
+            return Collections.singletonList(privilegeGroupToUserDao);
+        });
+
+        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroup.getUsersByRole(any(), any())).thenReturn(Collections.emptyList());
+        when(privilegeGroup.getUsersByRole(eq(Role.MANAGER), any())).thenReturn(Collections.singletonList(user));
+        when(privilegeGroupService.findPrivilegeGroupTree(any())).thenReturn(Optional.of(privilegeGroup));
     }
 
     @DisplayName("Save user with admin group parent")

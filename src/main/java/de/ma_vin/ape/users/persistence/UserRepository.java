@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.persistence;
 import de.ma_vin.ape.users.model.gen.dao.group.AdminGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,9 +15,13 @@ public interface UserRepository extends JpaRepository<UserDao, Long> {
 
     List<UserDao> findByParentAdminGroup(AdminGroupDao parentAdminGroup);
 
+    List<UserDao> findByParentAdminGroup(AdminGroupDao parentAdminGroup, Pageable pageable);
+
     long countByParentAdminGroup(AdminGroupDao parentAdminGroup);
 
     List<UserDao> findByParentCommonGroup(CommonGroupDao parentCommonGroup);
+
+    List<UserDao> findByParentCommonGroup(CommonGroupDao parentCommonGroup, Pageable pageable);
 
     long countByParentCommonGroup(CommonGroupDao parentCommonGroup);
 

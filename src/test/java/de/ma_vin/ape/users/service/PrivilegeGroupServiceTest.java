@@ -236,9 +236,7 @@ public class PrivilegeGroupServiceTest {
     @DisplayName("Find all privilege groups at common group")
     @Test
     public void testFindAllPrivilegeGroups() {
-        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
-        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-        when(privilegeGroupRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(privilegeGroupDao));
+        defaultMockFindAllPrivilegeGroups();
 
         List<PrivilegeGroup> result = cut.findAllPrivilegeGroups(PRIVILEGE_GROUP_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
@@ -246,6 +244,56 @@ public class PrivilegeGroupServiceTest {
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(privilegeGroupRepository).findByParentCommonGroup(any());
+        verify(privilegeGroupRepository, never()).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all privilege groups at common group with pages")
+    @Test
+    public void testFindAllPrivilegeGroupsPageable() {
+        defaultMockFindAllPrivilegeGroups();
+
+        List<PrivilegeGroup> result = cut.findAllPrivilegeGroups(PRIVILEGE_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupRepository, never()).findByParentCommonGroup(any());
+        verify(privilegeGroupRepository).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all privilege groups at common group with pages, but missing page")
+    @Test
+    public void testFindAllPrivilegeGroupsPageableMissingPage() {
+        defaultMockFindAllPrivilegeGroups();
+
+        List<PrivilegeGroup> result = cut.findAllPrivilegeGroups(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupRepository).findByParentCommonGroup(any());
+        verify(privilegeGroupRepository, never()).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all privilege groups at common group with pages, but missing size")
+    @Test
+    public void testFindAllPrivilegeGroupsPageableMissingSize() {
+        defaultMockFindAllPrivilegeGroups();
+
+        List<PrivilegeGroup> result = cut.findAllPrivilegeGroups(PRIVILEGE_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupRepository).findByParentCommonGroup(any());
+        verify(privilegeGroupRepository, never()).findByParentCommonGroup(any(), any());
+    }
+
+    private void defaultMockFindAllPrivilegeGroups() {
+        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
+        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(privilegeGroupDao));
+        when(privilegeGroupRepository.findByParentCommonGroup(any(), any())).thenReturn(Collections.singletonList(privilegeGroupDao));
     }
 
     @DisplayName("Save privilege group")

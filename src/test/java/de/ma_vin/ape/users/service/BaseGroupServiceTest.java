@@ -232,9 +232,7 @@ public class BaseGroupServiceTest {
     @DisplayName("Find all base groups at common group")
     @Test
     public void testFindAllBaseGroups() {
-        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
-        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
-        when(baseGroupRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(baseGroupDao));
+        defaultMockFindAllBaseGroups();
 
         List<BaseGroup> result = cut.findAllBaseGroups(COMMON_GROUP_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
@@ -242,6 +240,56 @@ public class BaseGroupServiceTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupRepository).findByParentCommonGroup(any());
+        verify(baseGroupRepository, never()).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at common group with pages")
+    @Test
+    public void testFindAllBaseGroupsPageable() {
+        defaultMockFindAllBaseGroups();
+
+        List<BaseGroup> result = cut.findAllBaseGroups(COMMON_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupRepository, never()).findByParentCommonGroup(any());
+        verify(baseGroupRepository).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at common group with pages, but missing page")
+    @Test
+    public void testFindAllBaseGroupsPageableMissingPage() {
+        defaultMockFindAllBaseGroups();
+
+        List<BaseGroup> result = cut.findAllBaseGroups(COMMON_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupRepository).findByParentCommonGroup(any());
+        verify(baseGroupRepository, never()).findByParentCommonGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at common group, with pages, but missing size")
+    @Test
+    public void testFindAllBaseGroupsPageableMissingSize() {
+        defaultMockFindAllBaseGroups();
+
+        List<BaseGroup> result = cut.findAllBaseGroups(COMMON_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupRepository).findByParentCommonGroup(any());
+        verify(baseGroupRepository, never()).findByParentCommonGroup(any(), any());
+    }
+
+    private void defaultMockFindAllBaseGroups() {
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupRepository.findByParentCommonGroup(any())).thenReturn(Collections.singletonList(baseGroupDao));
+        when(baseGroupRepository.findByParentCommonGroup(any(), any())).thenReturn(Collections.singletonList(baseGroupDao));
     }
 
     @DisplayName("Count base groups at base group")
@@ -259,10 +307,65 @@ public class BaseGroupServiceTest {
     @DisplayName("Find all base groups at base group")
     @Test
     public void testFindAllBasesAtBaseGroup() {
+        defaultMockFindAllBasesAtBaseGroup();
+
+        List<BaseGroup> result = cut.findAllBasesAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseToBaseGroupRepository).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at base group with pages")
+    @Test
+    public void testFindAllBasesAtBaseGroupPageable() {
+        defaultMockFindAllBasesAtBaseGroup();
+
+        List<BaseGroup> result = cut.findAllBasesAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository).findAllByBaseGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at base group with pages, but missing page")
+    @Test
+    public void testFindAllBasesAtBaseGroupPageableMissingPage() {
+        defaultMockFindAllBasesAtBaseGroup();
+
+        List<BaseGroup> result = cut.findAllBasesAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseToBaseGroupRepository).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at base group with pages, but missing size")
+    @Test
+    public void testFindAllBasesAtBaseGroupPageableMissingSize() {
+        defaultMockFindAllBasesAtBaseGroup();
+
+        List<BaseGroup> result = cut.findAllBasesAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseToBaseGroupRepository).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, never()).findAllByBaseGroup(any(), any());
+    }
+
+    private void defaultMockFindAllBasesAtBaseGroup() {
         BaseGroupToBaseGroupDao baseGroupToBaseGroupDao = mock(BaseGroupToBaseGroupDao.class);
         when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
         when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupToBaseGroupDao.getSubBaseGroup()).thenReturn(baseGroupDao);
+
         when(baseToBaseGroupRepository.findAllByBaseGroup(any())).then(a -> {
             if (((BaseGroupDao) a.getArgument(0)).getIdentification().equals(PARENT_BASE_GROUP_IDENTIFICATION)) {
                 when(baseGroupToBaseGroupDao.getBaseGroup()).thenReturn(a.getArgument(0));
@@ -271,12 +374,13 @@ public class BaseGroupServiceTest {
             return Collections.emptyList();
         });
 
-        List<BaseGroup> result = cut.findAllBasesAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
-        assertNotNull(result, "The result should not be null");
-        assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
-
-        verify(baseToBaseGroupRepository).findAllByBaseGroup(any());
+        when(baseToBaseGroupRepository.findAllByBaseGroup(any(), any())).then(a -> {
+            if (((BaseGroupDao) a.getArgument(0)).getIdentification().equals(PARENT_BASE_GROUP_IDENTIFICATION)) {
+                when(baseGroupToBaseGroupDao.getBaseGroup()).thenReturn(a.getArgument(0));
+                return Collections.singletonList(baseGroupToBaseGroupDao);
+            }
+            return Collections.emptyList();
+        });
     }
 
     @DisplayName("Count base groups at privilege group")
@@ -294,10 +398,65 @@ public class BaseGroupServiceTest {
     @DisplayName("Find all base groups at privilege group")
     @Test
     public void testFindAllBaseAtPrivilegeGroup() {
+        defaultMockFindAllBaseAtPrivilegeGroup();
+
+        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any());
+        verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at privilege group, with pages")
+    @Test
+    public void testFindAllBaseAtPrivilegeGroupPageable() {
+        defaultMockFindAllBaseAtPrivilegeGroup();
+
+        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any());
+        verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at privilege group with pages, but missing page")
+    @Test
+    public void testFindAllBaseAtPrivilegeGroupPageableMissingPage() {
+        defaultMockFindAllBaseAtPrivilegeGroup();
+
+        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any());
+        verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
+    }
+
+    @DisplayName("Find all base groups at privilege group with pages, but missing size")
+    @Test
+    public void testFindAllBaseAtPrivilegeGroupPageableMissingSize() {
+        defaultMockFindAllBaseAtPrivilegeGroup();
+
+        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any());
+        verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
+    }
+
+    private void defaultMockFindAllBaseAtPrivilegeGroup() {
         PrivilegeGroupToBaseGroupDao privilegeGroupToBaseGroupDao = mock(PrivilegeGroupToBaseGroupDao.class);
         when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
         when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(privilegeGroupToBaseGroupDao.getBaseGroup()).thenReturn(baseGroupDao);
+
         when(privilegeToBaseGroupRepository.findAllByPrivilegeGroup(any())).then(a -> {
             if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
                 when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
@@ -306,12 +465,13 @@ public class BaseGroupServiceTest {
             return Collections.emptyList();
         });
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
-        assertNotNull(result, "The result should not be null");
-        assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
-
-        verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any());
+        when(privilegeToBaseGroupRepository.findAllByPrivilegeGroup(any(), any())).then(a -> {
+            if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
+                when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+                return Collections.singletonList(privilegeGroupToBaseGroupDao);
+            }
+            return Collections.emptyList();
+        });
     }
 
     @DisplayName("Save base group")

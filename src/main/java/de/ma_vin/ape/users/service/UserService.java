@@ -1,7 +1,11 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.dao.group.BaseGroupDaoExt;
+import de.ma_vin.ape.users.model.dao.group.CommonGroupDaoExt;
+import de.ma_vin.ape.users.model.dao.group.PrivilegeGroupDaoExt;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
+import de.ma_vin.ape.users.model.domain.group.PrivilegeGroupExt;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.dao.group.*;
 import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
@@ -18,10 +22,12 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Log4j2
@@ -52,6 +58,8 @@ public class UserService extends AbstractRepositoryService {
     private BaseGroupToUserRepository baseGroupToUserRepository;
     @Autowired
     private BaseGroupService baseGroupService;
+    @Autowired
+    private PrivilegeGroupService privilegeGroupService;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
@@ -226,13 +234,33 @@ public class UserService extends AbstractRepositoryService {
      */
     public List<User> findAllUsersAtCommonGroup(String parentIdentification) {
         log.debug(SEARCH_START_LOG_MESSAGE, USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
-        CommonGroupDao parent = new CommonGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        List<User> result = new ArrayList<>();
-        findAllUsers(parent).forEach(s -> result.add(UserAccessMapper.convertToUser(s)));
+        List<User> result = findAllUsers(new CommonGroupDaoExt(parentIdentification), null, null)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .collect(Collectors.toList());
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all user children of a parent common group
+     *
+     * @param parentIdentification identification of the parent
+     * @param page                 zero-based page index, must not be negative.
+     * @param size                 the size of the page to be returned, must be greater than 0.
+     * @return List of users
+     */
+    public List<User> findAllUsersAtCommonGroup(String parentIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_START_PAGE_LOG_MESSAGE, USERS_LOG_PARAM, page, size, COMMON_GROUP_LOG_PARAM, parentIdentification);
+
+        List<User> result = findAllUsers(new CommonGroupDaoExt(parentIdentification), page, size)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .collect(Collectors.toList());
+
+        log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
     }
 
@@ -245,19 +273,144 @@ public class UserService extends AbstractRepositoryService {
      */
     public List<User> findAllUsersAtBaseGroup(String parentIdentification, boolean dissolveSubgroups) {
         log.debug(SEARCH_START_LOG_MESSAGE, USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification);
-        BaseGroupDao parent = new BaseGroupDao();
-        parent.setIdentification(parentIdentification);
 
         List<User> result = new ArrayList<>();
         if (dissolveSubgroups) {
             baseGroupService.findBaseGroupTree(parentIdentification).ifPresent(b -> result.addAll(((BaseGroupExt) b).getAllUsers()));
         } else {
-            baseGroupToUserRepository.findAllByBaseGroup(parent).stream()
-                    .map(btu -> UserAccessMapper.convertToUser(btu.getUser()))
+            findAllUsers(new BaseGroupDaoExt(parentIdentification), null, null)
+                    .stream()
+                    .map(UserAccessMapper::convertToUser)
                     .sorted(Comparator.comparing(User::getIdentification)).forEach(result::add);
         }
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all user children of a parent base group. This method does not dissolve subgroups
+     *
+     * @param parentIdentification identification of the parent
+     * @param page                 zero-based page index, must not be negative.
+     * @param size                 the size of the page to be returned, must be greater than 0.
+     * @return List of users
+     */
+    public List<User> findAllUsersAtBaseGroup(String parentIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_START_PAGE_LOG_MESSAGE, USERS_LOG_PARAM, page, size, BASE_GROUP_LOG_PARAM, parentIdentification);
+
+        List<User> result = findAllUsers(new BaseGroupDaoExt(parentIdentification), page, size)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+
+        log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification, page, size);
+        return result;
+    }
+
+
+    /**
+     * Searches for all user children of a parent privilege group
+     *
+     * @param parentIdentification identification of the parent
+     * @param role                 role of the users. If {@code null} or {@link Role#NOT_RELEVANT} all roles will be loaded
+     * @param dissolveSubgroups    indicator if the users of subgroups should also be added
+     * @return Map of roles and their users
+     */
+    public Map<Role, List<User>> findAllUsersAtPrivilegeGroup(String parentIdentification, Role role, boolean dissolveSubgroups) {
+        log.debug("Search for users with role {} with at {} with identification \"{}\""
+                , role != null ? role.getDescription() : "null", PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+
+        Map<Role, List<User>> result;
+
+        if (dissolveSubgroups) {
+            result = findAllDissolvedUsersAtPrivilegeGroup(parentIdentification, role);
+        } else {
+            result = findAllUsersAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, null, null);
+        }
+
+        result.forEach((r, l) -> log.debug("{} users with role {} are found at {} with identification \"{}\""
+                , l.size(), r.getDescription(), PRIVILEGE_GROUP_LOG_PARAM, parentIdentification));
+
+        return result;
+    }
+
+    /**
+     * Searches for all user children of a parent privilege group. This method does not dissolve subgroups
+     *
+     * @param parentIdentification identification of the parent
+     * @param role                 role of the users. If {@code null} or {@link Role#NOT_RELEVANT} all roles will be loaded
+     * @param page                 zero-based page index, must not be negative.
+     * @param size                 the size of the page to be returned, must be greater than 0.
+     * @return Map of roles and their users
+     */
+    public Map<Role, List<User>> findAllUsersAtPrivilegeGroup(String parentIdentification, Role role, Integer page, Integer size) {
+        log.debug("Search for users with role {} with page {} and size {} at {} with identification \"{}\""
+                , role != null ? role.getDescription() : "null", page, size, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+
+        Map<Role, List<User>> result = findAllUsersAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, page, size);
+
+        result.forEach((r, l) -> log.debug("{} users with role {} are found at {} with identification \"{}\""
+                , l.size(), r.getDescription(), PRIVILEGE_GROUP_LOG_PARAM, parentIdentification));
+
+        return result;
+    }
+
+    /**
+     * Searches for all user children of a parent privilege group. This method does not dissolve subgroups
+     *
+     * @param parent privilege group
+     * @param role   role of the users. If {@code null} or {@link Role#NOT_RELEVANT} all roles will be loaded
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @return Map of roles and their users
+     */
+    private Map<Role, List<User>> findAllUsersAtPrivilegeGroup(PrivilegeGroupDao parent, Role role, Integer page, Integer size) {
+        Map<Role, List<User>> result = new EnumMap<>(Role.class);
+        if (role == null || Role.NOT_RELEVANT.equals(role)) {
+            findAllUsers(parent, page, size).entrySet()
+                    .forEach(e ->
+                            result.computeIfAbsent(e.getKey(), r -> new ArrayList<>())
+                                    .addAll(e.getValue().stream()
+                                            .map(UserAccessMapper::convertToUser)
+                                            .collect(Collectors.toList())
+                                    )
+                    );
+        } else {
+            result.put(role, findAllUsers(parent, role, page, size).stream()
+                    .map(UserAccessMapper::convertToUser)
+                    .sorted(Comparator.comparing(User::getIdentification))
+                    .collect(Collectors.toList()));
+        }
+        return result;
+    }
+
+    /**
+     * Searches for all user children of a parent privilege group. This method does dissolve subgroups
+     *
+     * @param parentIdentification identification of the parent
+     * @param role                 role of the users. If {@code null} or {@link Role#NOT_RELEVANT} all roles will be loaded
+     * @return Map of roles and their users
+     */
+    private Map<Role, List<User>> findAllDissolvedUsersAtPrivilegeGroup(String parentIdentification, Role role) {
+        Map<Role, List<User>> result = new EnumMap<>(Role.class);
+
+        Optional<PrivilegeGroup> privilegeGroup = privilegeGroupService.findPrivilegeGroupTree(parentIdentification);
+        if (privilegeGroup.isEmpty() || !(privilegeGroup.get() instanceof PrivilegeGroupExt)) {
+            log.error("Could not find all dissolved users at privilege group {}, because the loaded subtree was empty", parentIdentification);
+            return Collections.emptyMap();
+        }
+        if (role == null || Role.NOT_RELEVANT.equals(role)) {
+            for (Role r : Role.values()) {
+                if (Role.NOT_RELEVANT.equals(r)) {
+                    continue;
+                }
+                result.computeIfAbsent(r, k -> new ArrayList<>()).addAll(((PrivilegeGroupExt) privilegeGroup.get()).getUsersByRole(r, true));
+            }
+        } else {
+            result.computeIfAbsent(role, k -> new ArrayList<>()).addAll(((PrivilegeGroupExt) privilegeGroup.get()).getUsersByRole(role, true));
+        }
+
         return result;
     }
 
@@ -318,10 +471,74 @@ public class UserService extends AbstractRepositoryService {
      * Searches for all user children of a parent common group
      *
      * @param parent parent
-     * @return List of users
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
      */
-    private List<UserDao> findAllUsers(CommonGroupDao parent) {
-        return userRepository.findByParentCommonGroup(parent);
+    private List<UserDao> findAllUsers(CommonGroupDao parent, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return userRepository.findByParentCommonGroup(parent);
+        }
+        return userRepository.findByParentCommonGroup(parent, PageRequest.of(page, size));
+    }
+
+    /**
+     * Searches for all user children of a parent base group
+     *
+     * @param parent parent
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
+     */
+    private List<UserDao> findAllUsers(BaseGroupDao parent, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return baseGroupToUserRepository.findAllByBaseGroup(parent).stream()
+                    .map(BaseGroupToUserDao::getUser)
+                    .collect(Collectors.toList());
+        }
+        return baseGroupToUserRepository.findAllByBaseGroup(parent, PageRequest.of(page, size)).stream()
+                .map(BaseGroupToUserDao::getUser)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Searches for all user children of a parent base group
+     *
+     * @param parent
+     * @param role   role of the users. not null
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
+     */
+    private List<UserDao> findAllUsers(PrivilegeGroupDao parent, Role role, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return privilegeGroupToUserRepository.findAllByPrivilegeGroupAndFilterRole(parent, role).stream()
+                    .map(PrivilegeGroupToUserDao::getUser)
+                    .collect(Collectors.toList());
+        }
+        return privilegeGroupToUserRepository.findAllByPrivilegeGroupAndFilterRole(parent, role, PageRequest.of(page, size)).stream()
+                .map(PrivilegeGroupToUserDao::getUser)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Searches for all user children of a parent base group
+     *
+     * @param parent
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
+     */
+    private Map<Role, List<UserDao>> findAllUsers(PrivilegeGroupDao parent, Integer page, Integer size) {
+        Map<Role, List<UserDao>> result = new EnumMap<>(Role.class);
+        if (page == null || size == null) {
+            privilegeGroupToUserRepository.findAllByPrivilegeGroup(parent)
+                    .forEach(ptu -> result.computeIfAbsent(ptu.getFilterRole(), r -> new ArrayList<>()).add(ptu.getUser()));
+        } else {
+            privilegeGroupToUserRepository.findAllByPrivilegeGroup(parent, PageRequest.of(page, size)).stream()
+                    .forEach(ptu -> result.computeIfAbsent(ptu.getFilterRole(), r -> new ArrayList<>()).add(ptu.getUser()));
+        }
+        return result;
     }
 
     /**

@@ -2,6 +2,9 @@ package de.ma_vin.ape.users.service;
 
 
 import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.dao.group.BaseGroupDaoExt;
+import de.ma_vin.ape.users.model.dao.group.CommonGroupDaoExt;
+import de.ma_vin.ape.users.model.dao.group.PrivilegeGroupDaoExt;
 import de.ma_vin.ape.users.model.gen.dao.group.*;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
@@ -12,6 +15,7 @@ import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -147,10 +151,8 @@ public class BaseGroupService extends AbstractRepositoryService {
      */
     public Long countBaseGroups(String parentIdentification) {
         log.debug(COUNT_START_LOG_MESSAGE, GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
-        CommonGroupDao parent = new CommonGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        long result = countBaseGroups(parent);
+        long result = countBaseGroups(new CommonGroupDaoExt(parentIdentification));
 
         log.debug(COUNT_RESULT_LOG_MESSAGE, result, GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
         return Long.valueOf(result);
@@ -164,13 +166,33 @@ public class BaseGroupService extends AbstractRepositoryService {
      */
     public List<BaseGroup> findAllBaseGroups(String parentIdentification) {
         log.debug(SEARCH_START_LOG_MESSAGE, GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
-        CommonGroupDao parent = new CommonGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        List<BaseGroup> result = new ArrayList<>();
-        findAllBaseGroups(parent).forEach(bg -> result.add(GroupAccessMapper.convertToBaseGroup(bg, false)));
+        List<BaseGroup> result = findAllBaseGroups(new CommonGroupDaoExt(parentIdentification), null, null)
+                .stream()
+                .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
+                .collect(Collectors.toList());
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all base groups at a parent common group
+     *
+     * @param parentIdentification identification of the parent
+     * @param page                 zero-based page index, must not be negative.
+     * @param size                 the size of the page to be returned, must be greater than 0.
+     * @return List of base groups
+     */
+    public List<BaseGroup> findAllBaseGroups(String parentIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_START_PAGE_LOG_MESSAGE, GROUPS_LOG_PARAM, page, size, COMMON_GROUP_LOG_PARAM, parentIdentification);
+
+        List<BaseGroup> result = findAllBaseGroups(new CommonGroupDaoExt(parentIdentification), page, size)
+                .stream()
+                .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
+                .collect(Collectors.toList());
+
+        log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
     }
 
@@ -182,10 +204,8 @@ public class BaseGroupService extends AbstractRepositoryService {
      */
     public Long countBasesAtBaseGroup(String parentIdentification) {
         log.debug(COUNT_START_LOG_MESSAGE, GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
-        BaseGroupDao parent = new BaseGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        long result = countBasesAtBaseGroup(parent);
+        long result = countBasesAtBaseGroup(new BaseGroupDaoExt(parentIdentification));
 
         log.debug(COUNT_RESULT_LOG_MESSAGE, result, GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
         return Long.valueOf(result);
@@ -199,13 +219,33 @@ public class BaseGroupService extends AbstractRepositoryService {
      */
     public List<BaseGroup> findAllBasesAtBaseGroup(String parentIdentification) {
         log.debug(SEARCH_START_LOG_MESSAGE, GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
-        BaseGroupDao parent = new BaseGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        List<BaseGroup> result = new ArrayList<>();
-        findAllBasesAtBaseGroup(parent).forEach(bg -> result.add(GroupAccessMapper.convertToBaseGroup(bg, false)));
+        List<BaseGroup> result = findAllBasesAtBaseGroup(new BaseGroupDaoExt(parentIdentification), null, null)
+                .stream()
+                .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
+                .collect(Collectors.toList());
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all base groups at an other parent base group
+     *
+     * @param parentIdentification identification of the parent
+     * @param page                 zero-based page index, must not be negative.
+     * @param size                 the size of the page to be returned, must be greater than 0.
+     * @return List of base groups
+     */
+    public List<BaseGroup> findAllBasesAtBaseGroup(String parentIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_START_PAGE_LOG_MESSAGE, GROUPS_LOG_PARAM, page, size, GROUP_LOG_PARAM, parentIdentification);
+
+        List<BaseGroup> result = findAllBasesAtBaseGroup(new BaseGroupDaoExt(parentIdentification), page, size)
+                .stream()
+                .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
+                .collect(Collectors.toList());
+
+        log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
     }
 
@@ -217,10 +257,8 @@ public class BaseGroupService extends AbstractRepositoryService {
      */
     public Long countBasesAtPrivilegeGroup(String parentIdentification) {
         log.debug(COUNT_START_LOG_MESSAGE, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
-        PrivilegeGroupDao parent = new PrivilegeGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        long result = countBasesAtPrivilegeGroup(parent);
+        long result = countBasesAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification));
 
         log.debug(COUNT_RESULT_LOG_MESSAGE, result, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
         return Long.valueOf(result);
@@ -234,13 +272,33 @@ public class BaseGroupService extends AbstractRepositoryService {
      */
     public List<BaseGroup> findAllBaseAtPrivilegeGroup(String parentIdentification) {
         log.debug(SEARCH_START_LOG_MESSAGE, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
-        PrivilegeGroupDao parent = new PrivilegeGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        List<BaseGroup> result = new ArrayList<>();
-        findAllBaseAtPrivilegeGroup(parent).forEach(bg -> result.add(GroupAccessMapper.convertToBaseGroup(bg, false)));
+        List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), null, null)
+                .stream()
+                .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
+                .collect(Collectors.toList());
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all base groups at a parent privilege group
+     *
+     * @param parentIdentification identification of the
+     * @param page                 zero-based page index, must not be negative.
+     * @param size                 the size of the page to be returned, must be greater than 0.
+     * @return List of base groups
+     */
+    public List<BaseGroup> findAllBaseAtPrivilegeGroup(String parentIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_START_PAGE_LOG_MESSAGE, GROUPS_LOG_PARAM, page, size, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+
+        List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), page, size)
+                .stream()
+                .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
+                .collect(Collectors.toList());
+
+        log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
     }
 
@@ -258,10 +316,15 @@ public class BaseGroupService extends AbstractRepositoryService {
      * Searches for all base groups
      *
      * @param parent parent common group
-     * @return List of base groups
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @return List of base groups. If {@code page} or {@code size} are {@code null} everything will be loaded
      */
-    private List<BaseGroupDao> findAllBaseGroups(CommonGroupDao parent) {
-        return baseGroupRepository.findByParentCommonGroup(parent);
+    private List<BaseGroupDao> findAllBaseGroups(CommonGroupDao parent, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return baseGroupRepository.findByParentCommonGroup(parent);
+        }
+        return baseGroupRepository.findByParentCommonGroup(parent, PageRequest.of(page, size));
     }
 
     /**
@@ -277,11 +340,20 @@ public class BaseGroupService extends AbstractRepositoryService {
     /**
      * Searches for all base groups
      *
-     * @param parent parent base group
+     * @param parent parent base
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
      * @return List of base groups
      */
-    private List<BaseGroupDao> findAllBasesAtBaseGroup(BaseGroupDao parent) {
-        return baseToBaseGroupRepository.findAllByBaseGroup(parent).stream().map(BaseGroupToBaseGroupDao::getSubBaseGroup).collect(Collectors.toList());
+    private List<BaseGroupDao> findAllBasesAtBaseGroup(BaseGroupDao parent, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return baseToBaseGroupRepository.findAllByBaseGroup(parent).stream()
+                    .map(BaseGroupToBaseGroupDao::getSubBaseGroup)
+                    .collect(Collectors.toList());
+        }
+        return baseToBaseGroupRepository.findAllByBaseGroup(parent, PageRequest.of(page, size)).stream()
+                .map(BaseGroupToBaseGroupDao::getSubBaseGroup)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -298,10 +370,17 @@ public class BaseGroupService extends AbstractRepositoryService {
      * Searches for all base groups
      *
      * @param parent parent privilege group
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
      * @return List of base groups
      */
-    private List<BaseGroupDao> findAllBaseAtPrivilegeGroup(PrivilegeGroupDao parent) {
-        return privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent).stream()
+    private List<BaseGroupDao> findAllBaseAtPrivilegeGroup(PrivilegeGroupDao parent, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent).stream()
+                    .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
+                    .collect(Collectors.toList());
+        }
+        return privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent, PageRequest.of(page, size)).stream()
                 .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
                 .collect(Collectors.toList());
     }

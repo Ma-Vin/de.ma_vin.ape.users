@@ -1,5 +1,6 @@
 package de.ma_vin.ape.users.service;
 
+import de.ma_vin.ape.users.model.dao.group.CommonGroupDaoExt;
 import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
@@ -12,11 +13,13 @@ import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @Data
@@ -162,13 +165,33 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
      */
     public List<PrivilegeGroup> findAllPrivilegeGroups(String parentIdentification) {
         log.debug(SEARCH_START_LOG_MESSAGE, GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
-        CommonGroupDao parent = new CommonGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        List<PrivilegeGroup> result = new ArrayList<>();
-        findAllPrivilegeGroups(parent).forEach(pg -> result.add(GroupAccessMapper.convertToPrivilegeGroup(pg, false)));
+        List<PrivilegeGroup> result = findAllPrivilegeGroups(new CommonGroupDaoExt(parentIdentification), null, null)
+                .stream()
+                .map(pg -> GroupAccessMapper.convertToPrivilegeGroup(pg, false))
+                .collect(Collectors.toList());
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all privilege groups at a parent common group
+     *
+     * @param parentIdentification identification of the parent
+     * @param page                 zero-based page index, must not be negative.
+     * @param size                 the size of the page to be returned, must be greater than 0.
+     * @return List of privilege groups
+     */
+    public List<PrivilegeGroup> findAllPrivilegeGroups(String parentIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_START_PAGE_LOG_MESSAGE, GROUPS_LOG_PARAM, page, size, COMMON_GROUP_LOG_PARAM, parentIdentification);
+
+        List<PrivilegeGroup> result = findAllPrivilegeGroups(new CommonGroupDaoExt(parentIdentification), page, size)
+                .stream()
+                .map(pg -> GroupAccessMapper.convertToPrivilegeGroup(pg, false))
+                .collect(Collectors.toList());
+
+        log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
     }
 
@@ -176,10 +199,15 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
      * Searches for all privilege groups
      *
      * @param parent parent common group
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
      * @return List of privilege groups
      */
-    private List<PrivilegeGroupDao> findAllPrivilegeGroups(CommonGroupDao parent) {
-        return privilegeGroupRepository.findByParentCommonGroup(parent);
+    private List<PrivilegeGroupDao> findAllPrivilegeGroups(CommonGroupDao parent, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return privilegeGroupRepository.findByParentCommonGroup(parent);
+        }
+        return privilegeGroupRepository.findByParentCommonGroup(parent, PageRequest.of(page, size));
     }
 
     /**
