@@ -163,3 +163,69 @@ Feature: Testing methods of the user controller
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The response is true
+
+  Scenario: Get all users with pages
+    Given There exists a base group with name "Parent Base Group Name" with alias "parentBase" at common group "common"
+    And There exists a privilege group with name "Parent Privilege Group Name" with alias "parentPrivilege" at common group "common"
+    And There are users with first and last name and alias at common group "common"
+      | 1. First Name | 1. Last Name | user1 |
+      | 2. First Name | 2. Last Name | user2 |
+      | 3. First Name | 3. Last Name | user3 |
+      | 4. First Name | 4. Last Name | user4 |
+      | 5. First Name | 5. Last Name | user5 |
+    When Controller is called to get all users at page 0 with size 4 from common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user1"
+    And The identification at 1 is the same like the one of alias "user2"
+    And The identification at 2 is the same like the one of alias "user3"
+    And The identification at 3 is the same like the one of alias "user4"
+    And The "identification" property at response position 4 does not exists
+    When Controller is called to get all users at page 1 with size 4 from common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user5"
+    And The "identification" property at response position 1 does not exists
+    Given The users are added to base group
+      | user1 | parentBase |
+      | user2 | parentBase |
+      | user3 | parentBase |
+      | user4 | parentBase |
+      | user5 | parentBase |
+    When Controller is called to get all users at page 0 with size 4 from base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user1"
+    And The identification at 1 is the same like the one of alias "user2"
+    And The identification at 2 is the same like the one of alias "user3"
+    And The identification at 3 is the same like the one of alias "user4"
+    And The "identification" property at response position 4 does not exists
+    When Controller is called to get all users at page 1 with size 4 from base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user5"
+    And The "identification" property at response position 1 does not exists
+    Given The users are added to privilege group with role
+      | user1 | parentPrivilege | ADMIN       |
+      | user2 | parentPrivilege | MANAGER     |
+      | user3 | parentPrivilege | CONTRIBUTOR |
+      | user4 | parentPrivilege | VISITOR     |
+      | user5 | parentPrivilege | BLOCKED     |
+    When Controller is called to get all users with role NOT_RELEVANT at page 0 with size 4 from privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "user1"
+    And The identification of "user" at 1 is the same like the one of alias "user2"
+    And The identification of "user" at 2 is the same like the one of alias "user3"
+    And The identification of "user" at 3 is the same like the one of alias "user4"
+    And At response position 4 does not exists
+    When Controller is called to get all users with role NOT_RELEVANT at page 1 with size 4 from privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "user5"
+    And At response position 1 does not exists
+    When Controller is called to get all users with role CONTRIBUTOR at page 0 with size 4 from privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "user3"
+    And At response position 1 does not exists

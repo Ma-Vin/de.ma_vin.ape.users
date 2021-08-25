@@ -257,10 +257,9 @@ public class PrivilegeGroupControllerTest {
     @DisplayName("Get all privilege groups")
     @Test
     public void testGetAllPrivilegeGroups() {
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-        when(privilegeGroupService.findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(privilegeGroup));
+        mockDefaultGetAllPrivilegeGroups();
 
-        ResponseWrapper<List<PrivilegeGroupDto>> response = cut.getAllPrivilegeGroups(COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<List<PrivilegeGroupDto>> response = cut.getAllPrivilegeGroups(COMMON_GROUP_IDENTIFICATION, null, null);
 
         checkOk(response);
 
@@ -268,5 +267,62 @@ public class PrivilegeGroupControllerTest {
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService, never()).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all privilege groups with pages, but missing page")
+    @Test
+    public void testGetAllPrivilegeGroupsPageableMissingPage() {
+        mockDefaultGetAllPrivilegeGroups();
+
+        ResponseWrapper<List<PrivilegeGroupDto>> response = cut.getAllPrivilegeGroups(COMMON_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupService, never()).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all privilege groups with pages, but missing size")
+    @Test
+    public void testGetAllPrivilegeGroupsPageableMissingSize() {
+        mockDefaultGetAllPrivilegeGroups();
+
+        ResponseWrapper<List<PrivilegeGroupDto>> response = cut.getAllPrivilegeGroups(COMMON_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupService, never()).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all privilege groups with pages")
+    @Test
+    public void testGetAllPrivilegeGroupsPageable() {
+        mockDefaultGetAllPrivilegeGroups();
+
+        ResponseWrapper<List<PrivilegeGroupDto>> response = cut.getAllPrivilegeGroups(COMMON_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupService, never()).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultGetAllPrivilegeGroups() {
+        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupService.findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(privilegeGroup));
+        when(privilegeGroupService.findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(privilegeGroup));
     }
 }

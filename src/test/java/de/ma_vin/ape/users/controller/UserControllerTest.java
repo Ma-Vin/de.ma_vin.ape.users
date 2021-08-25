@@ -27,10 +27,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class UserControllerTest {
 
@@ -504,10 +501,9 @@ public class UserControllerTest {
     @DisplayName("Get all users from common group")
     @Test
     public void testGetAllUsers() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(userService.findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
+        mockDefaultGetAllUsers();
 
-        ResponseWrapper<List<UserDto>> response = cut.getAllUsers(COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsers(COMMON_GROUP_IDENTIFICATION, null, null);
 
         checkOk(response);
 
@@ -515,6 +511,63 @@ public class UserControllerTest {
         assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService, never()).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all users from common group with pages, but missing page")
+    @Test
+    public void testGetAllUsersPageableMissingPage() {
+        mockDefaultGetAllUsers();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsers(COMMON_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all users from common group with pages, but missing size")
+    @Test
+    public void testGetAllUsersPageableMissingSize() {
+        mockDefaultGetAllUsers();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsers(COMMON_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all users from common group with pages")
+    @Test
+    public void testGetAllUsersPageable() {
+        mockDefaultGetAllUsers();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsers(COMMON_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultGetAllUsers() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userService.findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
+        when(userService.findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
     }
 
     @DisplayName("Count users at base group")
@@ -534,10 +587,9 @@ public class UserControllerTest {
     @DisplayName("Get all users from base group")
     @Test
     public void testGetAllUsersFromBaseGroup() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(userService.findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean())).thenReturn(Collections.singletonList(user));
+        mockDefaultGetAllUsersFromBaseGroup();
 
-        ResponseWrapper<List<UserDto>> response = cut.getAllUsersFromBaseGroup(BASE_GROUP_IDENTIFICATION, Boolean.TRUE);
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsersFromBaseGroup(BASE_GROUP_IDENTIFICATION, Boolean.TRUE, null, null);
 
         checkOk(response);
 
@@ -545,6 +597,80 @@ public class UserControllerTest {
         assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean());
+        verify(userService, never()).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all users from base group with pages, but missing page")
+    @Test
+    public void testGetAllUsersFromBaseGroupPageableMissingPage() {
+        mockDefaultGetAllUsersFromBaseGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsersFromBaseGroup(BASE_GROUP_IDENTIFICATION, Boolean.FALSE, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean());
+        verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all users from base group with pages, but missing size")
+    @Test
+    public void testGetAllUsersFromBaseGroupPageableMissingSize() {
+        mockDefaultGetAllUsersFromBaseGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsersFromBaseGroup(BASE_GROUP_IDENTIFICATION, Boolean.FALSE, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean());
+        verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all users from base group with pages")
+    @Test
+    public void testGetAllUsersFromBaseGroupPageable() {
+        mockDefaultGetAllUsersFromBaseGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsersFromBaseGroup(BASE_GROUP_IDENTIFICATION, Boolean.FALSE, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean());
+        verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all users from base group with pages, but dissolving subgroups")
+    @Test
+    public void testGetAllUsersFromBaseGroupPageableDissolving() {
+        mockDefaultGetAllUsersFromBaseGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAllUsersFromBaseGroup(BASE_GROUP_IDENTIFICATION, Boolean.TRUE, 2, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean());
+        verify(userService).findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultGetAllUsersFromBaseGroup() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userService.findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean())).thenReturn(Collections.singletonList(user));
+        when(userService.findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
     }
 
     @DisplayName("Count users at privilege group")
@@ -564,12 +690,9 @@ public class UserControllerTest {
     @DisplayName("Get all users from privilege group")
     @Test
     public void testGetAllUsersFromPrivilegeGroup() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroupExt));
-        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.singletonList(user));
+        mockDefaultGetAllUsersFromPrivilegeGroup();
 
-        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN);
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN, null, null);
 
         checkOk(response);
 
@@ -577,19 +700,52 @@ public class UserControllerTest {
         assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
         assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
 
-        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupExt).getUsersByRole(eq(Role.ADMIN), eq(Boolean.FALSE));
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any());
     }
 
-    @DisplayName("Get all direct and indirect users from privilege group")
+    @DisplayName("Get all users from privilege group with pages, but missing page")
     @Test
-    public void testGetAllUsersFromPrivilegeGroupDissolve() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroupExt));
-        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.singletonList(user));
+    public void testGetAllUsersFromPrivilegeGroupPageableMissingPage() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
 
-        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.TRUE, Role.ADMIN);
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all users from privilege group with pages, but missing size")
+    @Test
+    public void testGetAllUsersFromPrivilegeGroupPageableMissingSize() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
+
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all users from privilege group with pages")
+    @Test
+    public void testGetAllUsersFromPrivilegeGroupPageable() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
+
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN, 2, 20);
 
         checkOk(response);
 
@@ -597,85 +753,37 @@ public class UserControllerTest {
         assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
         assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
 
-        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupExt).getUsersByRole(eq(Role.ADMIN), eq(Boolean.TRUE));
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
     }
 
-    @DisplayName("Get all users from privilege group without role")
+    @DisplayName("Get all users from privilege group with pages, but dissolving subgroups")
     @Test
-    public void testGetAllUsersFromPrivilegeGroupWithoutRole() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroupExt));
-        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.emptyList());
-        when(privilegeGroupExt.getUsersByRole(eq(Role.MANAGER), anyBoolean())).thenReturn(Collections.singletonList(user));
+    public void testGetAllUsersFromPrivilegeGroupPageableDissolving() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
 
-        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, null);
+        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.TRUE, Role.ADMIN, 2, 20);
 
-        checkOk(response);
+        checkWarn(response);
 
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
         assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
         assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
-        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
 
-        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupExt, times(6)).getUsersByRole(any(), eq(Boolean.FALSE));
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
     }
 
-    @DisplayName("Get all users from privilege group with not relevant role")
-    @Test
-    public void testGetAllUsersFromPrivilegeGroupNotRelevantRole() {
+    private void mockDefaultGetAllUsersFromPrivilegeGroup() {
+        Map<Role, List<User>> rolesAndUsers = new EnumMap<>(Role.class);
+        rolesAndUsers.put(Role.ADMIN, Collections.singletonList(user));
+
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroupExt));
-        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.emptyList());
-        when(privilegeGroupExt.getUsersByRole(eq(Role.MANAGER), anyBoolean())).thenReturn(Collections.singletonList(user));
-
-        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.NOT_RELEVANT);
-
-        checkOk(response);
-
-        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
-        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
-        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
-
-        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupExt, times(6)).getUsersByRole(any(), eq(Boolean.FALSE));
+        when(userService.findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean())).thenReturn(rolesAndUsers);
+        when(userService.findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any())).thenReturn(rolesAndUsers);
     }
 
-
-    @DisplayName("Get all users from non existing privilege group")
-    @Test
-    public void testGetAllUsersFromPrivilegeGroupNonExisting() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(privilegeGroupExt.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
-        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.singletonList(user));
-
-        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN);
-
-        checkError(response);
-
-        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupExt, never()).getUsersByRole(any(), any());
-    }
-
-    @DisplayName("Get all users from not extended privilege group")
-    @Test
-    public void testGetAllUsersFromPrivilegeGroupNotExtended() {
-        PrivilegeGroup privilegeGroup = mock(PrivilegeGroup.class);
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(privilegeGroupService.findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
-        when(privilegeGroupExt.getUsersByRole(any(), anyBoolean())).thenReturn(Collections.singletonList(user));
-
-        ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN);
-
-        checkError(response);
-
-        verify(privilegeGroupService).findPrivilegeGroupTree(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupExt, never()).getUsersByRole(any(), any());
-    }
 
     @DisplayName("Set users password")
     @Test

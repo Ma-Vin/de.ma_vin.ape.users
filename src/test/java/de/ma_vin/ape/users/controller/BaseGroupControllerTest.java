@@ -394,10 +394,9 @@ public class BaseGroupControllerTest {
     @DisplayName("Find all base groups at base group")
     @Test
     public void testFindAllBaseAtBaseGroup() {
-        when(baseGroupService.findAllBasesAtBaseGroup(any())).thenReturn(Collections.singletonList(baseGroup));
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        mockDefaultFindAllBaseAtBaseGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, null, null);
 
         checkOk(response);
 
@@ -405,15 +404,71 @@ public class BaseGroupControllerTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService, never()).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Find all base groups at base group with pages, but missing page")
+    @Test
+    public void testFindAllBaseAtBaseGroupPageableMissingPage() {
+        mockDefaultFindAllBaseAtBaseGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Find all base groups at base group with pages, but missing size")
+    @Test
+    public void testFindAllBaseAtBaseGroupPageableMissingSize() {
+        mockDefaultFindAllBaseAtBaseGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Find all base groups at base group with pages")
+    @Test
+    public void testFindAllBaseAtBaseGroupPageable() {
+        mockDefaultFindAllBaseAtBaseGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBasesAtBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultFindAllBaseAtBaseGroup() {
+        when(baseGroupService.findAllBasesAtBaseGroup(any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroupService.findAllBasesAtBaseGroup(any(), any(), any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
     }
 
     @DisplayName("Find all base groups at privilege group")
     @Test
     public void testFindAllBaseAtPrivilegeGroup() {
-        when(baseGroupService.findAllBaseAtPrivilegeGroup(any())).thenReturn(Collections.singletonList(baseGroup));
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, null);
 
         checkOk(response);
 
@@ -421,15 +476,71 @@ public class BaseGroupControllerTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Find all base groups at privilege group with pages, but missing page")
+    @Test
+    public void testFindAllBaseAtPrivilegeGroupPageableMissingPage() {
+        mockDefaultFindAllBaseAtPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Find all base groups at privilege group with pages, but missing size")
+    @Test
+    public void testFindAllBaseAtPrivilegeGroupPageableMissingSize() {
+        mockDefaultFindAllBaseAtPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Find all base groups at privilege group with pages")
+    @Test
+    public void testFindAllBaseAtPrivilegeGroupPageable() {
+        mockDefaultFindAllBaseAtPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultFindAllBaseAtPrivilegeGroup() {
+        when(baseGroupService.findAllBaseAtPrivilegeGroup(any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any(), any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
     }
 
     @DisplayName("Get all base groups")
     @Test
     public void testGetAllBaseGroups() {
-        when(baseGroupService.findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroup));
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        mockDefaultGetAllBaseGroups();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseGroups(COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseGroups(COMMON_GROUP_IDENTIFICATION, null, null);
 
         checkOk(response);
 
@@ -437,5 +548,62 @@ public class BaseGroupControllerTest {
         assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(baseGroupService, never()).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all base groups with pages, but missing page")
+    @Test
+    public void testGetAllBaseGroupsPageableMissingPage() {
+        mockDefaultGetAllBaseGroups();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseGroups(COMMON_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all base groups with pages, but missing size")
+    @Test
+    public void testGetAllBaseGroupsPageableMissingSize() {
+        mockDefaultGetAllBaseGroups();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseGroups(COMMON_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all base groups with pages")
+    @Test
+    public void testGetAllBaseGroupsPageable() {
+        mockDefaultGetAllBaseGroups();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseGroups(COMMON_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultGetAllBaseGroups() {
+        when(baseGroupService.findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroupService.findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
     }
 }

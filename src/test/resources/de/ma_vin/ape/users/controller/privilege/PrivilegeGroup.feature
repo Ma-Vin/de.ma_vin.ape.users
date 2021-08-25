@@ -59,3 +59,24 @@ Feature: Testing methods of the privilege group controller
     When Controller is called to get the base group with the identification of the alias "subBase"
     Then The result is Ok and Json
     And The status of the result should be "OK"
+
+  Scenario: Get all privilege groups with pages
+    Given There are privilege groups with name and alias at common group "common"
+      | 1. Privilege Group Name | privilege1 |
+      | 2. Privilege Group Name | privilege2 |
+      | 3. Privilege Group Name | privilege3 |
+      | 4. Privilege Group Name | privilege4 |
+      | 5. Privilege Group Name | privilege5 |
+    When Controller is called to get all privilege groups at page 0 with size 4 from common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "privilege1"
+    And The identification at 1 is the same like the one of alias "privilege2"
+    And The identification at 2 is the same like the one of alias "privilege3"
+    And The identification at 3 is the same like the one of alias "privilege4"
+    And The "identification" property at response position 4 does not exists
+    When Controller is called to get all privilege groups at page 1 with size 4 from common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "privilege5"
+    And The "identification" property at response position 1 does not exists

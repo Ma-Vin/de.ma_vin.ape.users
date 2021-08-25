@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.controller.it.steps;
 import de.ma_vin.ape.users.model.gen.dto.group.PrivilegeGroupDto;
 import de.ma_vin.ape.utils.TestUtil;
 import de.ma_vin.ape.utils.controller.response.Status;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import org.springframework.http.MediaType;
@@ -33,6 +34,20 @@ public class PrivilegeGroupSteps extends AbstractIntegrationTestSteps {
 
         String createdPrivilegeGroupText = TestUtil.getObjectMapper().readTree(createPrivilegeGroupResponse.getContentAsString()).findValue("response").toString();
         shared.put(privilegeGroupAlias, TestUtil.getObjectMapper().readValue(createdPrivilegeGroupText, PrivilegeGroupDto.class));
+    }
+
+    @Given("There are privilege groups with name and alias at common group {string}")
+    public void createPrivilegeGroups(String commonGroupAlias, DataTable dataTable) {
+        dataTable.asLists().forEach(row -> {
+            if (row.size() != 2) {
+                fail("Wrong number of columns while creating privilege groups");
+            }
+            try {
+                createPrivilegeGroup(row.get(0), row.get(1), commonGroupAlias);
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
+        });
     }
 
     @Given("The {string} of the privilege group with alias {string} is set to {string}")
@@ -70,5 +85,12 @@ public class PrivilegeGroupSteps extends AbstractIntegrationTestSteps {
     @When("Controller is called to get all privilege groups from common group with alias {string}")
     public void callControllerToGetAllPrivilegeGroups(String commonGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/privilege/getAllPrivilegeGroups", getIdentification(commonGroupAlias)));
+    }
+
+    @When("Controller is called to get all privilege groups at page {int} with size {int} from common group with alias {string}")
+    public void callControllerToGetAllPrivilegeGroups(int page, int size, String commonGroupAlias) {
+        MultiValueMap<String, String> getAllPrivilegeGroupValues = createValueMap("page", "" + page
+                , "size", "" + size);
+        shared.setResultActions(performGetWithAuthorization("/group/privilege/getAllPrivilegeGroups", getIdentification(commonGroupAlias), getAllPrivilegeGroupValues));
     }
 }

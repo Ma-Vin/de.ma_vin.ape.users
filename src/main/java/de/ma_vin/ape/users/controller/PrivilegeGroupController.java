@@ -82,11 +82,20 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
     @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllPrivilegeGroups/{commonGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<PrivilegeGroupDto>> getAllPrivilegeGroups(@PathVariable String commonGroupIdentification) {
-        List<PrivilegeGroupDto> result = privilegeGroupService.findAllPrivilegeGroups(commonGroupIdentification).stream()
+    ResponseWrapper<List<PrivilegeGroupDto>> getAllPrivilegeGroups(@PathVariable String commonGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        List<PrivilegeGroup> privilegeGroups = page == null && size == null
+                ? privilegeGroupService.findAllPrivilegeGroups(commonGroupIdentification)
+                : privilegeGroupService.findAllPrivilegeGroups(commonGroupIdentification, pageToUse, sizeToUse);
+
+        List<PrivilegeGroupDto> result = privilegeGroups.stream()
                 .map(GroupTransportMapper::convertToPrivilegeGroupDto)
                 .collect(Collectors.toList());
 
-        return createSuccessResponse(result);
+        return createPageableResponse(result, page, size);
     }
 }

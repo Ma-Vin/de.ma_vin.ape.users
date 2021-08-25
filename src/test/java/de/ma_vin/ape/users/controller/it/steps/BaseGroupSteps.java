@@ -6,6 +6,7 @@ import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
 import de.ma_vin.ape.utils.TestUtil;
 import de.ma_vin.ape.utils.controller.response.Status;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import org.springframework.http.MediaType;
@@ -39,9 +40,51 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
         shared.put(baseGroupAlias, TestUtil.getObjectMapper().readValue(createdBaseGroupText, BaseGroupDto.class));
     }
 
+    @Given("There are base groups with name and alias at common group {string}")
+    public void createBaseGroups(String commonGroupAlias, DataTable dataTable) {
+        dataTable.asLists().forEach(row -> {
+            if (row.size() != 2) {
+                fail("Wrong number of columns while creating base groups");
+            }
+            try {
+                createBaseGroup(row.get(0), row.get(1), commonGroupAlias);
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
+        });
+    }
+
     @Given("The {string} of the base group with alias {string} is set to {string}")
     public void setBaseGroupValue(String property, String alias, String valueToSet) {
         setStringValue(property, alias, valueToSet);
+    }
+
+    @Given("The base groups are added to base group")
+    public void addBaseToBaseGroup(DataTable dataTable) {
+        dataTable.asLists().forEach(row -> {
+            if (row.size() != 2) {
+                fail("Wrong number of columns while adding base groups to base one");
+            }
+            try {
+                callControllerToAddBaseToBaseGroup(row.get(0), row.get(1));
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
+        });
+    }
+
+    @Given("The base groups are added to privilege group with role")
+    public void addBaseToPrivilegeGroup(DataTable dataTable) {
+        dataTable.asLists().forEach(row -> {
+            if (row.size() != 3) {
+                fail("Wrong number of columns while adding base groups to privilege one");
+            }
+            try {
+                callControllerToAddBaseToPrivilegeGroup(row.get(0), Role.valueOf(row.get(2)), row.get(1));
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
+        });
     }
 
     @When("The Controller is called to create a base group with name {string} at common group {string}")
@@ -88,6 +131,12 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias)));
     }
 
+    @When("Controller is called to get all base groups at page {int} with size {int} from base group with alias {string}")
+    public void callControllerToFindAllBaseAtBaseGroup(int page, int size, String baseGroupAlias) {
+        MultiValueMap<String, String> getAllBaseGroupValues = createValueMap("page", "" + page, "size", "" + size);
+        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias), getAllBaseGroupValues));
+    }
+
     @When("Controller is called to add the base group with alias {string} as {roleValue} to privilege group with alias {string}")
     public void callControllerToAddBaseToPrivilegeGroup(String baseGroupAlias, Role role, String privilegeGroupAlias) {
         BaseGroupIdRoleDto baseGroupIdRoleDto = new BaseGroupIdRoleDto();
@@ -117,6 +166,12 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
     }
 
+    @When("Controller is called to get all base groups at page {int} with size {int} from privilege group with alias {string}")
+    public void callControllerToFindAllBaseAtPrivilegeGroup(int page, int size, String privilegeGroupAlias) {
+        MultiValueMap<String, String> getAllBaseGroupValues = createValueMap("page", "" + page, "size", "" + size);
+        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias), getAllBaseGroupValues));
+    }
+
     @When("Controller is called to count base groups at common group with alias {string}")
     public void callControllerToCountBaseGroup(String commonGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/base/countBaseGroups", getIdentification(commonGroupAlias)));
@@ -125,5 +180,11 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     @When("Controller is called to get all base groups from common group with alias {string}")
     public void callControllerToGetAllBaseGroups(String commonGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseGroups", getIdentification(commonGroupAlias)));
+    }
+
+    @When("Controller is called to get all base groups at page {int} with size {int} from common group with alias {string}")
+    public void callControllerToGetAllBaseGroups(int page, int size, String commonGroupAlias) {
+        MultiValueMap<String, String> getAllBaseGroupValues = createValueMap("page", "" + page, "size", "" + size);
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseGroups", getIdentification(commonGroupAlias), getAllBaseGroupValues));
     }
 }

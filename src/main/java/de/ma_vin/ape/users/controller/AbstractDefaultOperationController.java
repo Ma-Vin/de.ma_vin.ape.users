@@ -6,10 +6,16 @@ import de.ma_vin.ape.users.model.gen.domain.IIdentifiable;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 
+import java.util.List;
 import java.util.Optional;
 
 
 public abstract class AbstractDefaultOperationController {
+
+    public static final Integer DEFAULT_PAGE = 1;
+    public static final Integer DEFAULT_SIZE = 50;
+    public static final String MISSING_PAGE_WARNING_TEXT = "The page was empty while a size was given. The default page %d was used";
+    public static final String MISSING_SIZE_WARNING_TEXT = "The size was empty while a page was given. The default size %d was used";
 
     /**
      * Gets a Dto object from Repository
@@ -120,6 +126,24 @@ public abstract class AbstractDefaultOperationController {
         }
         return createResponseWithWarning(result, String.format("The identification of the request body \"%s\" was different to the path variable \"%s\". The path variable was used."
                 , inputDto.getIdentification(), identification));
+    }
+
+    /**
+     * Creates a response for pageable controller methods
+     *
+     * @param result list to set at response
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @param <T>    Type of object at result list
+     * @return a warning response if page is missing while size is given and the other way round. Otherwise a success response.
+     */
+    protected <T> ResponseWrapper<List<T>> createPageableResponse(List<T> result, Integer page, Integer size) {
+        if (page != null && size == null) {
+            return createResponseWithWarning(result, String.format(MISSING_SIZE_WARNING_TEXT, DEFAULT_SIZE));
+        } else if (page == null && size != null) {
+            return createResponseWithWarning(result, String.format(MISSING_PAGE_WARNING_TEXT, DEFAULT_PAGE));
+        }
+        return createSuccessResponse(result);
     }
 
     @FunctionalInterface

@@ -81,12 +81,21 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllBaseGroups/{commonGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupDto>> getAllBaseGroups(@PathVariable String commonGroupIdentification) {
-        List<BaseGroupDto> result = baseGroupService.findAllBaseGroups(commonGroupIdentification).stream()
+    ResponseWrapper<List<BaseGroupDto>> getAllBaseGroups(@PathVariable String commonGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        List<BaseGroup> baseGroups = page == null && size == null
+                ? baseGroupService.findAllBaseGroups(commonGroupIdentification)
+                : baseGroupService.findAllBaseGroups(commonGroupIdentification, pageToUse, sizeToUse);
+
+        List<BaseGroupDto> result = baseGroups.stream()
                 .map(GroupTransportMapper::convertToBaseGroupDto)
                 .collect(Collectors.toList());
 
-        return createSuccessResponse(result);
+        return createPageableResponse(result, page, size);
     }
 
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
@@ -119,11 +128,21 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/findAllBaseAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification) {
-        List<BaseGroupDto> result = baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification).stream()
+    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        List<BaseGroup> baseGroups = page == null && size == null
+                ? baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification)
+                : baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification, pageToUse, sizeToUse);
+
+        List<BaseGroupDto> result = baseGroups.stream()
                 .map(GroupTransportMapper::convertToBaseGroupDto)
                 .collect(Collectors.toList());
-        return createSuccessResponse(result);
+
+        return createPageableResponse(result, page, size);
     }
 
     @PreAuthorize("isContributor(#parentGroupIdentification, 'BASE')")
@@ -156,10 +175,20 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'BASE')")
     @GetMapping("/findAllBaseAtBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtBaseGroup(@PathVariable String parentGroupIdentification) {
-        List<BaseGroupDto> result = baseGroupService.findAllBasesAtBaseGroup(parentGroupIdentification).stream()
+    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtBaseGroup(@PathVariable String parentGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        List<BaseGroup> baseGroups = page == null && size == null
+                ? baseGroupService.findAllBasesAtBaseGroup(parentGroupIdentification)
+                : baseGroupService.findAllBasesAtBaseGroup(parentGroupIdentification, pageToUse, sizeToUse);
+
+        List<BaseGroupDto> result = baseGroups.stream()
                 .map(GroupTransportMapper::convertToBaseGroupDto)
                 .collect(Collectors.toList());
-        return createSuccessResponse(result);
+
+        return createPageableResponse(result, page, size);
     }
 }

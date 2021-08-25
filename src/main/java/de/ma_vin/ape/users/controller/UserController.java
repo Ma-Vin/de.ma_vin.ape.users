@@ -1,9 +1,7 @@
 package de.ma_vin.ape.users.controller;
 
 import de.ma_vin.ape.users.enums.Role;
-import de.ma_vin.ape.users.model.domain.group.PrivilegeGroupExt;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
-import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
@@ -13,6 +11,7 @@ import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.users.service.UserService;
 import de.ma_vin.ape.utils.controller.response.ResponseUtil;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
+import de.ma_vin.ape.utils.controller.response.Status;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -111,12 +110,21 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
     @GetMapping("/getAllUsers/{commonGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<UserDto>> getAllUsers(@PathVariable String commonGroupIdentification) {
-        List<UserDto> result = userService.findAllUsersAtCommonGroup(commonGroupIdentification).stream()
+    ResponseWrapper<List<UserDto>> getAllUsers(@PathVariable String commonGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        List<User> users = page == null && size == null
+                ? userService.findAllUsersAtCommonGroup(commonGroupIdentification)
+                : userService.findAllUsersAtCommonGroup(commonGroupIdentification, pageToUse, sizeToUse);
+
+        List<UserDto> result = users.stream()
                 .map(UserTransportMapper::convertToUserDto)
                 .collect(Collectors.toList());
 
-        return createSuccessResponse(result);
+        return createPageableResponse(result, page, size);
     }
 
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
@@ -180,12 +188,26 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
     @GetMapping("/getAllUsersFromBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<UserDto>> getAllUsersFromBaseGroup(@PathVariable String baseGroupIdentification, @RequestParam(required = false) Boolean dissolveSubgroups) {
-        List<UserDto> result = userService.findAllUsersAtBaseGroup(baseGroupIdentification, Boolean.TRUE.equals(dissolveSubgroups)).stream()
+    ResponseWrapper<List<UserDto>> getAllUsersFromBaseGroup(@PathVariable String baseGroupIdentification
+            , @RequestParam(required = false) Boolean dissolveSubgroups
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        List<User> users = page == null && size == null
+                ? userService.findAllUsersAtBaseGroup(baseGroupIdentification, Boolean.TRUE.equals(dissolveSubgroups))
+                : userService.findAllUsersAtBaseGroup(baseGroupIdentification, pageToUse, sizeToUse);
+
+        List<UserDto> result = users.stream()
                 .map(UserTransportMapper::convertToUserDto)
                 .collect(Collectors.toList());
 
-        return createSuccessResponse(result);
+        ResponseWrapper<List<UserDto>> responseWrapper = createPageableResponse(result, page, size);
+        if (Boolean.TRUE.equals(dissolveSubgroups) && (page != null || size != null)) {
+            responseWrapper.addMessage("Dissolving subgroups is not available while using pages", Status.WARN);
+        }
+        return responseWrapper;
     }
 
     @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
@@ -199,32 +221,30 @@ public class UserController extends AbstractDefaultOperationController {
     @GetMapping("/getAllUsersFromPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<UserRoleDto>> getAllUsersFromPrivilegeGroup(@PathVariable String privilegeGroupIdentification
-            , @RequestParam(required = false) Boolean dissolveSubgroups, @RequestParam(required = false) Role role) {
+            , @RequestParam(required = false) Boolean dissolveSubgroups, @RequestParam(required = false) Role role
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        Optional<PrivilegeGroup> privilegeGroup = privilegeGroupService.findPrivilegeGroupTree(privilegeGroupIdentification);
-        if (privilegeGroup.isEmpty() || !(privilegeGroup.get() instanceof PrivilegeGroupExt)) {
-            return createEmptyResponseWithError(String.format("The privilege group with identification \"%s\" could not be loaded", privilegeGroupIdentification));
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        Map<Role, List<User>> rolesWithUsers = page == null && size == null
+                ? userService.findAllUsersAtPrivilegeGroup(privilegeGroupIdentification, role, Boolean.TRUE.equals(dissolveSubgroups))
+                : userService.findAllUsersAtPrivilegeGroup(privilegeGroupIdentification, role, pageToUse, sizeToUse);
+
+        List<UserRoleDto> result = rolesWithUsers.entrySet().stream()
+                .flatMap(e -> e.getValue().stream()
+                        .map(u -> {
+                            UserRoleDto userRoleDto = new UserRoleDto();
+                            userRoleDto.setRole(e.getKey());
+                            userRoleDto.setUser(UserTransportMapper.convertToUserDto(u));
+                            return userRoleDto;
+                        }))
+                .collect(Collectors.toList());
+
+        ResponseWrapper<List<UserRoleDto>> responseWrapper = createPageableResponse(result, page, size);
+        if (Boolean.TRUE.equals(dissolveSubgroups) && (page != null || size != null)) {
+            responseWrapper.addMessage("Dissolving subgroups is not available while using pages", Status.WARN);
         }
-
-        List<UserRoleDto> result = new ArrayList<>();
-
-        if (role == null || Role.NOT_RELEVANT.equals(role)) {
-            for (Role r : Role.values()) {
-                addUserRoleToResult((PrivilegeGroupExt) privilegeGroup.get(), result, r, dissolveSubgroups);
-            }
-        } else {
-            addUserRoleToResult((PrivilegeGroupExt) privilegeGroup.get(), result, role, dissolveSubgroups);
-        }
-
-        return createSuccessResponse(result);
-    }
-
-    private void addUserRoleToResult(PrivilegeGroupExt privilegeGroup, List<UserRoleDto> result, Role role, Boolean dissolveSubgroups) {
-        privilegeGroup.getUsersByRole(role, dissolveSubgroups).forEach(u -> {
-            UserRoleDto userRoleDto = new UserRoleDto();
-            userRoleDto.setRole(role);
-            userRoleDto.setUser(UserTransportMapper.convertToUserDto(u));
-            result.add(userRoleDto);
-        });
+        return responseWrapper;
     }
 }
