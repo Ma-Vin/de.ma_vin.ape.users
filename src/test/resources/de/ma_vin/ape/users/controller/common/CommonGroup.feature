@@ -73,37 +73,3 @@ Feature: Testing methods of the common group controller
     Given There is token for user with alias "anyUser" and password "1 Dummy Password!"
     When Controller is called to delete the common group with the identification of the alias "common"
     Then The result is a 4xx
-
-  Scenario: Unauthorized
-    Given Use an unknown token
-    When The Controller is called to create a common group with name "New Common Group"
-    Then The result is a 4xx
-
-  Scenario Outline: Check <role> privilege to get common group
-    Given There exists a common group with name "Common Group Name" with alias "common"
-    And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
-    And There is token for user with alias "user" and password "1 Dummy Password!"
-    When Controller is called to get the common group with the identification of the alias "common"
-    Then The result is a <httpCodeRange>
-    Examples:
-      | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 2xx           |
-      | VISITOR     | 2xx           |
-      | BLOCKED     | 4xx           |
-
-  Scenario Outline: Check <role> privilege to update common group
-    Given There exists a common group with name "Common Group Name" with alias "common"
-    And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
-    And There is token for user with alias "user" and password "1 Dummy Password!"
-    And The "description" of the common group with alias "common" is set to <value>
-    When Controller is called to update the common group with the identification of the alias "common"
-    Then The result is a <httpCodeRange>
-    Examples:
-      | role        | httpCodeRange | value         |
-      | ADMIN       | 2xx           | "admin"       |
-      | MANAGER     | 4xx           | "manager"     |
-      | CONTRIBUTOR | 4xx           | "contributor" |
-      | VISITOR     | 4xx           | "visitor"     |
-      | BLOCKED     | 4xx           | "blocked"     |
