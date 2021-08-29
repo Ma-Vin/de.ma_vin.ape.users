@@ -788,26 +788,26 @@ public class UserControllerTest {
     @DisplayName("Set users password")
     @Test
     public void testSetUserPassword() {
-        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD))).thenReturn(Boolean.TRUE);
+        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE))).thenReturn(Boolean.TRUE);
 
         ResponseWrapper<Boolean> response = cut.setUserPassword(USER_IDENTIFICATION, USER_PASSWORD);
 
         checkOk(response);
 
         assertTrue(response.getResponse(), "The result should be successful");
-        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD));
+        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE));
     }
 
     @DisplayName("Set users password, but failed")
     @Test
     public void testSetUserPasswordFailed() {
-        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD))).thenReturn(Boolean.FALSE);
+        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE))).thenReturn(Boolean.FALSE);
 
         ResponseWrapper<Boolean> response = cut.setUserPassword(USER_IDENTIFICATION, USER_PASSWORD);
 
         checkError(response);
 
-        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD));
+        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE));
     }
 
     @DisplayName("Set users role")
@@ -826,7 +826,7 @@ public class UserControllerTest {
     @DisplayName("Set users role, but failed")
     @Test
     public void testSetUserRoleFailed() {
-        when(userService.setPassword(eq(USER_IDENTIFICATION), any())).thenReturn(Boolean.FALSE);
+        when(userService.setPassword(eq(USER_IDENTIFICATION), any(), eq(Boolean.FALSE))).thenReturn(Boolean.FALSE);
 
         ResponseWrapper<Boolean> response = cut.setUserRole(USER_IDENTIFICATION, Role.ADMIN);
 

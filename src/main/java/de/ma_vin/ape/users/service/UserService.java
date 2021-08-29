@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.enums.Role;
+import de.ma_vin.ape.users.model.dao.group.AdminGroupDaoExt;
 import de.ma_vin.ape.users.model.dao.group.BaseGroupDaoExt;
 import de.ma_vin.ape.users.model.dao.group.CommonGroupDaoExt;
 import de.ma_vin.ape.users.model.dao.group.PrivilegeGroupDaoExt;
@@ -216,13 +217,33 @@ public class UserService extends AbstractRepositoryService {
      */
     public List<User> findAllUsersAtAdminGroup(String parentIdentification) {
         log.debug(SEARCH_START_LOG_MESSAGE, USERS_LOG_PARAM, ADMIN_GROUP_LOG_PARAM, parentIdentification);
-        AdminGroupDao parent = new AdminGroupDao();
-        parent.setIdentification(parentIdentification);
 
-        List<User> result = new ArrayList<>();
-        findAllUsers(parent).forEach(s -> result.add(UserAccessMapper.convertToUser(s)));
+        List<User> result = findAllUsers(new AdminGroupDaoExt(parentIdentification), null, null)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .collect(Collectors.toList());
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, ADMIN_GROUP_LOG_PARAM, parentIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all user children of a parent admin group
+     *
+     * @param parentIdentification identification of the parent
+     * @param page                 zero-based page index, must not be negative.
+     * @param size                 the size of the page to be returned, must be greater than 0.
+     * @return List of users
+     */
+    public List<User> findAllUsersAtAdminGroup(String parentIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_START_PAGE_LOG_MESSAGE, USERS_LOG_PARAM, page, size, ADMIN_GROUP_LOG_PARAM, parentIdentification);
+
+        List<User> result = findAllUsers(new AdminGroupDaoExt(parentIdentification), page, size)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .collect(Collectors.toList());
+
+        log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, ADMIN_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
     }
 
@@ -461,10 +482,15 @@ public class UserService extends AbstractRepositoryService {
      * Searches for all user children of a parent admin group
      *
      * @param parent parent
-     * @return List of users
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
      */
-    private List<UserDao> findAllUsers(AdminGroupDao parent) {
-        return userRepository.findByParentAdminGroup(parent);
+    private List<UserDao> findAllUsers(AdminGroupDao parent, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return userRepository.findByParentAdminGroup(parent);
+        }
+        return userRepository.findByParentAdminGroup(parent, PageRequest.of(page, size));
     }
 
     /**
@@ -717,11 +743,24 @@ public class UserService extends AbstractRepositoryService {
 
     /**
      * Set the password of an user
+     *
+     * @param userIdentification identification of the user
+     * @param rawPassword        the password to set
+     * @param isGlobalAdminCheck indicator whether an global admin is to check or not
+     * @return {@code true} if the password was set. Otherwise {@code false}
      */
-    public boolean setPassword(String userIdentification, String rawPassword) {
+    public boolean setPassword(String userIdentification, String rawPassword, boolean isGlobalAdminCheck) {
         Optional<User> user = findUser(userIdentification);
         if (user.isEmpty()) {
             log.error("The user with identification {} does not exists. The password could not be set", userIdentification);
+            return false;
+        }
+        if (isGlobalAdminCheck && !user.get().isGlobalAdmin()) {
+            log.error("The user with identification {} is not an admin, but it was tried to set the password as if. The password could not be set", userIdentification);
+            return false;
+        }
+        if (!isGlobalAdminCheck && user.get().isGlobalAdmin()) {
+            log.error("The user with identification {} is  an admin, but it was tried to set the password like for a normal user. The password could not be set", userIdentification);
             return false;
         }
         if (!isPasswordRequirementFulfilled(rawPassword, user.get().getPassword(), userIdentification)) {

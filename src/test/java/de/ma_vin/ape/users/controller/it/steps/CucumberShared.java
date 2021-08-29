@@ -30,6 +30,10 @@ public class CucumberShared {
 
     private List<String> globalAdmins = new ArrayList<>();
 
+    private boolean initAdminGroupFeature = false;
+
+    private int createdAdmins = 0;
+
     public void addUser(String privilegeGroup, String userId, Role role) {
         if (!groupsWithUsers.containsKey(privilegeGroup)) {
             groupsWithUsers.put(privilegeGroup, new ArrayList<>());

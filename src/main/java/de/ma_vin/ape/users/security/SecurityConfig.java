@@ -101,7 +101,7 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.regexMatcher("\\/(group|user)\\/.*").authorizeRequests().anyRequest().authenticated().and()
+            http.regexMatcher("\\/(group|user|admin)\\/.*").authorizeRequests().anyRequest().authenticated().and()
                     .oauth2ResourceServer(
                             oauth2 -> oauth2.opaqueToken(token -> token.introspectionUri(this.introspectionUri)
                                     .introspectionClientCredentials(this.clientId, this.clientSecret)

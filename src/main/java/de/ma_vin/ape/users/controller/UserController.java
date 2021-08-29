@@ -78,7 +78,7 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isPrincipalItself(#userIdentification) or isAdmin(#userIdentification, 'USER')")
     @PatchMapping("/setUserPassword/{userIdentification}")
     public ResponseWrapper<Boolean> setUserPassword(@PathVariable String userIdentification, @RequestBody String rawPassword) {
-        if (userService.setPassword(userIdentification, rawPassword)) {
+        if (userService.setPassword(userIdentification, rawPassword, false)) {
             return createSuccessResponse(Boolean.TRUE);
         }
         return createEmptyResponseWithError(String.format("The password could not be set at user with identification %s", userIdentification));
