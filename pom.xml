@@ -32,7 +32,7 @@
     </distributionManagement>
 
     <properties>
-        <layer.generator.version>1.1-SNAPSHOT</layer.generator.version>
+        <layer.generator.version>1.1</layer.generator.version>
         <maven.plugin-dependency.version>3.1.2</maven.plugin-dependency.version>
         <build.helper.maven.plugin.version>3.2.0</build.helper.maven.plugin.version>
 
