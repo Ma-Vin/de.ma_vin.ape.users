@@ -25,9 +25,9 @@ public interface UserRepository extends JpaRepository<UserDao, Long> {
 
     long countByParentCommonGroup(CommonGroupDao parentCommonGroup);
 
-    @Query(value = "SELECT u.Parent_Admin_Group_Id FROM Users u WHERE u.id = :userId", nativeQuery = true)
+    @Query(value = "SELECT u.parent_admin_group_id FROM users u WHERE u.id = :userId", nativeQuery = true)
     Optional<Long> getIdOfParentAdminGroup(@Param("userId") Long userId);
 
-    @Query(value = "SELECT u.Parent_Common_Group_Id FROM Users u WHERE u.id = :userId", nativeQuery = true)
+    @Query(value = "SELECT u.parent_common_group_id FROM users u WHERE u.id = :userId", nativeQuery = true)
     Optional<Long> getIdOfParentCommonGroup(@Param("userId") Long userId);
 }

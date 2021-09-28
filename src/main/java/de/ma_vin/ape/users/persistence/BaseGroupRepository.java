@@ -18,6 +18,6 @@ public interface BaseGroupRepository extends JpaRepository<BaseGroupDao, Long> {
 
     long countByParentCommonGroup(CommonGroupDao parentCommonGroup);
 
-    @Query(value = "SELECT bg.Parent_Common_Group_Id FROM Base_Groups bg WHERE bg.id = :groupId", nativeQuery = true)
+    @Query(value = "SELECT bg.parent_common_group_id FROM base_groups bg WHERE bg.id = :groupId", nativeQuery = true)
     Optional<Long> getIdOfParentCommonGroup(@Param("groupId") Long groupId);
 }
