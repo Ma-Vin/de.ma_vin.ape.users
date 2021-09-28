@@ -60,7 +60,7 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.antMatcher("/oauth/token").authorizeRequests().anyRequest().permitAll();
+            http.antMatcher("/oauth/token").authorizeRequests().anyRequest().permitAll().and().csrf().disable();
         }
     }
 
