@@ -34,7 +34,7 @@ public class SecurityConfig {
     }
 
     @Configuration
-    @Order(4)
+    @Order(3)
     public static class OAuthAuthorizeConfig extends WebSecurityConfigurerAdapter {
 
         @Autowired
@@ -58,16 +58,6 @@ public class SecurityConfig {
     @Order(1)
     public static class OAuthTokenAndIntrospectionConfig extends WebSecurityConfigurerAdapter {
 
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http.antMatcher("/oauth/token").authorizeRequests().anyRequest().permitAll().and().csrf().disable();
-        }
-    }
-
-    @Configuration
-    @Order(2)
-    public static class OAuthIntrospectionConfig extends WebSecurityConfigurerAdapter {
-
         @Autowired
         private ClientDetailService clientDetailService;
 
@@ -81,13 +71,12 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.antMatcher("/oauth/introspection").authorizeRequests().anyRequest().authenticated().and().httpBasic().and().csrf().disable();
+            http.regexMatcher("\\/oauth\\/(token|introspection)").authorizeRequests().anyRequest().authenticated().and().httpBasic().and().csrf().disable();
         }
     }
 
-
     @Configuration
-    @Order(3)
+    @Order(2)
     public static class OAuthResourceConfig extends WebSecurityConfigurerAdapter {
 
         @Value("${spring.security.oauth2.resourceserver.opaque.introspection-uri}")

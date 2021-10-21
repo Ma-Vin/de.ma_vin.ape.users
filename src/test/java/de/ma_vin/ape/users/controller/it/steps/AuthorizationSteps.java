@@ -23,8 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 
 public class AuthorizationSteps extends AbstractIntegrationTestSteps {
-    private String clientId = null;
-    private String clientSecret = null;
     private String redirection = null;
     private String scope = null;
     private String state = null;
@@ -60,12 +58,12 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
 
     @Given("The clientId is {string}")
     public void setClientId(String clientId) {
-        this.clientId = clientId;
+        shared.setClientId(clientId);
     }
 
     @Given("The clientSecret is {string}")
     public void setClientSecret(String clientSecret) {
-        this.clientSecret = Base64.getUrlEncoder().encodeToString(clientSecret.getBytes(StandardCharsets.UTF_8));
+        shared.setClientSecret(clientSecret);
     }
 
     @Given("The authorization code is {string}")
@@ -109,7 +107,7 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
     @When("The Controller is called to authorize with response type {responseType}")
     public void callControllerToAuthorize(ResponseType responseType) {
         MultiValueMap<String, String> authValues = createValueMap("response_type", responseType.getTypeName()
-                , "client_id", clientId, "client_secret", clientSecret, "redirect_uri", redirection, "scope", scope, "state", state);
+                , "client_id", shared.getClientId(), "client_secret", shared.getClientSecretBase64(), "redirect_uri", redirection, "scope", scope, "state", state);
         if (userId != null) {
             shared.setResultActions(performGet("/oauth/authorize", authValues, userId));
         } else {
@@ -120,9 +118,9 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
     @When("The Controller is called to issue a token with grand type {grantType}")
     public void callControllerToToken(GrantType grantType) {
         MultiValueMap<String, String> tokenValues = createValueMap("grant_type", grantType.getTypeName(), "code", code
-                , "refresh_token", refreshToken, "redirect_uri", redirection, "client_id", clientId, "client_secret", clientSecret
+                , "refresh_token", refreshToken, "redirect_uri", redirection, "client_id", shared.getClientId(), "client_secret", shared.getClientSecretBase64()
                 , "username", userId, "password", userPwd != null ? Base64.getUrlEncoder().encodeToString(userPwd.getBytes(StandardCharsets.UTF_8)) : null, "scope", scope);
-        shared.setResultActions(performPost("/oauth/token", tokenValues));
+        shared.setResultActions(performPostWithBasicAuthorization("/oauth/token", tokenValues));
     }
 
     @Given("There is token for user {string} with password {string}")
@@ -130,10 +128,10 @@ public class AuthorizationSteps extends AbstractIntegrationTestSteps {
         shared.setPrincipalUserId(userId);
         shared.setPrincipalPassword(userPwd);
         MultiValueMap<String, String> tokenValues = createValueMap("grant_type", GrantType.PASSWORD.getTypeName()
-                , "client_id", clientId, "client_secret", clientSecret
+                , "client_id", shared.getClientId(), "client_secret", shared.getClientSecretBase64()
                 , "username", userId, "password", userPwd != null ? Base64.getUrlEncoder().encodeToString(userPwd.getBytes(StandardCharsets.UTF_8)) : null
                 , "scope", scope);
-        MockHttpServletResponse tokenResponse = performPost("/oauth/token", tokenValues).andReturn().getResponse();
+        MockHttpServletResponse tokenResponse = performPostWithBasicAuthorization("/oauth/token", tokenValues).andReturn().getResponse();
         shared.setTokenResponse(TestUtil.getObjectMapper().readValue(tokenResponse.getContentAsString(), TokenResponse.class));
     }
 

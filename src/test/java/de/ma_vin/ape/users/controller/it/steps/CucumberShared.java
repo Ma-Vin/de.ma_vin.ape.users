@@ -7,18 +7,18 @@ import lombok.Data;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Data
 @Component
 public class CucumberShared {
 
     private String principalUserId;
+    private String clientId;
 
     private String principalPassword;
+    private String clientSecret;
 
     private TokenResponse tokenResponse;
 
@@ -64,6 +64,10 @@ public class CucumberShared {
 
     public void put(String key, ITransportable value) {
         createdObjects.put(key, value);
+    }
+
+    public String getClientSecretBase64() {
+        return Base64.getUrlEncoder().encodeToString(clientSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     class UserAndRole {

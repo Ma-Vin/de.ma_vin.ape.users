@@ -18,6 +18,8 @@ import org.springframework.util.MultiValueMap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -67,6 +69,20 @@ public abstract class AbstractIntegrationTestSteps {
         return null;
     }
 
+    protected ResultActions performPostWithBasicAuthorization(String url, MultiValueMap<String, String> valueMap) {
+        try {
+            return mvc.perform(
+                    post(url)
+                            .with(csrf())
+                            .header("Authorization", getClientAuthBasic())
+                            .params(valueMap)
+                            .contentType(MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            fail(String.format("fail to call post at %s: %s", url, e.getMessage()));
+        }
+        return null;
+    }
+
     protected ResultActions performPost(String url, MultiValueMap<String, String> valueMap) {
         try {
             return mvc.perform(
@@ -86,6 +102,19 @@ public abstract class AbstractIntegrationTestSteps {
                     get(url + "/" + pathVariable)
                             .with(csrf())
                             .header("Authorization", "Bearer " + shared.getAccessToken())
+                            .contentType(MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
+        }
+        return null;
+    }
+
+    protected ResultActions performGetWithBasicAuthorization(String url, String pathVariable) {
+        try {
+            return mvc.perform(
+                    get(url + "/" + pathVariable)
+                            .with(csrf())
+                            .header("Authorization", getClientAuthBasic())
                             .contentType(MediaType.APPLICATION_JSON));
         } catch (Exception e) {
             fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
@@ -220,5 +249,9 @@ public abstract class AbstractIntegrationTestSteps {
             return null;
         }
         return getSetterMethod(methodOwner.getSuperclass(), setterMethodName, classToSet);
+    }
+
+    private String getClientAuthBasic() {
+        return "Basic " + Base64.getUrlEncoder().encodeToString((shared.getClientId() + ":" + shared.getClientSecret()).getBytes(StandardCharsets.UTF_8));
     }
 }
