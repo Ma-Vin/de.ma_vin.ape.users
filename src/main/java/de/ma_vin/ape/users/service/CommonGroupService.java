@@ -12,6 +12,7 @@ import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -126,6 +127,27 @@ public class CommonGroupService extends AbstractRepositoryService {
         List<CommonGroup> result = commonGroupRepository.findAll().stream().map(dao -> GroupAccessMapper.convertToCommonGroup(dao, false)).collect(Collectors.toList());
 
         log.debug("{} common groups found", result.size());
+        return result;
+    }
+
+    /**
+     * Searches for all common groups
+     *
+     * @param page zero-based page index, must not be negative.
+     * @param size the size of the page to be returned, must be greater than 0.
+     * @return List of common groups
+     */
+    public List<CommonGroup> findAllCommonGroups(Integer page, Integer size) {
+        if (page == null || size == null) {
+            return findAllCommonGroups();
+        }
+        log.debug("Search for all common groups at page {} and size {}", page, size);
+
+        List<CommonGroup> result = commonGroupRepository.findAll(PageRequest.of(page, size))
+                .stream().map(dao -> GroupAccessMapper.convertToCommonGroup(dao, false))
+                .collect(Collectors.toList());
+
+        log.debug("{} common groups found  at page {} and size {}, page, size", result.size(), page, size);
         return result;
     }
 

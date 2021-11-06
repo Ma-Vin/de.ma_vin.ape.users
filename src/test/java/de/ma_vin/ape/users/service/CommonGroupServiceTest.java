@@ -12,6 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
 import java.util.List;
@@ -165,6 +168,58 @@ public class CommonGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(COMMON_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
+        verify(commonGroupRepository).findAll();
+    }
+
+    @DisplayName("Find all common groups with pages")
+    @Test
+    public void testFindAllCommonGroupsPageable() {
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.singletonList(commonGroupDao)));
+        when(commonGroupRepository.findAll()).thenReturn(Collections.singletonList(commonGroupDao));
+
+        List<CommonGroup> result = cut.findAllCommonGroups(1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(commonGroupRepository).findAll(eq(PageRequest.of(1, 20)));
+        verify(commonGroupRepository, never()).findAll();
+    }
+
+    @DisplayName("Find all common groups with pages, but missing page")
+    @Test
+    public void testFindAllCommonGroupsPageableMissingPage() {
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.singletonList(commonGroupDao)));
+        when(commonGroupRepository.findAll()).thenReturn(Collections.singletonList(commonGroupDao));
+
+        List<CommonGroup> result = cut.findAllCommonGroups(null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(commonGroupRepository, never()).findAll(any(Pageable.class));
+        verify(commonGroupRepository).findAll();
+    }
+
+    @DisplayName("Find all common groups with pages, but missing size")
+    @Test
+    public void testFindAllCommonGroupsPageableMissingSize() {
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Collections.singletonList(commonGroupDao)));
+        when(commonGroupRepository.findAll()).thenReturn(Collections.singletonList(commonGroupDao));
+
+
+        List<CommonGroup> result = cut.findAllCommonGroups(1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(commonGroupRepository, never()).findAll(any(Pageable.class));
         verify(commonGroupRepository).findAll();
     }
 
