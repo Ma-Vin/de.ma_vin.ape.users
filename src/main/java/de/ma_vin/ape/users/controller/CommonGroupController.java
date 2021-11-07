@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "group/common")
@@ -49,10 +51,30 @@ public class CommonGroupController extends AbstractDefaultOperationController {
     @GetMapping("/getCommonGroup/{commonGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<CommonGroupDto> getCommonGroup(@PathVariable String commonGroupIdentification) {
-        return get( commonGroupIdentification, CommonGroup.class
+        return get(commonGroupIdentification, CommonGroup.class
                 , identificationToGet -> commonGroupService.findCommonGroup(identificationToGet)
                 , GroupTransportMapper::convertToCommonGroupDto
         );
+    }
+
+    @PreAuthorize("isGlobalAdmin()")
+    @GetMapping("/getAllCommonGroups")
+    public @ResponseBody
+    ResponseWrapper<List<CommonGroupDto>> getAllCommonGroups(@RequestParam(required = false) Integer page
+            , @RequestParam(required = false) Integer size) {
+
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        List<CommonGroup> commonGroups = page == null && size == null
+                ? commonGroupService.findAllCommonGroups()
+                : commonGroupService.findAllCommonGroups(pageToUse, sizeToUse);
+
+        List<CommonGroupDto> result = commonGroups.stream()
+                .map(GroupTransportMapper::convertToCommonGroupDto)
+                .collect(Collectors.toList());
+
+        return createPageableResponse(result, page, size);
     }
 
     @PreAuthorize("isAdmin(#commonGroupIdentification, 'COMMON')")

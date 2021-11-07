@@ -163,6 +163,33 @@ public abstract class AbstractIntegrationTestSteps {
         return null;
     }
 
+    protected ResultActions performGetWithAuthorization(String url, MultiValueMap<String, String> valueMap) {
+        try {
+            return mvc.perform(
+                    get(url)
+                            .with(csrf())
+                            .header("Authorization", "Bearer " + shared.getAccessToken())
+                            .params(valueMap)
+                            .contentType(MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
+        }
+        return null;
+    }
+
+    protected ResultActions performGetWithAuthorization(String url) {
+        try {
+            return mvc.perform(
+                    get(url)
+                            .with(csrf())
+                            .header("Authorization", "Bearer " + shared.getAccessToken())
+                            .contentType(MediaType.APPLICATION_JSON));
+        } catch (Exception e) {
+            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
+        }
+        return null;
+    }
+
     protected ResultActions performPutWithAuthorization(String url, String pathVariable, String updatedResourceAlias) {
         try {
             return mvc.perform(

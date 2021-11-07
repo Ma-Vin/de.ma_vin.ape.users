@@ -1,5 +1,7 @@
 package de.ma_vin.ape.users.controller;
 
+import static de.ma_vin.ape.users.controller.AbstractDefaultOperationController.DEFAULT_PAGE;
+import static de.ma_vin.ape.users.controller.AbstractDefaultOperationController.DEFAULT_SIZE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -158,6 +161,75 @@ public class CommonGroupControllerTest {
         checkError(response);
 
         verify(commonGroupService).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+    }
+
+
+    @DisplayName("Get all common groups without pages")
+    @Test
+    public void testGetAllCommonGroups() {
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
+        when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
+
+        ResponseWrapper<List<CommonGroupDto>> response = cut.getAllCommonGroups(null, null);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at common group");
+
+        verify(commonGroupService).findAllCommonGroups();
+        verify(commonGroupService, never()).findAllCommonGroups(any(), any());
+    }
+
+    @DisplayName("Get all common groups with pages")
+    @Test
+    public void testGetAllCommonGroupsWithPages() {
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
+        when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
+
+        ResponseWrapper<List<CommonGroupDto>> response = cut.getAllCommonGroups(2, 20);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at common group");
+
+        verify(commonGroupService, never()).findAllCommonGroups();
+        verify(commonGroupService).findAllCommonGroups(eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all common groups with pages, but missing page")
+    @Test
+    public void testGetAllCommonGroupsWithPagesMissingPage() {
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
+        when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
+
+        ResponseWrapper<List<CommonGroupDto>> response = cut.getAllCommonGroups(null, 20);
+
+        checkWarn(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at common group");
+
+        verify(commonGroupService, never()).findAllCommonGroups();
+        verify(commonGroupService).findAllCommonGroups(eq(DEFAULT_PAGE), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all common groups with pages, but missing size")
+    @Test
+    public void testGetAllCommonGroupsWithPagesMissingSize() {
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
+        when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
+
+        ResponseWrapper<List<CommonGroupDto>> response = cut.getAllCommonGroups(2, null);
+
+        checkWarn(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at common group");
+
+        verify(commonGroupService, never()).findAllCommonGroups();
+        verify(commonGroupService).findAllCommonGroups(eq(Integer.valueOf(2)), eq(DEFAULT_SIZE));
     }
 
     @DisplayName("Update a common group")
