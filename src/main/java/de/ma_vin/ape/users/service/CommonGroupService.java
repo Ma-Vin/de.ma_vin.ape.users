@@ -52,11 +52,6 @@ public class CommonGroupService extends AbstractRepositoryService {
     private void delete(CommonGroupDao commonGroupDao) {
         log.debug(DELETE_BEGIN_LOG_MESSAGE, GROUP_LOG_PARAM, commonGroupDao.getIdentification(), commonGroupDao.getId());
 
-        List<User> users = userService.findAllUsersAtCommonGroup(commonGroupDao.getIdentification());
-        log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, users.size(), UserService.USERS_LOG_PARAM, GROUP_LOG_PARAM
-                , commonGroupDao.getIdentification(), commonGroupDao.getId());
-        users.forEach(userService::delete);
-
         List<PrivilegeGroup> privilegeGroups = privilegeGroupService.findAllPrivilegeGroups(commonGroupDao.getIdentification());
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, privilegeGroups.size(), PrivilegeGroupService.GROUP_LOG_PARAM, GROUP_LOG_PARAM
                 , commonGroupDao.getIdentification(), commonGroupDao.getId());
@@ -66,6 +61,11 @@ public class CommonGroupService extends AbstractRepositoryService {
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, baseGroups.size(), BaseGroupService.GROUP_LOG_PARAM, GROUP_LOG_PARAM
                 , commonGroupDao.getIdentification(), commonGroupDao.getId());
         baseGroups.forEach(baseGroupService::delete);
+
+        List<User> users = userService.findAllUsersAtCommonGroup(commonGroupDao.getIdentification());
+        log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, users.size(), UserService.USERS_LOG_PARAM, GROUP_LOG_PARAM
+                , commonGroupDao.getIdentification(), commonGroupDao.getId());
+        users.forEach(userService::delete);
 
         commonGroupRepository.delete(commonGroupDao);
 
