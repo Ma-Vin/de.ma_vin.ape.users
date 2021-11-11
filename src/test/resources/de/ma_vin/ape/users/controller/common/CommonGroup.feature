@@ -29,6 +29,15 @@ Feature: Testing methods of the common group controller
     And The "groupName" property at response is "Common Group Name"
     And The identification is the same like the one of alias "common"
 
+  Scenario: Get parent common group of user
+    Given There exists a common group with name "Common Group Name" with alias "common"
+    And There exists an user with first name "Anybody" and last name "User" with alias "anyUser" at common group "common"
+    When Controller is called to get the parent common group of user with the identification of the alias "anyUser"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The "groupName" property at response is "Common Group Name"
+    And The identification is the same like the one of alias "common"
+
   Scenario: Get all common groups with and without pages
     Given All existing common groups are deleted
     And There are common groups with group name

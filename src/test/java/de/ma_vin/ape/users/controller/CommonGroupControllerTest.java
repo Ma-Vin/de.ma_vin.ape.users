@@ -10,6 +10,7 @@ import static org.mockito.MockitoAnnotations.openMocks;
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
 
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
+import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.CommonGroupDto;
 import de.ma_vin.ape.users.service.CommonGroupService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
@@ -302,5 +303,32 @@ public class CommonGroupControllerTest {
         verify(commonGroupService).findCommonGroup(eq(otherIdentification));
         verify(commonGroupService, never()).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
         verify(commonGroupService).save(any());
+    }
+
+    @DisplayName("Get parent common group of user")
+    @Test
+    public void testGetParentCommonGroupOfUser() {
+        String userIdentification = IdGenerator.generateIdentification(1L, User.ID_PREFIX);
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findParentCommonGroupOfUser(eq(userIdentification))).thenReturn(Optional.of(commonGroup));
+
+        ResponseWrapper<CommonGroupDto> response = cut.getParentCommonGroupOfUser(userIdentification);
+
+        checkOk(response);
+
+        verify(commonGroupService).findParentCommonGroupOfUser(eq(userIdentification));
+    }
+
+    @DisplayName("Get parent common group of user, but failed")
+    @Test
+    public void testGetParentCommonGroupOfUserNonExisting() {
+        String userIdentification = IdGenerator.generateIdentification(1L, User.ID_PREFIX);
+        when(commonGroupService.findParentCommonGroupOfUser(eq(userIdentification))).thenReturn(Optional.empty());
+
+        ResponseWrapper<CommonGroupDto> response = cut.getParentCommonGroupOfUser(userIdentification);
+
+        checkError(response);
+
+        verify(commonGroupService).findParentCommonGroupOfUser(eq(userIdentification));
     }
 }

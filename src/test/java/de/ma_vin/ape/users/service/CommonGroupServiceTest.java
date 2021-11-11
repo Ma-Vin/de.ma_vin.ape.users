@@ -6,6 +6,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.CommonGroupRepository;
+import de.ma_vin.ape.users.persistence.UserRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,8 @@ public class CommonGroupServiceTest {
     @Mock
     private CommonGroupRepository commonGroupRepository;
     @Mock
+    private UserRepository userRepository;
+    @Mock
     private CommonGroup commonGroup;
     @Mock
     private CommonGroupDao commonGroupDao;
@@ -61,6 +64,7 @@ public class CommonGroupServiceTest {
         cut = new CommonGroupService();
         cut.setUserService(userService);
         cut.setCommonGroupRepository(commonGroupRepository);
+        cut.setUserRepository(userRepository);
         cut.setPrivilegeGroupService(privilegeGroupService);
         cut.setBaseGroupService(baseGroupService);
     }
@@ -129,7 +133,7 @@ public class CommonGroupServiceTest {
         verify(commonGroupRepository).findById(eq(COMMON_GROUP_ID));
     }
 
-    @DisplayName("Find non existing common group")
+    @DisplayName("Find existing common group")
     @Test
     public void testFindCommonGroup() {
         when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
@@ -221,6 +225,59 @@ public class CommonGroupServiceTest {
 
         verify(commonGroupRepository, never()).findAll(any(Pageable.class));
         verify(commonGroupRepository).findAll();
+    }
+
+    @DisplayName("Find parent common group of user")
+    @Test
+    public void testFindParentCommonGroupOfUser() {
+        Long userId = 1L;
+        String userIdentification = IdGenerator.generateIdentification(userId, User.ID_PREFIX);
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupRepository.findById(any())).thenReturn(Optional.of(commonGroupDao));
+        when(userRepository.getIdOfParentCommonGroup(eq(userId))).thenReturn(Optional.of(COMMON_GROUP_ID));
+
+        Optional<CommonGroup> result = cut.findParentCommonGroupOfUser(userIdentification);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification");
+
+        verify(commonGroupRepository).findById(eq(COMMON_GROUP_ID));
+        verify(userRepository).getIdOfParentCommonGroup(eq(userId));
+    }
+
+    @DisplayName("Find parent common group of user, but user does not exists")
+    @Test
+    public void testFindParentCommonGroupOfUserNotExistingUser() {
+        Long userId = 1L;
+        String userIdentification = IdGenerator.generateIdentification(userId, User.ID_PREFIX);
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupRepository.findById(any())).thenReturn(Optional.of(commonGroupDao));
+        when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
+
+        Optional<CommonGroup> result = cut.findParentCommonGroupOfUser(userIdentification);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isEmpty(), "The result should be empty");
+
+        verify(commonGroupRepository, never()).findById(eq(COMMON_GROUP_ID));
+        verify(userRepository).getIdOfParentCommonGroup(eq(userId));
+    }
+
+    @DisplayName("Find parent common group of user, but common group does not exists")
+    @Test
+    public void testFindParentCommonGroupOfUserNotExistingCommonGroup() {
+        Long userId = 1L;
+        String userIdentification = IdGenerator.generateIdentification(userId, User.ID_PREFIX);
+        when(commonGroupRepository.findById(any())).thenReturn(Optional.empty());
+        when(userRepository.getIdOfParentCommonGroup(eq(userId))).thenReturn(Optional.of(COMMON_GROUP_ID));
+
+        Optional<CommonGroup> result = cut.findParentCommonGroupOfUser(userIdentification);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isEmpty(), "The result should be empty");
+
+        verify(commonGroupRepository).findById(eq(COMMON_GROUP_ID));
+        verify(userRepository).getIdOfParentCommonGroup(eq(userId));
     }
 
     @DisplayName("Save new common group")

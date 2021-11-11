@@ -8,6 +8,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.CommonGroupRepository;
+import de.ma_vin.ape.users.persistence.UserRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -28,6 +29,8 @@ public class CommonGroupService extends AbstractRepositoryService {
 
     @Autowired
     private CommonGroupRepository commonGroupRepository;
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     private UserService userService;
     @Autowired
@@ -149,6 +152,20 @@ public class CommonGroupService extends AbstractRepositoryService {
 
         log.debug("{} common groups found  at page {} and size {}, page, size", result.size(), page, size);
         return result;
+    }
+
+    /**
+     * Determines the parent common group of a given user
+     *
+     * @param userIdentification Id of user whose parent common group is searched for
+     * @return Optional of the found common group. Empty if it could not be determined.
+     */
+    public Optional<CommonGroup> findParentCommonGroupOfUser(String userIdentification) {
+        Optional<Long> parentId = userRepository.getIdOfParentCommonGroup(IdGenerator.generateId(userIdentification, User.ID_PREFIX));
+        if (parentId.isEmpty()) {
+            return Optional.empty();
+        }
+        return findCommonGroup(IdGenerator.generateIdentification(parentId.get(), CommonGroup.ID_PREFIX));
     }
 
     /**

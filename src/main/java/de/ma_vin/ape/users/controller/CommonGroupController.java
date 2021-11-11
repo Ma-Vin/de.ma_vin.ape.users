@@ -88,4 +88,15 @@ public class CommonGroupController extends AbstractDefaultOperationController {
                 , GroupTransportMapper::convertToCommonGroup
         );
     }
+
+    @PostAuthorize("returnObject.response!=null && isVisitor(returnObject.response.getIdentification(), 'COMMON')")
+    @GetMapping("/getParentCommonGroupOfUser/{userIdentification}")
+    public @ResponseBody
+    ResponseWrapper<CommonGroupDto> getParentCommonGroupOfUser(@PathVariable String userIdentification) {
+        Optional<CommonGroup> result = commonGroupService.findParentCommonGroupOfUser(userIdentification);
+        if (result.isEmpty()) {
+            return ResponseUtil.createEmptyResponseWithError(String.format("The parent common group of user \"%s\" was not found", userIdentification));
+        }
+        return ResponseUtil.createSuccessResponse(GroupTransportMapper.convertToCommonGroupDto(result.get()));
+    }
 }

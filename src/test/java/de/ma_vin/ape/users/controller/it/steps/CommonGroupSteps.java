@@ -92,6 +92,11 @@ public class CommonGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/group/common/getCommonGroup", getIdentification(commonGroupAlias)));
     }
 
+    @When("Controller is called to get the parent common group of user with the identification of the alias {string}")
+    public void callControllerToGetParentCommonGroupOfUser(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/common/getParentCommonGroupOfUser", getIdentification(commonGroupAlias)));
+    }
+
     @When("Controller is called to get all common groups")
     public void callControllerToGetAllCommonGroups() {
         shared.setResultActions(performGetWithAuthorization("/group/common/getAllCommonGroups"));

@@ -24,6 +24,21 @@ Feature: Testing methods of the common group controller
       | VISITOR     | 2xx           |
       | BLOCKED     | 4xx           |
 
+  Scenario Outline: Check <role> privilege to Get parent common group of user
+    Given There exists a common group with name "Common Group Name" with alias "common"
+    And There exists an user with first name "Anybody" and last name "User" with alias "anyUser" at common group "common"
+    And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
+    And There is token for user with alias "user" and password "1 Dummy Password!"
+    When Controller is called to get the parent common group of user with the identification of the alias "anyUser"
+    Then The result is a <httpCodeRange>
+    Examples:
+      | role        | httpCodeRange |
+      | ADMIN       | 2xx           |
+      | MANAGER     | 2xx           |
+      | CONTRIBUTOR | 2xx           |
+      | VISITOR     | 2xx           |
+      | BLOCKED     | 4xx           |
+
   Scenario Outline: Check <role> privilege to update common group
     Given There exists a common group with name "Common Group Name" with alias "common"
     And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
