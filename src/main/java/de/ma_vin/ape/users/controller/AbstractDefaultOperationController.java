@@ -95,6 +95,7 @@ public abstract class AbstractDefaultOperationController {
      * @param identification    Identification of the instance to update
      * @param domainClass       Corresponding domain class of the dto
      * @param searcher          Functional to access the domain object
+     * @param adoption          Functional to take over stored values which are not provided by the dto or should be overridden
      * @param storer            Functional to store the updated domain model instance
      * @param toDtoConverter    Functional to convert the domain model object to an dto one
      * @param toDomainConverter Functional to convert the dto object to an domain model one
@@ -103,7 +104,8 @@ public abstract class AbstractDefaultOperationController {
      * @return ResponseWrapper containing the updated instance, if no error occurs
      */
     protected <T extends IIdentifiable, S extends ITransportable> ResponseWrapper<S> update(S inputDto, String identification
-            , Class<T> domainClass, Searcher<T> searcher, Storer<T> storer, Converter<T, S> toDtoConverter, Converter<S, T> toDomainConverter) {
+            , Class<T> domainClass, Searcher<T> searcher, AdoptionFromStorage<T> adoption, Storer<T> storer
+            , Converter<T, S> toDtoConverter, Converter<S, T> toDomainConverter) {
 
         Optional<T> persistedDomainObject = searcher.find(identification);
         if (persistedDomainObject.isEmpty()) {
@@ -112,6 +114,7 @@ public abstract class AbstractDefaultOperationController {
         }
 
         T modifiedDomainObject = toDomainConverter.convert(inputDto);
+        modifiedDomainObject = adoption.adopt(persistedDomainObject.get(), modifiedDomainObject);
         modifiedDomainObject.setIdentification(identification);
 
         Optional<T> storedDomainObject = storer.save(modifiedDomainObject);
@@ -126,6 +129,26 @@ public abstract class AbstractDefaultOperationController {
         }
         return createResponseWithWarning(result, String.format("The identification of the request body \"%s\" was different to the path variable \"%s\". The path variable was used."
                 , inputDto.getIdentification(), identification));
+    }
+
+    /**
+     * Updates an existing instance
+     *
+     * @param inputDto          Dto containing the modified data
+     * @param identification    Identification of the instance to update
+     * @param domainClass       Corresponding domain class of the dto
+     * @param searcher          Functional to access the domain object
+     * @param storer            Functional to store the updated domain model instance
+     * @param toDtoConverter    Functional to convert the domain model object to an dto one
+     * @param toDomainConverter Functional to convert the dto object to an domain model one
+     * @param <T>               the domain model which should be updated
+     * @param <S>               corresponding dto model which should be updated
+     * @return ResponseWrapper containing the updated instance, if no error occurs
+     */
+    protected <T extends IIdentifiable, S extends ITransportable> ResponseWrapper<S> update(S inputDto, String identification
+            , Class<T> domainClass, Searcher<T> searcher, Storer<T> storer, Converter<T, S> toDtoConverter, Converter<S, T> toDomainConverter) {
+
+        return update(inputDto, identification, domainClass, searcher, (s, o) -> o, storer, toDtoConverter, toDomainConverter);
     }
 
     /**
@@ -164,6 +187,11 @@ public abstract class AbstractDefaultOperationController {
     @FunctionalInterface
     protected interface Storer<T extends IIdentifiable> {
         Optional<T> save(T toStore);
+    }
+
+    @FunctionalInterface
+    protected interface AdoptionFromStorage<T extends IIdentifiable> {
+        T adopt(T stored, T other);
     }
 
     @FunctionalInterface

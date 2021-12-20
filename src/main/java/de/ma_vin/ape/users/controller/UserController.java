@@ -69,6 +69,10 @@ public class UserController extends AbstractDefaultOperationController {
     ResponseWrapper<UserDto> updateUser(@RequestBody UserDto user, @PathVariable String userIdentification) {
         return update(user, userIdentification, User.class
                 , getNonGlobalAdminSearcher()
+                , (stored, modified) -> {
+                    modified.setRole(stored.getRole());
+                    return modified;
+                }
                 , objectToUpdate -> userService.save(objectToUpdate)
                 , UserTransportMapper::convertToUserDto
                 , UserTransportMapper::convertToUser

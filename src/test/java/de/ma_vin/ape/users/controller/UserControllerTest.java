@@ -226,9 +226,14 @@ public class UserControllerTest {
     public void testUpdateUser() {
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
+        when(user.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userDto.getRole()).thenReturn(Role.ADMIN);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(userService.save(any())).then(a -> {
+            assertEquals(Role.CONTRIBUTOR, ((User) a.getArgument(0)).getRole(), "The role should be the stored one");
+            return Optional.of(a.getArgument(0));
+        });
 
         ResponseWrapper<UserDto> response = cut.updateUser(userDto, USER_IDENTIFICATION);
 
