@@ -26,6 +26,7 @@ import static org.mockito.MockitoAnnotations.openMocks;
  */
 public class ControllerMethodSecurityExpressionRootTest {
     public static final String PRINCIPAL_NAME = "UAA0001";
+    public static final String OTHER_USER_IDENTIFICATION = "UAA0002";
     public static final String GROUP_IDENTIFICATION = "GAA0001";
 
     private ControllerMethodSecurityExpressionRoot cut;
@@ -286,5 +287,28 @@ public class ControllerMethodSecurityExpressionRootTest {
         assertFalse(cut.isPrincipalItself(PRINCIPAL_NAME), "The user identification should not be identified as principal");
 
         verify(userPermissionService, never()).isBlocked(any(), any(), any());
+    }
+
+    @DisplayName("Check if the principal has a more worth role than user")
+    @Test
+    public void tesHasPrincipalEqualOrHigherPrivilege() {
+        when(userPermissionService.hasEqualOrHigherRole(any(), any())).thenReturn(Boolean.TRUE);
+        when(userPermissionService.hasEqualOrHigherRole(eq(Optional.empty()), any())).thenReturn(Boolean.FALSE);
+        assertTrue(cut.hasPrincipalEqualOrHigherPrivilege(OTHER_USER_IDENTIFICATION), "The Principal should have role which is more worth");
+
+        verify(userPermissionService).hasEqualOrHigherRole(eq(Optional.of(PRINCIPAL_NAME)), eq(OTHER_USER_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a more worth role than user, but not DefaultOAuth2AuthenticatedPrincipal")
+    @Test
+    public void testHasPrincipalEqualOrHigherPrivilegeNotDefaultOAuth2AuthenticatedPrincipal() {
+        when(userPermissionService.hasEqualOrHigherRole(any(), any())).thenReturn(Boolean.TRUE);
+        when(userPermissionService.hasEqualOrHigherRole(eq(Optional.empty()), any())).thenReturn(Boolean.FALSE);
+        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        when(authentication.getPrincipal()).thenReturn(principal);
+
+        assertFalse(cut.hasPrincipalEqualOrHigherPrivilege(OTHER_USER_IDENTIFICATION), "The Principal should have role which is more worth");
+
+        verify(userPermissionService).hasEqualOrHigherRole(eq(Optional.empty()), eq(OTHER_USER_IDENTIFICATION));
     }
 }

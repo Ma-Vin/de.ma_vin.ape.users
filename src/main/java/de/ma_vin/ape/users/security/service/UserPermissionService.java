@@ -111,6 +111,21 @@ public class UserPermissionService {
     }
 
     /**
+     * Determines whether the principal has an equal or higher worth role
+     *
+     * @param username              username of the principal
+     * @param identificationOfOther id of the user to compare with
+     * @return {@code true} if the principal has the same role or a role which is more worth than the user one. Otherwise {@code false}
+     */
+    public boolean hasEqualOrHigherRole(Optional<String> username, String identificationOfOther) {
+        Optional<User> otherUser = userService.findUser(identificationOfOther);
+        if (otherUser.isEmpty()) {
+            return false;
+        }
+        return hasUserRole(username, identificationOfOther, IdentificationType.USER, otherUser.get().getRole());
+    }
+
+    /**
      * Checks whether the principal is blocked
      *
      * @param username           username to check

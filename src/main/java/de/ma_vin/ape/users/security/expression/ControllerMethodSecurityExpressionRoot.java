@@ -119,6 +119,16 @@ public class ControllerMethodSecurityExpressionRoot extends SecurityExpressionRo
         return getUsername().stream().anyMatch(u -> u.equals(userIdentification)) && !isBlocked(userIdentification, IdentificationType.USER);
     }
 
+    /**
+     * Checks whether the principal has an equal or higher worth role
+     *
+     * @param userIdentification id of the user to compare with
+     * @return {@code true} if the principal has the same role or a role which is more worth than the user one. Otherwise {@code false}
+     */
+    public boolean hasPrincipalEqualOrHigherPrivilege(String userIdentification) {
+        return userPermissionService.hasEqualOrHigherRole(getUsername(), userIdentification);
+    }
+
     private Optional<String> getUsername() {
         return getAuthentication().getPrincipal() instanceof DefaultOAuth2AuthenticatedPrincipal ?
                 Optional.of(((DefaultOAuth2AuthenticatedPrincipal) getAuthentication().getPrincipal()).getName()) : Optional.empty();
