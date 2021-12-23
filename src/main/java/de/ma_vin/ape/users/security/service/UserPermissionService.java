@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 
 /**
@@ -123,6 +125,28 @@ public class UserPermissionService {
             return false;
         }
         return hasUserRole(username, identificationOfOther, IdentificationType.USER, otherUser.get().getRole());
+    }
+
+    /**
+     * Determines whether the principal has a more worth role
+     *
+     * @param username              username of the principal
+     * @param identificationOfOther id of the user to compare with
+     * @return {@code true} if the principal has a role which is more worth than the user one. Otherwise {@code false}
+     */
+    public boolean hasHigherRole(Optional<String> username, String identificationOfOther) {
+        Optional<User> otherUser = userService.findUser(identificationOfOther);
+        if (otherUser.isEmpty()) {
+            return false;
+        }
+        Optional<Role> nextHigherRole = Arrays.stream(Role.values())
+                .filter(r -> r.getLevel() > otherUser.get().getRole().getLevel())
+                .sorted(Comparator.comparing(Role::getLevel))
+                .findFirst();
+        if (nextHigherRole.isEmpty()) {
+            return false;
+        }
+        return hasUserRole(username, identificationOfOther, IdentificationType.USER, nextHigherRole.get());
     }
 
     /**

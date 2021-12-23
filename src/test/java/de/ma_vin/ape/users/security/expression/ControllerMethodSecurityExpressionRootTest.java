@@ -289,7 +289,7 @@ public class ControllerMethodSecurityExpressionRootTest {
         verify(userPermissionService, never()).isBlocked(any(), any(), any());
     }
 
-    @DisplayName("Check if the principal has a more worth role than user")
+    @DisplayName("Check if the principal has an equal or a more worth role than user")
     @Test
     public void tesHasPrincipalEqualOrHigherPrivilege() {
         when(userPermissionService.hasEqualOrHigherRole(any(), any())).thenReturn(Boolean.TRUE);
@@ -299,7 +299,7 @@ public class ControllerMethodSecurityExpressionRootTest {
         verify(userPermissionService).hasEqualOrHigherRole(eq(Optional.of(PRINCIPAL_NAME)), eq(OTHER_USER_IDENTIFICATION));
     }
 
-    @DisplayName("Check if the principal has a more worth role than user, but not DefaultOAuth2AuthenticatedPrincipal")
+    @DisplayName("Check if the principal has an equal or a more worth role than user, but not DefaultOAuth2AuthenticatedPrincipal")
     @Test
     public void testHasPrincipalEqualOrHigherPrivilegeNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.hasEqualOrHigherRole(any(), any())).thenReturn(Boolean.TRUE);
@@ -310,5 +310,28 @@ public class ControllerMethodSecurityExpressionRootTest {
         assertFalse(cut.hasPrincipalEqualOrHigherPrivilege(OTHER_USER_IDENTIFICATION), "The Principal should have role which is more worth");
 
         verify(userPermissionService).hasEqualOrHigherRole(eq(Optional.empty()), eq(OTHER_USER_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a more worth role than user")
+    @Test
+    public void tesHasPrincipalHigherPrivilege() {
+        when(userPermissionService.hasHigherRole(any(), any())).thenReturn(Boolean.TRUE);
+        when(userPermissionService.hasHigherRole(eq(Optional.empty()), any())).thenReturn(Boolean.FALSE);
+        assertTrue(cut.hasPrincipalHigherPrivilege(OTHER_USER_IDENTIFICATION), "The Principal should have role which is more worth");
+
+        verify(userPermissionService).hasHigherRole(eq(Optional.of(PRINCIPAL_NAME)), eq(OTHER_USER_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a more worth role than user, but not DefaultOAuth2AuthenticatedPrincipal")
+    @Test
+    public void testHasPrincipalHigherPrivilegeNotDefaultOAuth2AuthenticatedPrincipal() {
+        when(userPermissionService.hasHigherRole(any(), any())).thenReturn(Boolean.TRUE);
+        when(userPermissionService.hasHigherRole(eq(Optional.empty()), any())).thenReturn(Boolean.FALSE);
+        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        when(authentication.getPrincipal()).thenReturn(principal);
+
+        assertFalse(cut.hasPrincipalHigherPrivilege(OTHER_USER_IDENTIFICATION), "The Principal should have role which is more worth");
+
+        verify(userPermissionService).hasHigherRole(eq(Optional.empty()), eq(OTHER_USER_IDENTIFICATION));
     }
 }

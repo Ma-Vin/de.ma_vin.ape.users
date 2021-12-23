@@ -874,7 +874,7 @@ public class UserPermissionServiceTest {
         checkFindUser();
     }
 
-    @DisplayName("Check if the principal has a role which is more worth")
+    @DisplayName("Check if the principal has a role which is equal or more worth, is more worth")
     @Test
     public void testHasEqualOrHigherRole() {
         assertTrue(cut.hasEqualOrHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
@@ -884,7 +884,18 @@ public class UserPermissionServiceTest {
         verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
     }
 
-    @DisplayName("Check if the principal has a role which is more worth, but is less worth")
+    @DisplayName("Check if the principal has a role which is equal or more worth, is equal")
+    @Test
+    public void testHasEqualOrHigherRoleEqual() {
+        when(userRequest.getRole()).thenReturn(Role.ADMIN);
+        assertTrue(cut.hasEqualOrHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is equal worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is equal or more worth, but is less worth")
     @Test
     public void testHasEqualOrHigherRoleButLessWorth() {
         when(user.getRole()).thenReturn(Role.VISITOR);
@@ -895,7 +906,7 @@ public class UserPermissionServiceTest {
         verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
     }
 
-    @DisplayName("Check if the principal has a role which is more worth, but missing user")
+    @DisplayName("Check if the principal has a role which is equal or more worth, but missing user")
     @Test
     public void testHasEqualOrHigherRoleButMissingUser() {
         when(userService.findUser(eq(USER_REQUEST_IDENTIFICATION))).thenReturn(Optional.empty());
@@ -906,7 +917,7 @@ public class UserPermissionServiceTest {
         verify(userService).findUser(eq(USER_REQUEST_IDENTIFICATION));
     }
 
-    @DisplayName("Check if the principal has a role which is more worth, but missing principal")
+    @DisplayName("Check if the principal has a role which is equal or more worth, but missing principal")
     @Test
     public void testHasEqualOrHigherRoleButMissingPrincipal() {
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
@@ -917,7 +928,7 @@ public class UserPermissionServiceTest {
         verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
     }
 
-    @DisplayName("Check if the principal has a role which is more worth, but different common group")
+    @DisplayName("Check if the principal has a role which is equal or more worth, but different common group")
     @Test
     public void testHasEqualOrHigherRoleButDifferentCommonGroup() {
         when(userRequest.getCommonGroupId()).thenReturn(COMMON_GROUP_IDENTIFICATION + "_");
@@ -928,7 +939,7 @@ public class UserPermissionServiceTest {
         verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
     }
 
-    @DisplayName("Check if the principal has a role which is more worth, with valid from and to date times")
+    @DisplayName("Check if the principal has a role which is equal or more worth, with valid from and to date times")
     @Test
     public void testHasEqualOrHigherRoleWithValidFromAndTo() {
         when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
@@ -940,7 +951,7 @@ public class UserPermissionServiceTest {
         verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
     }
 
-    @DisplayName("Check if the principal has a role which is more worth, with invalid from date time")
+    @DisplayName("Check if the principal has a role which is equal or more worth, with invalid from date time")
     @Test
     public void testHasEqualOrHigherRoleButValidFromFuture() {
         when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().plusSeconds(1L));
@@ -952,12 +963,125 @@ public class UserPermissionServiceTest {
         verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
     }
 
-    @DisplayName("Check if the principal has a role which is more worth, with invalid to date time")
+    @DisplayName("Check if the principal has a role which is equal or more worth, with invalid to date time")
     @Test
     public void testHasEqualOrHigherRoleButValidToPast() {
         when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
         when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().minusSeconds(1L));
         assertFalse(cut.hasEqualOrHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is less worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+
+    @DisplayName("Check if the principal has a role which is more worth")
+    @Test
+    public void testHasHigherRole() {
+        assertTrue(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is more worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is equal or more worth, but is equal")
+    @Test
+    public void testHasHigherRoleButIsEqual() {
+        when(user.getRole()).thenReturn(Role.CONTRIBUTOR);
+        assertFalse(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is equal worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is equal or more worth, but there does not exists a higher one")
+    @Test
+    public void testHasHigherRoleButHighestRole() {
+        when(userRequest.getRole()).thenReturn(Role.ADMIN);
+        assertFalse(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is equal worth");
+
+        verify(userService, never()).findUser(eq(USER_IDENTIFICATION));
+        verify(userService).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is more worth, but is less worth")
+    @Test
+    public void testHasHigherRoleButLessWorth() {
+        when(user.getRole()).thenReturn(Role.VISITOR);
+        assertFalse(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is less worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is more worth, but missing user")
+    @Test
+    public void testHasHigherRoleButMissingUser() {
+        when(userService.findUser(eq(USER_REQUEST_IDENTIFICATION))).thenReturn(Optional.empty());
+        assertFalse(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is less worth");
+
+        verify(userService, never()).findUser(eq(USER_IDENTIFICATION));
+        verify(userService).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is more worth, but missing principal")
+    @Test
+    public void testHasHigherRoleButMissingPrincipal() {
+        when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
+        assertFalse(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is less worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is more worth, but different common group")
+    @Test
+    public void testHasHigherRoleButDifferentCommonGroup() {
+        when(userRequest.getCommonGroupId()).thenReturn(COMMON_GROUP_IDENTIFICATION + "_");
+        assertFalse(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is less worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is more worth, with valid from and to date times")
+    @Test
+    public void testHasHigherRoleWithValidFromAndTo() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertTrue(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is more worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is more worth, with invalid from date time")
+    @Test
+    public void testHasHigherRoleButValidFromFuture() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().plusSeconds(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().plusMinutes(1L));
+        assertFalse(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
+                , "The principal should have are role which is less worth");
+
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+        verify(userService, times(2)).findUser(eq(USER_REQUEST_IDENTIFICATION));
+    }
+
+    @DisplayName("Check if the principal has a role which is more worth, with invalid to date time")
+    @Test
+    public void testHasHigherRoleButValidToPast() {
+        when(user.getValidFrom()).thenReturn(SystemProperties.getSystemDateTime().minusMinutes(1L));
+        when(user.getValidTo()).thenReturn(SystemProperties.getSystemDateTime().minusSeconds(1L));
+        assertFalse(cut.hasHigherRole(Optional.of(USER_IDENTIFICATION), USER_REQUEST_IDENTIFICATION)
                 , "The principal should have are role which is less worth");
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));

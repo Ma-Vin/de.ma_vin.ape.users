@@ -129,6 +129,16 @@ public class ControllerMethodSecurityExpressionRoot extends SecurityExpressionRo
         return userPermissionService.hasEqualOrHigherRole(getUsername(), userIdentification);
     }
 
+    /**
+     * Checks whether the principal has a higher worth role
+     *
+     * @param userIdentification id of the user to compare with
+     * @return {@code true} if the principal has a role which is more worth than the user one. Otherwise {@code false}
+     */
+    public boolean hasPrincipalHigherPrivilege(String userIdentification) {
+        return userPermissionService.hasHigherRole(getUsername(), userIdentification);
+    }
+
     private Optional<String> getUsername() {
         return getAuthentication().getPrincipal() instanceof DefaultOAuth2AuthenticatedPrincipal ?
                 Optional.of(((DefaultOAuth2AuthenticatedPrincipal) getAuthentication().getPrincipal()).getName()) : Optional.empty();
