@@ -24,19 +24,40 @@ Feature: Testing methods of the user controller
       | VISITOR     | 4xx           |
       | BLOCKED     | 4xx           |
 
-  Scenario Outline: Check <role> privilege to delete an user
+  Scenario Outline: Check <role> privilege to delete an user with role <roleOfToDelete>
     Given There exists an user with first name "New" and last name "User" with alias "userToDelete" at common group "common"
+    Given There exists an user with first name "New", last name "User", password "1 Dummy Password!" and role <roleOfToDelete> with alias "userToDelete" at common group "common"
     And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to delete the user with the identification of the alias "userToDelete"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      | role        | roleOfToDelete | httpCodeRange |
+      | ADMIN       | ADMIN          | 2xx           |
+      | MANAGER     | ADMIN          | 4xx           |
+      | CONTRIBUTOR | ADMIN          | 4xx           |
+      | VISITOR     | ADMIN          | 4xx           |
+      | BLOCKED     | ADMIN          | 4xx           |
+      | ADMIN       | MANAGER        | 2xx           |
+      | MANAGER     | MANAGER        | 4xx           |
+      | CONTRIBUTOR | MANAGER        | 4xx           |
+      | VISITOR     | MANAGER        | 4xx           |
+      | BLOCKED     | MANAGER        | 4xx           |
+      | ADMIN       | CONTRIBUTOR    | 2xx           |
+      | MANAGER     | CONTRIBUTOR    | 2xx           |
+      | CONTRIBUTOR | CONTRIBUTOR    | 4xx           |
+      | VISITOR     | CONTRIBUTOR    | 4xx           |
+      | BLOCKED     | CONTRIBUTOR    | 4xx           |
+      | ADMIN       | VISITOR        | 2xx           |
+      | MANAGER     | VISITOR        | 2xx           |
+      | CONTRIBUTOR | VISITOR        | 4xx           |
+      | VISITOR     | VISITOR        | 4xx           |
+      | BLOCKED     | VISITOR        | 4xx           |
+      | ADMIN       | BLOCKED        | 2xx           |
+      | MANAGER     | BLOCKED        | 2xx           |
+      | CONTRIBUTOR | BLOCKED        | 4xx           |
+      | VISITOR     | BLOCKED        | 4xx           |
+      | BLOCKED     | BLOCKED        | 4xx           |
 
   Scenario Outline: Check <role> privilege to get and count an user
     Given There exists an user with first name "New" and last name "User" with alias "userToGet" at common group "common"
@@ -56,25 +77,45 @@ Feature: Testing methods of the user controller
       | VISITOR     | 2xx           |
       | BLOCKED     | 4xx           |
 
-  Scenario Outline: Check <role> privilege to update <testName>
-    Given There exists an user with first name "New" and last name "User" with alias "anOtherUser" at common group "common"
+  Scenario Outline: Check <role> privilege to update <testName> with role <roleOfToUpdate>
+    Given There exists an user with first name "New", last name "User", password "1 Dummy Password!" and role <roleOfToUpdate> with alias "anOtherUser" at common group "common"
     And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
     And There is token for user with alias "user" and password "1 Dummy Password!"
     And The "mail" of the user with alias <aliasToUpdate> is set to "anythingNew"
     When Controller is called to update the user with the identification of the alias <aliasToUpdate>
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange | aliasToUpdate | testName      |
-      | ADMIN       | 2xx           | "anOtherUser" | an other user |
-      | MANAGER     | 2xx           | "anOtherUser" | an other user |
-      | CONTRIBUTOR | 4xx           | "anOtherUser" | an other user |
-      | VISITOR     | 4xx           | "anOtherUser" | an other user |
-      | BLOCKED     | 4xx           | "anOtherUser" | an other user |
-      | ADMIN       | 2xx           | "user"        | itself        |
-      | MANAGER     | 2xx           | "user"        | itself        |
-      | CONTRIBUTOR | 2xx           | "user"        | itself        |
-      | VISITOR     | 2xx           | "user"        | itself        |
-      | BLOCKED     | 4xx           | "user"        | itself        |
+      | role        | roleOfToUpdate | httpCodeRange | aliasToUpdate | testName      |
+      | ADMIN       | ADMIN          | 2xx           | "anOtherUser" | an other user |
+      | MANAGER     | ADMIN          | 4xx           | "anOtherUser" | an other user |
+      | CONTRIBUTOR | ADMIN          | 4xx           | "anOtherUser" | an other user |
+      | VISITOR     | ADMIN          | 4xx           | "anOtherUser" | an other user |
+      | BLOCKED     | ADMIN          | 4xx           | "anOtherUser" | an other user |
+      | ADMIN       | MANAGER        | 2xx           | "anOtherUser" | an other user |
+      | MANAGER     | MANAGER        | 4xx           | "anOtherUser" | an other user |
+      | CONTRIBUTOR | MANAGER        | 4xx           | "anOtherUser" | an other user |
+      | VISITOR     | MANAGER        | 4xx           | "anOtherUser" | an other user |
+      | BLOCKED     | MANAGER        | 4xx           | "anOtherUser" | an other user |
+      | ADMIN       | CONTRIBUTOR    | 2xx           | "anOtherUser" | an other user |
+      | MANAGER     | CONTRIBUTOR    | 2xx           | "anOtherUser" | an other user |
+      | CONTRIBUTOR | CONTRIBUTOR    | 4xx           | "anOtherUser" | an other user |
+      | VISITOR     | CONTRIBUTOR    | 4xx           | "anOtherUser" | an other user |
+      | BLOCKED     | CONTRIBUTOR    | 4xx           | "anOtherUser" | an other user |
+      | ADMIN       | VISITOR        | 2xx           | "anOtherUser" | an other user |
+      | MANAGER     | VISITOR        | 2xx           | "anOtherUser" | an other user |
+      | CONTRIBUTOR | VISITOR        | 4xx           | "anOtherUser" | an other user |
+      | VISITOR     | VISITOR        | 4xx           | "anOtherUser" | an other user |
+      | BLOCKED     | VISITOR        | 4xx           | "anOtherUser" | an other user |
+      | ADMIN       | BLOCKED        | 2xx           | "anOtherUser" | an other user |
+      | MANAGER     | BLOCKED        | 2xx           | "anOtherUser" | an other user |
+      | CONTRIBUTOR | BLOCKED        | 4xx           | "anOtherUser" | an other user |
+      | VISITOR     | BLOCKED        | 4xx           | "anOtherUser" | an other user |
+      | BLOCKED     | BLOCKED        | 4xx           | "anOtherUser" | an other user |
+      | ADMIN       | ADMIN          | 2xx           | "user"        | itself        |
+      | MANAGER     | MANAGER        | 2xx           | "user"        | itself        |
+      | CONTRIBUTOR | CONTRIBUTOR    | 2xx           | "user"        | itself        |
+      | VISITOR     | VISITOR        | 2xx           | "user"        | itself        |
+      | BLOCKED     | BLOCKED        | 4xx           | "user"        | itself        |
 
   Scenario Outline: Check <role> privilege to set password of <testName>
     Given There exists an user with first name "New" and last name "User" with alias "anOtherUser" at common group "common"

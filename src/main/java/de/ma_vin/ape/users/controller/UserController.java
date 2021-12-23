@@ -43,7 +43,7 @@ public class UserController extends AbstractDefaultOperationController {
         return ResponseUtil.createSuccessResponse(UserTransportMapper.convertToUserDto(result.get()));
     }
 
-    @PreAuthorize("isManager(#userIdentification, 'USER')")
+    @PreAuthorize("isAdmin(#userIdentification, 'USER') or (isManager(#userIdentification, 'USER') and hasPrincipalHigherPrivilege(#userIdentification))")
     @DeleteMapping("/deleteUser/{userIdentification}")
     public @ResponseBody
     ResponseWrapper<Boolean> deleteUser(@PathVariable String userIdentification) {
@@ -63,7 +63,7 @@ public class UserController extends AbstractDefaultOperationController {
         );
     }
 
-    @PreAuthorize("isPrincipalItself(#userIdentification) or isManager(#userIdentification, 'USER')")
+    @PreAuthorize("isPrincipalItself(#userIdentification) or isAdmin(#userIdentification, 'USER') or (isManager(#userIdentification, 'USER') and hasPrincipalHigherPrivilege(#userIdentification))")
     @PutMapping("/updateUser/{userIdentification}")
     public @ResponseBody
     ResponseWrapper<UserDto> updateUser(@RequestBody UserDto user, @PathVariable String userIdentification) {
