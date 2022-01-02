@@ -468,15 +468,15 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtPrivilegeGroup() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, null);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
 
         checkOk(response);
 
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
         assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any());
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER));
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any());
     }
 
     @DisplayName("Find all base groups at privilege group with pages, but missing page")
@@ -484,7 +484,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtPrivilegeGroupPageableMissingPage() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
 
         checkWarn(response);
 
@@ -492,8 +492,8 @@ public class BaseGroupControllerTest {
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
         assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), any(), eq(Integer.valueOf(20)));
     }
 
     @DisplayName("Find all base groups at privilege group with pages, but missing size")
@@ -501,7 +501,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtPrivilegeGroupPageableMissingSize() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, null);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
 
         checkWarn(response);
 
@@ -509,8 +509,8 @@ public class BaseGroupControllerTest {
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
         assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), any());
     }
 
     @DisplayName("Find all base groups at privilege group with pages")
@@ -518,20 +518,20 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtPrivilegeGroupPageable() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, 20);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
 
         checkOk(response);
 
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
         assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
     }
 
     private void mockDefaultFindAllBaseAtPrivilegeGroup() {
-        when(baseGroupService.findAllBaseAtPrivilegeGroup(any())).thenReturn(Collections.singletonList(baseGroup));
-        when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any(), any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any())).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any(), any(), any())).thenReturn(Collections.singletonList(baseGroup));
         when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
     }
 

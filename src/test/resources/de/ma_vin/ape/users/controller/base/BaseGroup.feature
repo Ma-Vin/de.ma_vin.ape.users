@@ -85,6 +85,15 @@ Feature: Testing methods of the base group controller
     And The status of the result should be "OK"
     And The identification at 0 is the same like the one of alias "subBase"
     And The "identification" property at response position 1 does not exists
+    When Controller is called to get all sub base groups of privilege group with alias "parentPrivilege" and role MANAGER
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "subBase"
+    And The "identification" property at response position 1 does not exists
+    When Controller is called to get all sub base groups of privilege group with alias "parentPrivilege" and role CONTRIBUTOR
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The "identification" property at response position 0 does not exists
     When Controller is called to remove the base group with alias "subBase" from privilege group with alias "parentPrivilege"
     Then The result is Ok and Json
     And The status of the result should be "OK"

@@ -265,15 +265,16 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
-     * Searches for all base groups at a parent privilege group
+     * Searches for all base groups at a parent privilege group with a given role
      *
      * @param parentIdentification identification of the parent
-     * @return List of base groups
+     * @param role                 role of base groups at privilege group
+     * @return List of base groups. If the role is given, the result is filtered by this role.
      */
-    public List<BaseGroup> findAllBaseAtPrivilegeGroup(String parentIdentification) {
+    public List<BaseGroup> findAllBaseAtPrivilegeGroup(String parentIdentification, Role role) {
         log.debug(SEARCH_START_LOG_MESSAGE, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
 
-        List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), null, null)
+        List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, null, null)
                 .stream()
                 .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
                 .collect(Collectors.toList());
@@ -283,17 +284,18 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
-     * Searches for all base groups at a parent privilege group
+     * Searches for all base groups at a parent privilege group with a given role
      *
      * @param parentIdentification identification of the
+     * @param role                 role of base groups at privilege group
      * @param page                 zero-based page index, must not be negative.
      * @param size                 the size of the page to be returned, must be greater than 0.
-     * @return List of base groups
+     * @return List of base groups. If the role is given, the result is filtered by this role.
      */
-    public List<BaseGroup> findAllBaseAtPrivilegeGroup(String parentIdentification, Integer page, Integer size) {
+    public List<BaseGroup> findAllBaseAtPrivilegeGroup(String parentIdentification, Role role, Integer page, Integer size) {
         log.debug(SEARCH_START_PAGE_LOG_MESSAGE, GROUPS_LOG_PARAM, page, size, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
 
-        List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), page, size)
+        List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, page, size)
                 .stream()
                 .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
                 .collect(Collectors.toList());
@@ -381,6 +383,29 @@ public class BaseGroupService extends AbstractRepositoryService {
                     .collect(Collectors.toList());
         }
         return privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent, PageRequest.of(page, size)).stream()
+                .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Searches for all base groups with a given role
+     *
+     * @param parent parent privilege group
+     * @param role   role of base groups at privilege group
+     * @param page   zero-based page index, must not be negative.
+     * @param size   the size of the page to be returned, must be greater than 0.
+     * @return List of base groups
+     */
+    private List<BaseGroupDao> findAllBaseAtPrivilegeGroup(PrivilegeGroupDao parent, Role role, Integer page, Integer size) {
+        if (role == null) {
+            return findAllBaseAtPrivilegeGroup(parent, page, size);
+        }
+        if (page == null || size == null) {
+            return privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(parent, role).stream()
+                    .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
+                    .collect(Collectors.toList());
+        }
+        return privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(parent, role, PageRequest.of(page, size)).stream()
                 .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
                 .collect(Collectors.toList());
     }

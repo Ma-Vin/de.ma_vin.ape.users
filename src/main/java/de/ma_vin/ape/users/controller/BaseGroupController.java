@@ -2,6 +2,7 @@ package de.ma_vin.ape.users.controller;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 
+import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
@@ -128,15 +129,15 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/findAllBaseAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification
+    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
         int pageToUse = page == null ? DEFAULT_PAGE : page;
         int sizeToUse = size == null ? DEFAULT_SIZE : size;
 
         List<BaseGroup> baseGroups = page == null && size == null
-                ? baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification)
-                : baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification, pageToUse, sizeToUse);
+                ? baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification, role)
+                : baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification, role, pageToUse, sizeToUse);
 
         List<BaseGroupDto> result = baseGroups.stream()
                 .map(GroupTransportMapper::convertToBaseGroupDto)
