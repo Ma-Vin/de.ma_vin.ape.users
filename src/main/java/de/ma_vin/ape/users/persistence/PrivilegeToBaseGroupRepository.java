@@ -29,4 +29,6 @@ public interface PrivilegeToBaseGroupRepository extends JpaRepository<PrivilegeG
     List<PrivilegeGroupToBaseGroupDao> findAllByPrivilegeGroupAndFilterRole(PrivilegeGroupDao privilegeGroup, Role filterRole, Pageable pageable);
 
     long countByPrivilegeGroup(PrivilegeGroupDao privilegeGroup);
+
+    long countByPrivilegeGroupAndFilterRole(PrivilegeGroupDao privilegeGroup, Role filterRole);
 }

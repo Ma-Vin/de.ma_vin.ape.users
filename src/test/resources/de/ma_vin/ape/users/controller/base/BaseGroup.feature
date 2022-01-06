@@ -80,6 +80,14 @@ Feature: Testing methods of the base group controller
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The response is 1
+    When Controller is called to count sub base groups at privilege group with alias "parentPrivilege" and role MANAGER
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
+    When Controller is called to count sub base groups at privilege group with alias "parentPrivilege" and role CONTRIBUTOR
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 0
     When Controller is called to get all sub base groups of privilege group with alias "parentPrivilege"
     Then The result is Ok and Json
     And The status of the result should be "OK"

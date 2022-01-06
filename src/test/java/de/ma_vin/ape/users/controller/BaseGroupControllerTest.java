@@ -380,15 +380,15 @@ public class BaseGroupControllerTest {
     @DisplayName("Count base groups at privilege group")
     @Test
     public void testCountBaseAtPrivilegeGroup() {
-        when(baseGroupService.countBasesAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+        when(baseGroupService.countBasesAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER))).thenReturn(Long.valueOf(42L));
 
-        ResponseWrapper<Long> response = cut.countBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Long> response = cut.countBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER);
 
         checkOk(response);
 
         assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of elements");
 
-        verify(baseGroupService).countBasesAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).countBasesAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER));
     }
 
     @DisplayName("Find all base groups at base group")

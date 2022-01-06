@@ -122,8 +122,8 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/countBaseAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Long> countBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification) {
-        return createSuccessResponse(baseGroupService.countBasesAtPrivilegeGroup(parentGroupIdentification));
+    ResponseWrapper<Long> countBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role) {
+        return createSuccessResponse(baseGroupService.countBasesAtPrivilegeGroup(parentGroupIdentification, role));
     }
 
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")

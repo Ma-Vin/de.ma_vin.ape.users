@@ -387,12 +387,29 @@ public class BaseGroupServiceTest {
     @Test
     public void testCountBasesAtPrivilegeGroup() {
         when(privilegeToBaseGroupRepository.countByPrivilegeGroup(any())).thenReturn(42L);
+        when(privilegeToBaseGroupRepository.countByPrivilegeGroupAndFilterRole(any(), any())).thenReturn(0L);
 
-        Long result = cut.countBasesAtPrivilegeGroup(COMMON_GROUP_IDENTIFICATION);
+        Long result = cut.countBasesAtPrivilegeGroup(COMMON_GROUP_IDENTIFICATION, null);
         assertNotNull(result, "The result should not be null");
         assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
 
         verify(privilegeToBaseGroupRepository).countByPrivilegeGroup(any());
+        verify(privilegeToBaseGroupRepository, never()).countByPrivilegeGroupAndFilterRole(any(), any());
+    }
+
+    @DisplayName("Count base groups at privilege group with role")
+    @Test
+    public void testCountBasesAtPrivilegeGroupWithRole() {
+        when(privilegeToBaseGroupRepository.countByPrivilegeGroup(any())).thenReturn(0L);
+        when(privilegeToBaseGroupRepository.countByPrivilegeGroupAndFilterRole(any(), any())).thenReturn(0L);
+        when(privilegeToBaseGroupRepository.countByPrivilegeGroupAndFilterRole(any(), eq(Role.ADMIN))).thenReturn(42L);
+
+        Long result = cut.countBasesAtPrivilegeGroup(COMMON_GROUP_IDENTIFICATION, Role.ADMIN);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeToBaseGroupRepository, never()).countByPrivilegeGroup(any());
+        verify(privilegeToBaseGroupRepository).countByPrivilegeGroupAndFilterRole(any(), eq(Role.ADMIN));
     }
 
     @DisplayName("Find all base groups at privilege group")

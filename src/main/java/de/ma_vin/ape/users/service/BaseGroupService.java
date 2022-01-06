@@ -253,12 +253,13 @@ public class BaseGroupService extends AbstractRepositoryService {
      * Counts all base groups at a parent privilege group
      *
      * @param parentIdentification identification of the parent
-     * @return number of base groups
+     * @param role                 role of base groups at privilege group
+     * @return number of base groups. If the role is given, the result is filtered by this role.
      */
-    public Long countBasesAtPrivilegeGroup(String parentIdentification) {
+    public Long countBasesAtPrivilegeGroup(String parentIdentification, Role role) {
         log.debug(COUNT_START_LOG_MESSAGE, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
 
-        long result = countBasesAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification));
+        long result = countBasesAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role);
 
         log.debug(COUNT_RESULT_LOG_MESSAGE, result, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
         return Long.valueOf(result);
@@ -362,10 +363,12 @@ public class BaseGroupService extends AbstractRepositoryService {
      * Count all base groups
      *
      * @param parent parent privilege group
-     * @return number of base groups
+     * @param role   role of base groups at privilege group
+     * @return number of base groups. If the role is given, the result is filtered by this role.
      */
-    private long countBasesAtPrivilegeGroup(PrivilegeGroupDao parent) {
-        return privilegeToBaseGroupRepository.countByPrivilegeGroup(parent);
+    private long countBasesAtPrivilegeGroup(PrivilegeGroupDao parent, Role role) {
+        return role == null ? privilegeToBaseGroupRepository.countByPrivilegeGroup(parent)
+                : privilegeToBaseGroupRepository.countByPrivilegeGroupAndFilterRole(parent, role);
     }
 
     /**
