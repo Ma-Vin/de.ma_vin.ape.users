@@ -25,6 +25,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping(path = "oauth")
 @Data
+@CrossOrigin
 public class AuthController {
 
     public static final String TOKEN_TYPE = "bearer";

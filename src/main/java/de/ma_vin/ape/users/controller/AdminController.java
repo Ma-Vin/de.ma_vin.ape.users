@@ -27,6 +27,7 @@ import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createSuccess
 @RestController
 @RequestMapping(path = "admin")
 @Data
+@CrossOrigin
 public class AdminController extends AbstractDefaultOperationController {
 
     @Autowired

@@ -16,6 +16,7 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,6 +26,7 @@ import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 @RestController
 @RequestMapping(path = "user")
 @Data
+@CrossOrigin
 public class UserController extends AbstractDefaultOperationController {
 
     @Autowired

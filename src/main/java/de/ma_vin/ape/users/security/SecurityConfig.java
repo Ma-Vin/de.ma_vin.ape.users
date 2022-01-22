@@ -50,6 +50,7 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
+            //http.authorizeRequests().antMatchers("*").permitAll().and().csrf().disable().headers().frameOptions().disable();
             http.authorizeRequests().antMatchers("/oauth/authorize").authenticated().and().formLogin();
         }
     }
@@ -71,7 +72,7 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.regexMatcher("\\/oauth\\/(token|introspection)").authorizeRequests().anyRequest().authenticated().and().httpBasic().and().csrf().disable();
+            http.regexMatcher("\\/oauth\\/(token|introspection)").authorizeRequests().anyRequest().authenticated().and().httpBasic().and().csrf().disable().cors();
         }
     }
 
@@ -95,7 +96,7 @@ public class SecurityConfig {
                             oauth2 -> oauth2.opaqueToken(token -> token.introspectionUri(this.introspectionUri)
                                     .introspectionClientCredentials(this.clientId, this.clientSecret)
                             )
-                    );
+                    ).cors();
         }
     }
 }

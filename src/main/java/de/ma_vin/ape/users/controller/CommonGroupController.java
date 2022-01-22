@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @RequestMapping(path = "group/common")
 @Log4j2
 @Data
+@CrossOrigin
 public class CommonGroupController extends AbstractDefaultOperationController {
 
     @Autowired
