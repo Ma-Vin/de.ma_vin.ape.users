@@ -4,6 +4,7 @@ import de.ma_vin.ape.users.controller.auth.TokenResponse;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import lombok.Data;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -25,6 +26,8 @@ public class CucumberShared {
     private Map<String, ITransportable> createdObjects = new HashMap<>();
 
     private ResultActions resultActions;
+
+    private HttpStatus httpStatus;
 
     private Map<String, List<UserAndRole>> groupsWithUsers = new HashMap<>();
 

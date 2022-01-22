@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import de.ma_vin.ape.users.controller.auth.GrantType;
 import de.ma_vin.ape.users.controller.auth.ResponseType;
 import de.ma_vin.ape.users.controller.auth.TokenResponse;
-import de.ma_vin.ape.users.model.gen.dto.group.CommonGroupDto;
 import de.ma_vin.ape.users.security.jwt.JsonWebTokenTest;
 import de.ma_vin.ape.utils.TestUtil;
 import io.cucumber.java.ParameterType;
@@ -12,7 +11,6 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.scheduling.support.SimpleTriggerContext;
 import org.springframework.util.MultiValueMap;
 
 import java.io.UnsupportedEncodingException;

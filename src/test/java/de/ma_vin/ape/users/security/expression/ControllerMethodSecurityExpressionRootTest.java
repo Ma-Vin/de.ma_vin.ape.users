@@ -7,9 +7,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
+import org.springframework.security.oauth2.server.resource.introspection.OAuth2IntrospectionAuthenticatedPrincipal;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +38,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @Mock
     private UserPermissionService userPermissionService;
 
-    private DefaultOAuth2AuthenticatedPrincipal principal;
+    private OAuth2AuthenticatedPrincipal principal;
     private Map<String, Object> attributes;
 
     @BeforeEach
@@ -48,7 +49,7 @@ public class ControllerMethodSecurityExpressionRootTest {
 
         attributes = new HashMap<>();
         attributes.put("sub", PRINCIPAL_NAME);
-        principal = new DefaultOAuth2AuthenticatedPrincipal(PRINCIPAL_NAME, attributes, null);
+        principal = new OAuth2IntrospectionAuthenticatedPrincipal(PRINCIPAL_NAME, attributes, null);
 
         when(authentication.getPrincipal()).thenReturn(principal);
         when(userPermissionService.isBlocked(any(), any(), any())).thenReturn(Boolean.FALSE);
@@ -83,7 +84,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @Test
     public void testIsGlobalAdminNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.isGlobalAdmin(eq(Optional.of(PRINCIPAL_NAME)))).thenReturn(Boolean.TRUE);
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.isGlobalAdmin(), "The principal should not be identified as an global admin");
@@ -115,7 +116,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @Test
     public void testIsAdminNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.isAdmin(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.isAdmin(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as an admin");
@@ -147,7 +148,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @Test
     public void testIsManagerNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.isManager(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.isManager(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as a manager");
@@ -179,7 +180,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @Test
     public void testIsContributorNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.isContributor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.isContributor(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as a contributor");
@@ -211,7 +212,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @Test
     public void testIsVisitorNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.isVisitor(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.isVisitor(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as a visitor");
@@ -243,7 +244,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @Test
     public void testIsBlockedNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.isBlocked(eq(Optional.of(PRINCIPAL_NAME)), eq(GROUP_IDENTIFICATION), eq(IdentificationType.BASE))).thenReturn(Boolean.TRUE);
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.isBlocked(GROUP_IDENTIFICATION, IdentificationType.BASE), "The principal should not be identified as a blocked");
@@ -262,7 +263,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @DisplayName("Check if the principal is not the given user identification itself")
     @Test
     public void testIsPrincipalItselfButIsNot() {
-        principal = new DefaultOAuth2AuthenticatedPrincipal(PRINCIPAL_NAME + "_1", attributes, null);
+        principal = new OAuth2IntrospectionAuthenticatedPrincipal(PRINCIPAL_NAME + "_1", attributes, null);
         when(authentication.getPrincipal()).thenReturn(principal);
         assertFalse(cut.isPrincipalItself(PRINCIPAL_NAME), "The user identification should not be identified as principal");
 
@@ -281,7 +282,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     @DisplayName("Check if the principal is the given user identification itself, but not DefaultOAuth2AuthenticatedPrincipal")
     @Test
     public void testIsPrincipalItselfNotDefaultOAuth2AuthenticatedPrincipal() {
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.isPrincipalItself(PRINCIPAL_NAME), "The user identification should not be identified as principal");
@@ -304,7 +305,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     public void testHasPrincipalEqualOrHigherPrivilegeNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.hasEqualOrHigherRole(any(), any())).thenReturn(Boolean.TRUE);
         when(userPermissionService.hasEqualOrHigherRole(eq(Optional.empty()), any())).thenReturn(Boolean.FALSE);
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.hasPrincipalEqualOrHigherPrivilege(OTHER_USER_IDENTIFICATION), "The Principal should have role which is more worth");
@@ -327,7 +328,7 @@ public class ControllerMethodSecurityExpressionRootTest {
     public void testHasPrincipalHigherPrivilegeNotDefaultOAuth2AuthenticatedPrincipal() {
         when(userPermissionService.hasHigherRole(any(), any())).thenReturn(Boolean.TRUE);
         when(userPermissionService.hasHigherRole(eq(Optional.empty()), any())).thenReturn(Boolean.FALSE);
-        OAuth2AuthenticatedPrincipal principal = mock(OAuth2AuthenticatedPrincipal.class);
+        AuthenticatedPrincipal principal = mock(AuthenticatedPrincipal.class);
         when(authentication.getPrincipal()).thenReturn(principal);
 
         assertFalse(cut.hasPrincipalHigherPrivilege(OTHER_USER_IDENTIFICATION), "The Principal should have role which is more worth");

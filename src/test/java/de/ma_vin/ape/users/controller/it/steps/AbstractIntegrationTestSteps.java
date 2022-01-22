@@ -1,18 +1,12 @@
 package de.ma_vin.ape.users.controller.it.steps;
 
-import de.ma_vin.ape.users.UserApplication;
 import de.ma_vin.ape.utils.TestUtil;
-import io.cucumber.spring.CucumberContextConfiguration;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -26,13 +20,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
-@ExtendWith(SpringExtension.class)
-@AutoConfigureMockMvc
-@CucumberContextConfiguration
-@ActiveProfiles("integration-test")
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
-        classes = UserApplication.class)
+
 public abstract class AbstractIntegrationTestSteps {
 
     @Autowired
@@ -56,179 +44,127 @@ public abstract class AbstractIntegrationTestSteps {
     }
 
     protected ResultActions performPostWithAuthorization(String url, MultiValueMap<String, String> valueMap) {
-        try {
-            return mvc.perform(
-                    post(url)
-                            .with(csrf())
-                            .header("Authorization", "Bearer " + shared.getAccessToken())
-                            .params(valueMap)
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call post at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(post(url)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + shared.getAccessToken())
+                        .params(valueMap)
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performPostWithBasicAuthorization(String url, MultiValueMap<String, String> valueMap) {
-        try {
-            return mvc.perform(
-                    post(url)
-                            .with(csrf())
-                            .header("Authorization", getClientAuthBasic())
-                            .params(valueMap)
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call post at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(post(url)
+                        .with(csrf())
+                        .header("Authorization", getClientAuthBasic())
+                        .params(valueMap)
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performPost(String url, MultiValueMap<String, String> valueMap) {
-        try {
-            return mvc.perform(
-                    post(url)
-                            .with(csrf())
-                            .params(valueMap)
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call post at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(post(url)
+                        .with(csrf())
+                        .params(valueMap)
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performGetWithAuthorization(String url, String pathVariable) {
-        try {
-            return mvc.perform(
-                    get(url + "/" + pathVariable)
-                            .with(csrf())
-                            .header("Authorization", "Bearer " + shared.getAccessToken())
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(get(url + "/" + pathVariable)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + shared.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performGetWithBasicAuthorization(String url, String pathVariable) {
-        try {
-            return mvc.perform(
-                    get(url + "/" + pathVariable)
-                            .with(csrf())
-                            .header("Authorization", getClientAuthBasic())
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(get(url + "/" + pathVariable)
+                        .with(csrf())
+                        .header("Authorization", getClientAuthBasic())
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performGet(String url, MultiValueMap<String, String> valueMap) {
-        try {
-            return mvc.perform(
-                    get(url)
-                            .with(csrf())
-                            .params(valueMap)
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(get(url)
+                        .with(csrf())
+                        .params(valueMap)
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performGet(String url, MultiValueMap<String, String> valueMap, String username) {
-        try {
-            return mvc.perform(
-                    get(url)
-                            .with(csrf())
-                            .with(user(username))
-                            .params(valueMap)
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(get(url)
+                        .with(csrf())
+                        .with(user(username))
+                        .params(valueMap)
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performGetWithAuthorization(String url, String pathVariable, MultiValueMap<String, String> valueMap) {
-        try {
-            return mvc.perform(
-                    get(url + "/" + pathVariable)
-                            .with(csrf())
-                            .header("Authorization", "Bearer " + shared.getAccessToken())
-                            .params(valueMap)
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(get(url + "/" + pathVariable)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + shared.getAccessToken())
+                        .params(valueMap)
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performGetWithAuthorization(String url, MultiValueMap<String, String> valueMap) {
-        try {
-            return mvc.perform(
-                    get(url)
-                            .with(csrf())
-                            .header("Authorization", "Bearer " + shared.getAccessToken())
-                            .params(valueMap)
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(get(url)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + shared.getAccessToken())
+                        .params(valueMap)
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performGetWithAuthorization(String url) {
-        try {
-            return mvc.perform(
-                    get(url)
-                            .with(csrf())
-                            .header("Authorization", "Bearer " + shared.getAccessToken())
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(get(url)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + shared.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performPutWithAuthorization(String url, String pathVariable, String updatedResourceAlias) {
-        try {
-            return mvc.perform(
-                    put(url + "/" + pathVariable)
-                            .with(csrf())
-                            .header("Authorization", "Bearer " + shared.getAccessToken())
-                            .content(TestUtil.getObjectMapper().writeValueAsString(shared.get(updatedResourceAlias)))
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call put at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(put(url + "/" + pathVariable)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + shared.getAccessToken())
+                        .content(TestUtil.getObjectMapper().writeValueAsString(shared.get(updatedResourceAlias)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performPatchWithAuthorization(String url, String pathVariable, String changedValue) {
-        try {
-            return mvc.perform(
-                    patch(url + "/" + pathVariable)
-                            .with(csrf())
-                            .header("Authorization", "Bearer " + shared.getAccessToken())
-                            .content(changedValue)
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call patch at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(patch(url + "/" + pathVariable)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + shared.getAccessToken())
+                        .content(changedValue)
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected ResultActions performDeleteWithAuthorization(String url, String pathVariable) {
-        try {
-            return mvc.perform(
-                    delete(url + "/" + pathVariable)
-                            .with(csrf())
-                            .header("Authorization", "Bearer " + shared.getAccessToken())
-                            .contentType(MediaType.APPLICATION_JSON));
-        } catch (Exception e) {
-            fail(String.format("fail to call put at %s: %s", url, e.getMessage()));
-        }
-        return null;
+        return performAndCheckHttpStatus(
+                () -> mvc.perform(delete(url + "/" + pathVariable)
+                        .with(csrf())
+                        .header("Authorization", "Bearer " + shared.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                , url);
     }
 
     protected String getIdentification(String alias) {
@@ -281,4 +217,28 @@ public abstract class AbstractIntegrationTestSteps {
     private String getClientAuthBasic() {
         return "Basic " + Base64.getUrlEncoder().encodeToString((shared.getClientId() + ":" + shared.getClientSecret()).getBytes(StandardCharsets.UTF_8));
     }
+
+    private ResultActions performAndCheckHttpStatus(IPerform toPerform, String url) {
+        try {
+            ResultActions result = toPerform.perform();
+            shared.setHttpStatus(HttpStatus.resolve(result.andReturn().getResponse().getStatus()));
+            return result;
+        } catch (AuthenticationServiceException e) {
+            if (e.getMessage().startsWith("4") && e.getMessage().contains(":")) {
+                shared.setHttpStatus(HttpStatus.resolve(Integer.valueOf(e.getMessage().substring(0, 3))));
+                return null;
+            }
+            fail(String.format("fail with AuthenticationServiceException to call get at %s: %s", url, e.getMessage()));
+        } catch (Exception e) {
+            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
+        }
+        shared.setHttpStatus(null);
+        return null;
+    }
+
+    @FunctionalInterface
+    private interface IPerform {
+        ResultActions perform() throws Exception;
+    }
+
 }

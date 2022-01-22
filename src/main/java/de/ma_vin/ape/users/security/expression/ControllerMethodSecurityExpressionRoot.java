@@ -7,7 +7,7 @@ import lombok.Setter;
 import org.springframework.security.access.expression.SecurityExpressionRoot;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionOperations;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 
 import java.util.Optional;
 
@@ -140,7 +140,7 @@ public class ControllerMethodSecurityExpressionRoot extends SecurityExpressionRo
     }
 
     private Optional<String> getUsername() {
-        return getAuthentication().getPrincipal() instanceof DefaultOAuth2AuthenticatedPrincipal ?
-                Optional.of(((DefaultOAuth2AuthenticatedPrincipal) getAuthentication().getPrincipal()).getName()) : Optional.empty();
+        return getAuthentication().getPrincipal() instanceof OAuth2AuthenticatedPrincipal ?
+                Optional.of(((OAuth2AuthenticatedPrincipal) getAuthentication().getPrincipal()).getName()) : Optional.empty();
     }
 }

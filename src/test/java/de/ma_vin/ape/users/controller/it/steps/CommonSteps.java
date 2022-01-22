@@ -5,11 +5,15 @@ import de.ma_vin.ape.utils.controller.response.Status;
 import io.cucumber.java.Before;
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.Then;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsAnything.anything;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class CommonSteps extends AbstractIntegrationTestSteps {
@@ -37,8 +41,13 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
     }
 
     @Then("The result is a {httpCodeRange}")
-    public void checkResponseIsHttpCode(ResultMatcher codeMatcher) throws Exception {
-        shared.getResultActions().andExpect(codeMatcher);
+    public void checkResponseIsHttpCode(HttpCodeRange httpCodeRange) throws Exception {
+        if (shared.getResultActions() != null) {
+            shared.getResultActions().andExpect(httpCodeRange.getResultMatcher());
+        } else {
+            assertTrue(httpCodeRange.check(shared.getHttpStatus())
+                    , String.format("Wrong status. expected type %s but was %d", httpCodeRange.getValue(), shared.getHttpStatus().value()));
+        }
     }
 
     @Then("The status of the result should be {string}")
@@ -147,14 +156,36 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
     }
 
     @ParameterType(value = "1xx|2xx|3xx|4xx|5xx")
-    public ResultMatcher httpCodeRange(String value) {
-        return switch (value) {
-            case "1xx" -> status().is1xxInformational();
-            case "2xx" -> status().is2xxSuccessful();
-            case "3xx" -> status().is3xxRedirection();
-            case "4xx" -> status().is4xxClientError();
-            case "5xx" -> status().is5xxServerError();
-            default -> null;
-        };
+    public HttpCodeRange httpCodeRange(String value) {
+        return new HttpCodeRange(value);
+    }
+
+    @Data
+    private class HttpCodeRange {
+        String value;
+        ResultMatcher resultMatcher;
+
+        HttpCodeRange(String value) {
+            this.value = value;
+            resultMatcher = switch (value) {
+                case "1xx" -> status().is1xxInformational();
+                case "2xx" -> status().is2xxSuccessful();
+                case "3xx" -> status().is3xxRedirection();
+                case "4xx" -> status().is4xxClientError();
+                case "5xx" -> status().is5xxServerError();
+                default -> null;
+            };
+        }
+
+        boolean check(HttpStatus httpStatus) {
+            return switch (value) {
+                case "1xx" -> httpStatus.is1xxInformational();
+                case "2xx" -> httpStatus.is2xxSuccessful();
+                case "3xx" -> httpStatus.is3xxRedirection();
+                case "4xx" -> httpStatus.is4xxClientError();
+                case "5xx" -> httpStatus.is5xxServerError();
+                default -> false;
+            };
+        }
     }
 }
