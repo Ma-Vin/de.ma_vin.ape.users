@@ -4,19 +4,12 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
-    #url: jdbc:mysql://users-db.cdyqyamlyqlv.eu-central-1.rds.amazonaws.com:3306/usersDb?createDatabaseIfNotExist=true
-    #driver-class-name: com.mysql.cj.jdbc.Driver
-    #username: admin
-    #password: 394d2dcb3ece1ab6a9fbae5a00e0ddd8
   h2:
     console:
       enabled: true
       path: /h2-console
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
-    #database-platform: org.hibernate.dialect.MySQL8Dialect
-    #hibernate:
-      #ddl-auto: update
   security:
     oauth2:
       resourceserver:
@@ -26,7 +19,7 @@ spring:
           introspection-client-secret: f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15
 logging:
   level:
-    root: DEBUG
+    root: INFO
 db:
   user:
     isToInitialize: true
@@ -40,10 +33,6 @@ authorizeCodeExpiresInSeconds: 600
 auth:
   clients:
     - clientId: users
-      secret: f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15
-      redirects:
-        - redirect-start: http://localhost:8080/
-    - clientId: ape.user.ui
       secret: f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15
       redirects:
         - redirect-start: http://localhost:8080/

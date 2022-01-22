@@ -50,10 +50,6 @@ jobs:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1
-      with:
-        languages: java
     - name: Build ape
       run: mvn -B clean install --file apeparent/pom.xml
     - name: Build apeutils
@@ -65,7 +61,3 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.APE_DEPENDENCY_BUILD_PAT }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: mvn -B clean install org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -P sonar-cloud,gen-model --file main/pom.xml --settings maven/settings.xml
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
-      with:
-        path: main
