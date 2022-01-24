@@ -5,9 +5,11 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   build:
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || ( github.event_name == 'workflow_dispatch' && github.event.ref == 'master' )
 
     runs-on: ubuntu-latest
 
