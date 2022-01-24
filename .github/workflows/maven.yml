@@ -9,11 +9,14 @@ on:
 
 jobs:
   build:
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || ( github.event_name == 'workflow_dispatch' && github.event.ref == 'master' )
+    #if: github.event_name == 'push' || github.event_name == 'pull_request' || ( github.event_name == 'workflow_dispatch' && github.event.ref == 'master' )
 
     runs-on: ubuntu-latest
 
     steps:
+      - name:
+        run: echo "github.event_name ${{ github.event_name }} github.event.ref ${{ github.event.ref }}"
+
       - name: Checkout users
         uses: actions/checkout@v2
         with:
