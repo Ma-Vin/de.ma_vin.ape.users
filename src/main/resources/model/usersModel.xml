@@ -132,13 +132,32 @@
                 </entity>
             </entities>
         </grouping>
+        <grouping groupingPackage="group.part">
+            <entities>
+                <entity baseName="CommonGroupPart" derivedFrom="CommonGroup">
+                    <fields>
+                        <field fieldName="groupName" type="String"/>
+                    </fields>
+                </entity>
+                <entity baseName="PrivilegeGroupPart" derivedFrom="PrivilegeGroup">
+                    <fields>
+                        <field fieldName="groupName" type="String"/>
+                    </fields>
+                </entity>
+                <entity baseName="BaseGroupPart" derivedFrom="BaseGroup">
+                    <fields>
+                        <field fieldName="groupName" type="String"/>
+                    </fields>
+                </entity>
+            </entities>
+        </grouping>
         <grouping groupingPackage="user">
             <entities>
                 <entity baseName="User" identificationPrefix="U"
                         description="User which is used to identify and to assign privileges at">
                     <fields>
-                        <field fieldName="firstName" type="String"/>
-                        <field fieldName="lastName" type="String"/>
+                        <field fieldName="firstName" type="String" shortDescription="First name of the user"/>
+                        <field fieldName="lastName" type="String" shortDescription="Last name of the user"/>
                         <field fieldName="mail" type="String"/>
                         <field fieldName="validFrom" type="LocalDateTime" typePackage="java.time"/>
                         <field fieldName="validTo" type="LocalDateTime" typePackage="java.time"/>
@@ -154,6 +173,16 @@
                         <reference referenceName="image" targetEntity="UserResource"/>
                         <reference referenceName="smallImage" targetEntity="UserResource"/>
                     </references>
+                </entity>
+            </entities>
+        </grouping>
+        <grouping groupingPackage="user.part">
+            <entities>
+                <entity baseName="UserPart" derivedFrom="User">
+                    <fields>
+                        <field fieldName="firstName" type="String"/>
+                        <field fieldName="lastName" type="String"/>
+                    </fields>
                 </entity>
             </entities>
         </grouping>

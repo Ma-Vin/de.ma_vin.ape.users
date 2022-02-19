@@ -323,6 +323,18 @@ Two static function are to provide:
     </xs:attribute>
             
     
+    <xs:attribute name="derivedFrom" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[Entity to derive from.
+Generated Mapper work only one way, from domain model to transport one]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
     <xs:attribute name="genIdIfDto" type="xs:boolean">
             
       <xs:annotation>
