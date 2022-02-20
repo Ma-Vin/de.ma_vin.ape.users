@@ -149,6 +149,14 @@
                         <field fieldName="groupName" type="String"/>
                     </fields>
                 </entity>
+                <entity baseName="UserRolePart" models="DTO" genIdIfDto="false">
+                    <fields>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
+                    </fields>
+                    <references>
+                        <reference referenceName="user" targetEntity="UserPart"/>
+                    </references>
+                </entity>
             </entities>
         </grouping>
         <grouping groupingPackage="user">

@@ -3,9 +3,11 @@ package de.ma_vin.ape.users.controller;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.dto.IBasicTransportable;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.UserRolePartDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
 import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
 import de.ma_vin.ape.users.model.gen.mapper.UserPartTransportMapper;
@@ -269,6 +271,46 @@ public class UserController extends AbstractDefaultOperationController {
             , @RequestParam(required = false) Boolean dissolveSubgroups, @RequestParam(required = false) Role role
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
+        return getAllUsersFromPrivilegeGroup(privilegeGroupIdentification, dissolveSubgroups, role, page, size
+                , (u, r) -> {
+                    UserRoleDto userRoleDto = new UserRoleDto();
+                    userRoleDto.setRole(r);
+                    userRoleDto.setUser(UserTransportMapper.convertToUserDto(u));
+                    return userRoleDto;
+                });
+    }
+
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/getAllUserPartsFromPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserRolePartDto>> getAllUserPartsFromPrivilegeGroup(@PathVariable String privilegeGroupIdentification
+            , @RequestParam(required = false) Boolean dissolveSubgroups, @RequestParam(required = false) Role role
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return getAllUsersFromPrivilegeGroup(privilegeGroupIdentification, dissolveSubgroups, role, page, size
+                , (u, r) -> {
+                    UserRolePartDto userRoleDto = new UserRolePartDto();
+                    userRoleDto.setRole(r);
+                    userRoleDto.setUser(UserPartTransportMapper.convertToUserPartDto(u));
+                    return userRoleDto;
+                });
+    }
+
+    /**
+     * Loads all users and converts them to a wrapped list of {@code T} elements
+     *
+     * @param privilegeGroupIdentification the parent privilege group
+     * @param dissolveSubgroups            indicator if the users of subgroups should also be added
+     * @param role                         role of the users. If null or Role.NOT_RELEVANT all roles will be loaded
+     * @param page                         zero-based page index, must not be negative.
+     * @param size                         the size of the page to be returned, must be greater than 0.
+     * @param mapper                       a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                          the transport model
+     * @return a wrapped list of loaded users
+     */
+    private <T extends IBasicTransportable> ResponseWrapper<List<T>> getAllUsersFromPrivilegeGroup(String privilegeGroupIdentification
+            , Boolean dissolveSubgroups, Role role, Integer page, Integer size, UserRoleMapper<T> mapper) {
+
         int pageToUse = page == null ? DEFAULT_PAGE : page;
         int sizeToUse = size == null ? DEFAULT_SIZE : size;
 
@@ -276,20 +318,20 @@ public class UserController extends AbstractDefaultOperationController {
                 ? userService.findAllUsersAtPrivilegeGroup(privilegeGroupIdentification, role, Boolean.TRUE.equals(dissolveSubgroups))
                 : userService.findAllUsersAtPrivilegeGroup(privilegeGroupIdentification, role, pageToUse, sizeToUse);
 
-        List<UserRoleDto> result = rolesWithUsers.entrySet().stream()
+        List<T> result = rolesWithUsers.entrySet().stream()
                 .flatMap(e -> e.getValue().stream()
-                        .map(u -> {
-                            UserRoleDto userRoleDto = new UserRoleDto();
-                            userRoleDto.setRole(e.getKey());
-                            userRoleDto.setUser(UserTransportMapper.convertToUserDto(u));
-                            return userRoleDto;
-                        }))
+                        .map(u -> mapper.map(u, e.getKey())))
                 .collect(Collectors.toList());
 
-        ResponseWrapper<List<UserRoleDto>> responseWrapper = createPageableResponse(result, page, size);
+        ResponseWrapper<List<T>> responseWrapper = createPageableResponse(result, page, size);
         if (Boolean.TRUE.equals(dissolveSubgroups) && (page != null || size != null)) {
             responseWrapper.addMessage("Dissolving subgroups is not available while using pages", Status.WARN);
         }
         return responseWrapper;
+    }
+
+    @FunctionalInterface
+    private interface UserRoleMapper<T extends IBasicTransportable> {
+        T map(User user, Role role);
     }
 }

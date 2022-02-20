@@ -16,6 +16,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.UserRolePartDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
 import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
@@ -919,6 +920,95 @@ public class UserControllerTest {
         mockDefaultGetAllUsersFromPrivilegeGroup();
 
         ResponseWrapper<List<UserRoleDto>> response = cut.getAllUsersFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.TRUE, Role.ADMIN, 2, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+
+    @DisplayName("Get all user parts from privilege group")
+    @Test
+    public void testGetAllUserPartsFromPrivilegeGroup() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
+
+        ResponseWrapper<List<UserRolePartDto>> response = cut.getAllUserPartsFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any());
+    }
+
+    @DisplayName("Get all user parts from privilege group with pages, but missing page")
+    @Test
+    public void testGetAllUserPartsFromPrivilegeGroupPageableMissingPage() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
+
+        ResponseWrapper<List<UserRolePartDto>> response = cut.getAllUserPartsFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all user parts from privilege group with pages, but missing size")
+    @Test
+    public void testGetAllUserPartsFromPrivilegeGroupPageableMissingSize() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
+
+        ResponseWrapper<List<UserRolePartDto>> response = cut.getAllUserPartsFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all user parts from privilege group with pages")
+    @Test
+    public void testGetAllUserPartsFromPrivilegeGroupPageable() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
+
+        ResponseWrapper<List<UserRolePartDto>> response = cut.getAllUserPartsFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.FALSE, Role.ADMIN, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getUser().getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.ADMIN, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+
+        verify(userService, never()).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean());
+        verify(userService).findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all user parts from privilege group with pages, but dissolving subgroups")
+    @Test
+    public void testGetAllUserPartsFromPrivilegeGroupPageableDissolving() {
+        mockDefaultGetAllUsersFromPrivilegeGroup();
+
+        ResponseWrapper<List<UserRolePartDto>> response = cut.getAllUserPartsFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Boolean.TRUE, Role.ADMIN, 2, 20);
 
         checkWarn(response);
 

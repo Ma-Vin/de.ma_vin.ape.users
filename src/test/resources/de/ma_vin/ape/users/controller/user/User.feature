@@ -122,6 +122,12 @@ Feature: Testing methods of the user controller
     And The identification of "user" at 0 is the same like the one of alias "directUser"
     And The identification of "user" at 1 is the same like the one of alias "indirectUser"
     And At response position 2 does not exists
+    When Controller is called to get all user parts of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups true
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "user" at 0 is the same like the one of alias "directUser"
+    And The identification of "user" at 1 is the same like the one of alias "indirectUser"
+    And At response position 2 does not exists
     When Controller is called to get all user of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups false
     Then The result is Ok and Json
     And The status of the result should be "OK"

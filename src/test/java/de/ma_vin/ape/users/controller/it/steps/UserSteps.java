@@ -202,6 +202,12 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/user/getAllUsersFromPrivilegeGroup", getIdentification(privilegeGroupAlias), findAllUsers));
     }
 
+    @When("Controller is called to get all user parts of privilege group with alias {string} with role {roleValue} and dissolving sub groups {booleanValue}")
+    public void callControllerToGetAllUserPartsFromPrivilegeGroup(String privilegeGroupAlias, Role role, Boolean dissolveSubgroups) {
+        MultiValueMap<String, String> findAllUsers = createValueMap("dissolveSubgroups", dissolveSubgroups.toString(), "role", role.name());
+        shared.setResultActions(performGetWithAuthorization("/user/getAllUserPartsFromPrivilegeGroup", getIdentification(privilegeGroupAlias), findAllUsers));
+    }
+
     @When("Controller is called to get all users with role {roleValue} at page {int} with size {int} from privilege group with alias {string}")
     public void callControllerToGetAllUsersFromPrivilegeGroup(Role role, int page, int size, String privilegeGroupAlias) {
         MultiValueMap<String, String> getAllUsersValues = createValueMap("page", "" + page, "size", "" + size, "role", role.name());
