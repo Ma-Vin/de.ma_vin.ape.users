@@ -65,6 +65,11 @@ Feature: Testing methods of the base group controller
     And The status of the result should be "OK"
     And The identification at 0 is the same like the one of alias "subBase"
     And The "identification" property at response position 1 does not exists
+    When Controller is called to get all sub group parts of base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "subBase"
+    And The "identification" property at response position 1 does not exists
     When Controller is called to remove the base group with alias "subBase" from base group with alias "parentBase"
     Then The result is Ok and Json
     And The status of the result should be "OK"

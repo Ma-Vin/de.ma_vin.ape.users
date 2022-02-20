@@ -134,6 +134,8 @@ Feature: Testing security at methods of the base group controller
     Then The result is a <httpCodeRange>
     When Controller is called to get all sub groups of base group with alias "parentBase"
     Then The result is a <httpCodeRange>
+    When Controller is called to get all sub group parts of base group with alias "parentBase"
+    Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 2xx           |

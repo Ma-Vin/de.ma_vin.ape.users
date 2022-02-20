@@ -218,17 +218,34 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     ResponseWrapper<List<BaseGroupDto>> findAllBaseAtBaseGroup(@PathVariable String parentGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        int pageToUse = page == null ? DEFAULT_PAGE : page;
-        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+        return findAllBaseAtBaseGroup(parentGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
+    }
 
-        List<BaseGroup> baseGroups = page == null && size == null
-                ? baseGroupService.findAllBasesAtBaseGroup(parentGroupIdentification)
-                : baseGroupService.findAllBasesAtBaseGroup(parentGroupIdentification, pageToUse, sizeToUse);
+    @PreAuthorize("isVisitor(#parentGroupIdentification, 'BASE')")
+    @GetMapping("/findAllBasePartAtBaseGroup/{parentGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupPartDto>> findAllBasePartAtBaseGroup(@PathVariable String parentGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        List<BaseGroupDto> result = baseGroups.stream()
-                .map(GroupTransportMapper::convertToBaseGroupDto)
-                .collect(Collectors.toList());
+        return findAllBaseAtBaseGroup(parentGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+    }
 
-        return createPageableResponse(result, page, size);
+    /**
+     * Loads all base groups at a base one and converts them to a wrapped list of {@code T} elements
+     *
+     * @param baseGroupIdentification the parent privilege group
+     * @param page                    zero-based page index, must not be negative.
+     * @param size                    the size of the page to be returned, must be greater than 0.
+     * @param mapper                  a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                     the transport model
+     * @return a wrapped list of loaded base groups
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> findAllBaseAtBaseGroup(String baseGroupIdentification
+            , Integer page, Integer size, Function<BaseGroup, T> mapper) {
+
+        return getAllSubElements(baseGroupIdentification, page, size
+                , identification -> baseGroupService.findAllBasesAtBaseGroup(identification)
+                , (identification, pageToUse, sizeToUse) -> baseGroupService.findAllBasesAtBaseGroup(identification, pageToUse, sizeToUse)
+                , mapper);
     }
 }
