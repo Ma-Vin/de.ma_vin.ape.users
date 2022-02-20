@@ -101,6 +101,11 @@ public class CommonGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/group/common/getAllCommonGroups"));
     }
 
+    @When("Controller is called to get all common group parts")
+    public void callControllerToGetAllCommonGroupParts() {
+        shared.setResultActions(performGetWithAuthorization("/group/common/getAllCommonGroupParts"));
+    }
+
     @When("Controller is called to get all common groups at page {int} with size {int}")
     public void callControllerToGetAllCommonGroups(int page, int size) {
         MultiValueMap<String, String> getAllCommonGroupsValues = createValueMap("page", "" + page, "size", "" + size);

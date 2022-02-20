@@ -55,6 +55,15 @@ Feature: Testing methods of the common group controller
     And The identification at 3 is the same like the one of alias "group4"
     And The identification at 4 is the same like the one of alias "group5"
     And The "identification" property at response position 5 does not exists
+    When Controller is called to get all common group parts
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "group1"
+    And The identification at 1 is the same like the one of alias "group2"
+    And The identification at 2 is the same like the one of alias "group3"
+    And The identification at 3 is the same like the one of alias "group4"
+    And The identification at 4 is the same like the one of alias "group5"
+    And The "identification" property at response position 5 does not exists
     When Controller is called to get all common groups at page 0 with size 4
     Then The result is Ok and Json
     And The status of the result should be "OK"

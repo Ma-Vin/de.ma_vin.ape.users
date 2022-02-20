@@ -12,6 +12,7 @@ import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.CommonGroupDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.CommonGroupPartDto;
 import de.ma_vin.ape.users.service.CommonGroupService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -224,6 +225,74 @@ public class CommonGroupControllerTest {
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
         ResponseWrapper<List<CommonGroupDto>> response = cut.getAllCommonGroups(2, null);
+
+        checkWarn(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at common group");
+
+        verify(commonGroupService, never()).findAllCommonGroups();
+        verify(commonGroupService).findAllCommonGroups(eq(Integer.valueOf(2)), eq(DEFAULT_SIZE));
+    }
+
+    @DisplayName("Get all common group parts without pages")
+    @Test
+    public void testGetAllCommonGroupParts() {
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
+        when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
+
+        ResponseWrapper<List<CommonGroupPartDto>> response = cut.getAllCommonGroupParts(null, null);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at common group");
+
+        verify(commonGroupService).findAllCommonGroups();
+        verify(commonGroupService, never()).findAllCommonGroups(any(), any());
+    }
+
+    @DisplayName("Get all common group parts with pages")
+    @Test
+    public void testGetAllCommonGroupPartsWithPages() {
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
+        when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
+
+        ResponseWrapper<List<CommonGroupPartDto>> response = cut.getAllCommonGroupParts(2, 20);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at common group");
+
+        verify(commonGroupService, never()).findAllCommonGroups();
+        verify(commonGroupService).findAllCommonGroups(eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all common group parts with pages, but missing page")
+    @Test
+    public void testGetAllCommonGroupPartsWithPagesMissingPage() {
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
+        when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
+
+        ResponseWrapper<List<CommonGroupPartDto>> response = cut.getAllCommonGroupParts(null, 20);
+
+        checkWarn(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
+        assertEquals(COMMON_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at common group");
+
+        verify(commonGroupService, never()).findAllCommonGroups();
+        verify(commonGroupService).findAllCommonGroups(eq(DEFAULT_PAGE), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all common group parts with pages, but missing size")
+    @Test
+    public void testGetAllCommonGroupPartsWithPagesMissingSize() {
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
+        when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
+
+        ResponseWrapper<List<CommonGroupPartDto>> response = cut.getAllCommonGroupParts(2, null);
 
         checkWarn(response);
         assertEquals(1, response.getResponse().size(), "Wrong number of common groups");
