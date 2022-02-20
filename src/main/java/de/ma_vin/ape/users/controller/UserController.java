@@ -3,9 +3,12 @@ package de.ma_vin.ape.users.controller;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
+import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
+import de.ma_vin.ape.users.model.gen.mapper.UserPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.UserTransportMapper;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.users.service.UserService;
@@ -18,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
@@ -117,18 +121,35 @@ public class UserController extends AbstractDefaultOperationController {
     ResponseWrapper<List<UserDto>> getAllUsers(@PathVariable String commonGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        int pageToUse = page == null ? DEFAULT_PAGE : page;
-        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+        return getAllUsers(commonGroupIdentification, page, size, UserTransportMapper::convertToUserDto);
+    }
 
-        List<User> users = page == null && size == null
-                ? userService.findAllUsersAtCommonGroup(commonGroupIdentification)
-                : userService.findAllUsersAtCommonGroup(commonGroupIdentification, pageToUse, sizeToUse);
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
+    @GetMapping("/getAllUserParts/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserPartDto>> getAllUserParts(@PathVariable String commonGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        List<UserDto> result = users.stream()
-                .map(UserTransportMapper::convertToUserDto)
-                .collect(Collectors.toList());
+        return getAllUsers(commonGroupIdentification, page, size, UserPartTransportMapper::convertToUserPartDto);
+    }
 
-        return createPageableResponse(result, page, size);
+    /**
+     * Loads all users and converts them to a wrapped list of {@code T} elements
+     *
+     * @param commonGroupIdentification the parent common group
+     * @param page                      zero-based page index, must not be negative.
+     * @param size                      the size of the page to be returned, must be greater than 0.
+     * @param mapper                    a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                       the transport model
+     * @return a wrapped list of loaded users
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllUsers(String commonGroupIdentification
+            , Integer page, Integer size, Function<User, T> mapper) {
+
+        return getAllSubElements(commonGroupIdentification, page, size
+                , identification -> userService.findAllUsersAtCommonGroup(identification)
+                , (identification, pageToUse, sizeToUse) -> userService.findAllUsersAtCommonGroup(identification, pageToUse, sizeToUse)
+                , mapper);
     }
 
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")

@@ -17,6 +17,7 @@ import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
+import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.users.service.UserService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
@@ -559,6 +560,73 @@ public class UserControllerTest {
         mockDefaultGetAllUsers();
 
         ResponseWrapper<List<UserDto>> response = cut.getAllUsers(COMMON_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+
+    @DisplayName("Get all user parts from common group")
+    @Test
+    public void testGetAllUserParts() {
+        mockDefaultGetAllUsers();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAllUserParts(COMMON_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService, never()).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all user parts from common group with pages, but missing page")
+    @Test
+    public void testGetAllUserPartsPageableMissingPage() {
+        mockDefaultGetAllUsers();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAllUserParts(COMMON_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all user parts from common group with pages, but missing size")
+    @Test
+    public void testGetAllUserPartsPageableMissingSize() {
+        mockDefaultGetAllUsers();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAllUserParts(COMMON_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all user parts from common group with pages")
+    @Test
+    public void testGetAllUserPartsPageable() {
+        mockDefaultGetAllUsers();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAllUserParts(COMMON_GROUP_IDENTIFICATION, 2, 20);
 
         checkOk(response);
 

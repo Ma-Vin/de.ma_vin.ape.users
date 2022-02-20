@@ -33,6 +33,12 @@ Feature: Testing methods of the user controller
     And The identification at 0 is the same like the one of alias "user"
     And The identification at 1 is the same like the one of alias "anotherUser"
     And The "identification" property at response position 2 does not exists
+    When Controller is called to get all user parts from common group with identification of "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user"
+    And The identification at 1 is the same like the one of alias "anotherUser"
+    And The "identification" property at response position 2 does not exists
 
   Scenario: Add, count and remove users at base groups
     Given There exists an user with first name "Direct" and last name "User" with alias "directUser" at common group "common"

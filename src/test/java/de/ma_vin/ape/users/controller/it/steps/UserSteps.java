@@ -130,6 +130,11 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/user/getAllUsers", getIdentification(commonGroupAlias)));
     }
 
+    @When("Controller is called to get all user parts from common group with identification of {string}")
+    public void callControllerToGetAllUserParts(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/getAllUserParts", getIdentification(commonGroupAlias)));
+    }
+
     @When("Controller is called to get all users at page {int} with size {int} from common group with alias {string}")
     public void callControllerToGetAllUsers(int page, int size, String commonGroupAlias) {
         MultiValueMap<String, String> getAllUsersValues = createValueMap("page", "" + page
