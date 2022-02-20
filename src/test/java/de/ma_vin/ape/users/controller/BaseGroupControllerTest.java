@@ -536,6 +536,72 @@ public class BaseGroupControllerTest {
         when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
     }
 
+    @DisplayName("Find all base group parts at privilege group")
+    @Test
+    public void testFindAllBasePartAtPrivilegeGroup() {
+        mockDefaultFindAllBaseAtPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.findAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER));
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any());
+    }
+
+    @DisplayName("Find all base group parts at privilege group with pages, but missing page")
+    @Test
+    public void testFindAllBasePartAtPrivilegeGroupPageableMissingPage() {
+        mockDefaultFindAllBaseAtPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.findAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Find all base group parts at privilege group with pages, but missing size")
+    @Test
+    public void testFindAllBasePartAtPrivilegeGroupPageableMissingSize() {
+        mockDefaultFindAllBaseAtPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.findAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Find all base group parts at privilege group with pages")
+    @Test
+    public void testFindAllBasePartAtPrivilegeGroupPageable() {
+        mockDefaultFindAllBaseAtPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.findAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
+        verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
     @DisplayName("Get all base groups")
     @Test
     public void testGetAllBaseGroups() {

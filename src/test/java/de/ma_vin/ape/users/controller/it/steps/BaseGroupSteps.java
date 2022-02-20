@@ -172,6 +172,11 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
     }
 
+    @When("Controller is called to get all sub base group parts of privilege group with alias {string}")
+    public void callControllerToFindAllBasePartAtPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBasePartAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    }
+
     @When("Controller is called to get all sub base groups of privilege group with alias {string} and role {roleValue}")
     public void callControllerToFindAllBaseAtPrivilegeGroup(String privilegeGroupAlias, Role role) {
         MultiValueMap<String, String> findAllBaseAtPrivilegeGroupValues = createValueMap("role", "" + role.name());

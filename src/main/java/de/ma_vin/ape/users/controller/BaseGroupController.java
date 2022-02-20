@@ -153,18 +153,36 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        int pageToUse = page == null ? DEFAULT_PAGE : page;
-        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+        return findAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, GroupTransportMapper::convertToBaseGroupDto);
+    }
 
-        List<BaseGroup> baseGroups = page == null && size == null
-                ? baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification, role)
-                : baseGroupService.findAllBaseAtPrivilegeGroup(parentGroupIdentification, role, pageToUse, sizeToUse);
+    @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/findAllBasePartAtPrivilegeGroup/{parentGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupPartDto>> findAllBasePartAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        List<BaseGroupDto> result = baseGroups.stream()
-                .map(GroupTransportMapper::convertToBaseGroupDto)
-                .collect(Collectors.toList());
+        return findAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+    }
 
-        return createPageableResponse(result, page, size);
+    /**
+     * Loads all base groups at a privilege one and converts them to a wrapped list of {@code T} elements
+     *
+     * @param privilegeGroupIdentification the parent privilege group
+     * @param role                         role of base groups at privilege group. If the role is given, the result is filtered by this role
+     * @param page                         zero-based page index, must not be negative.
+     * @param size                         the size of the page to be returned, must be greater than 0.
+     * @param mapper                       a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                          the transport model
+     * @return a wrapped list of loaded base groups
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> findAllBaseAtPrivilegeGroup(String privilegeGroupIdentification
+            , Role role, Integer page, Integer size, Function<BaseGroup, T> mapper) {
+
+        return getAllSubElements(privilegeGroupIdentification, page, size
+                , identification -> baseGroupService.findAllBaseAtPrivilegeGroup(identification, role)
+                , (identification, pageToUse, sizeToUse) -> baseGroupService.findAllBaseAtPrivilegeGroup(identification, role, pageToUse, sizeToUse)
+                , mapper);
     }
 
     @PreAuthorize("isContributor(#parentGroupIdentification, 'BASE')")

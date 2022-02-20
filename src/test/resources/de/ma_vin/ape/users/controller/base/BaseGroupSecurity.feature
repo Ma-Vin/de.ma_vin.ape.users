@@ -130,6 +130,8 @@ Feature: Testing security at methods of the base group controller
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to get all sub base groups of privilege group with alias "parentPrivilege"
     Then The result is a <httpCodeRange>
+    When Controller is called to get all sub base group parts of privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRange>
     When Controller is called to get all sub groups of base group with alias "parentBase"
     Then The result is a <httpCodeRange>
     Examples:
