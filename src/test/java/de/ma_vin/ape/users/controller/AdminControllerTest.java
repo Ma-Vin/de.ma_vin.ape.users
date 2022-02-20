@@ -4,6 +4,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.AdminGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
+import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
 import de.ma_vin.ape.users.service.AdminGroupService;
 import de.ma_vin.ape.users.service.UserService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
@@ -409,6 +410,73 @@ public class AdminControllerTest {
         mockDefaultGetAllAdmins();
 
         ResponseWrapper<List<UserDto>> response = cut.getAllAdmins(ADMIN_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+
+    @DisplayName("Get all user parts from admin group")
+    @Test
+    public void testGetAllAdminParts() {
+        mockDefaultGetAllAdmins();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAllAdminParts(ADMIN_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
+        verify(userService, never()).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all user parts from admin group with pages, but missing page")
+    @Test
+    public void testGetAllAdminPartsPageableMissingPage() {
+        mockDefaultGetAllAdmins();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAllAdminParts(ADMIN_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all user parts from admin group with pages, but missing size")
+    @Test
+    public void testGetAllAdminPartsPageableMissingSize() {
+        mockDefaultGetAllAdmins();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAllAdminParts(ADMIN_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
+        verify(userService).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all user parts from admin group with pages")
+    @Test
+    public void testGetAllAdminPartsPageable() {
+        mockDefaultGetAllAdmins();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAllAdminParts(ADMIN_GROUP_IDENTIFICATION, 2, 20);
 
         checkOk(response);
 

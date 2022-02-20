@@ -51,6 +51,8 @@ Feature: Testing security at methods of the admin group controller
     Then The result is a <httpCodeRange>
     When Controller is called to get all admins from admin group with identification of "adminGroup"
     Then The result is a <httpCodeRange>
+    When Controller is called to get all admin parts from admin group with identification of "adminGroup"
+    Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |

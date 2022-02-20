@@ -52,6 +52,10 @@ Feature: Testing methods of the admin group controller
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And There are not more entries than the number of created admins
+    When Controller is called to get all admin parts from admin group with identification of "adminGroup"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And There are not more entries than the number of created admins
 
   Scenario: Update and get admin
     Given There exists an admin with first name "New" and last name "Admin" with alias "newAdmin" at admin group "adminGroup"

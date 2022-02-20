@@ -103,6 +103,11 @@ public class AdminGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/admin/getAllAdmins", getIdentification(adminGroupAlias)));
     }
 
+    @When("Controller is called to get all admin parts from admin group with identification of {string}")
+    public void callControllerToGetAllAdminParts(String adminGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/admin/getAllAdminParts", getIdentification(adminGroupAlias)));
+    }
+
     @When("Controller is called to update the admin with the identification of the alias {string}")
     public void callControllerToUpdateAdmin(String adminAlias) {
         shared.setResultActions(performPutWithAuthorization("/admin/updateAdmin", getIdentification(adminAlias), adminAlias));

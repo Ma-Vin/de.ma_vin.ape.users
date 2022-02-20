@@ -4,9 +4,12 @@ import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.AdminGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
+import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
+import de.ma_vin.ape.users.model.gen.mapper.UserPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.UserTransportMapper;
 import de.ma_vin.ape.users.service.AdminGroupService;
 import de.ma_vin.ape.users.service.UserService;
@@ -19,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createEmptyResponseWithError;
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createSuccessResponse;
@@ -96,23 +99,40 @@ public class AdminController extends AbstractDefaultOperationController {
     }
 
     @PreAuthorize("isGlobalAdmin()")
-    @GetMapping("/getAllAdmins/{commonGroupIdentification}")
+    @GetMapping("/getAllAdmins/{adminGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<UserDto>> getAllAdmins(@PathVariable String commonGroupIdentification
+    ResponseWrapper<List<UserDto>> getAllAdmins(@PathVariable String adminGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        int pageToUse = page == null ? DEFAULT_PAGE : page;
-        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+        return getAllAdmins(adminGroupIdentification, page, size, UserTransportMapper::convertToUserDto);
+    }
 
-        List<User> users = page == null && size == null
-                ? userService.findAllUsersAtAdminGroup(commonGroupIdentification)
-                : userService.findAllUsersAtAdminGroup(commonGroupIdentification, pageToUse, sizeToUse);
+    @PreAuthorize("isGlobalAdmin()")
+    @GetMapping("/getAllAdminParts/{adminGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserPartDto>> getAllAdminParts(@PathVariable String adminGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        List<UserDto> result = users.stream()
-                .map(UserTransportMapper::convertToUserDto)
-                .collect(Collectors.toList());
+        return getAllAdmins(adminGroupIdentification, page, size, UserPartTransportMapper::convertToUserPartDto);
+    }
 
-        return createPageableResponse(result, page, size);
+    /**
+     * Loads all admins and converts them to a wrapped list of {@code T} elements
+     *
+     * @param adminGroupIdentification the parent admin group
+     * @param page                     zero-based page index, must not be negative.
+     * @param size                     the size of the page to be returned, must be greater than 0.
+     * @param mapper                   a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                      the transport model
+     * @return a wrapped list of loaded admins
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllAdmins(String adminGroupIdentification
+            , Integer page, Integer size, Function<User, T> mapper) {
+
+        return getAllSubElements(adminGroupIdentification, page, size
+                , identification -> userService.findAllUsersAtAdminGroup(identification)
+                , (identification, pageToUse, sizeToUse) -> userService.findAllUsersAtAdminGroup(identification, pageToUse, sizeToUse)
+                , mapper);
     }
 
     @PreAuthorize("isGlobalAdmin()")
