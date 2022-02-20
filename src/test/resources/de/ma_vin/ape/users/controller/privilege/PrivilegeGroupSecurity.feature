@@ -48,6 +48,8 @@ Feature: Testing methods of the privilege group controller
     Then The result is a <httpCodeRange>
     When Controller is called to get all privilege groups from common group with alias "common"
     Then The result is a <httpCodeRange>
+    When Controller is called to get all privilege group parts from common group with alias "common"
+    Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 2xx           |

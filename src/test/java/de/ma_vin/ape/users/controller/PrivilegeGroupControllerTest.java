@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.controller;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.dto.group.PrivilegeGroupDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.PrivilegeGroupPartDto;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -310,6 +311,72 @@ public class PrivilegeGroupControllerTest {
         mockDefaultGetAllPrivilegeGroups();
 
         ResponseWrapper<List<PrivilegeGroupDto>> response = cut.getAllPrivilegeGroups(COMMON_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupService, never()).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all privilege group parts")
+    @Test
+    public void testGetAllPrivilegeGroupParts() {
+        mockDefaultGetAllPrivilegeGroups();
+
+        ResponseWrapper<List<PrivilegeGroupPartDto>> response = cut.getAllPrivilegeGroupParts(COMMON_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService, never()).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all privilege group parts with pages, but missing page")
+    @Test
+    public void testGetAllPrivilegeGroupPartsPageableMissingPage() {
+        mockDefaultGetAllPrivilegeGroups();
+
+        ResponseWrapper<List<PrivilegeGroupPartDto>> response = cut.getAllPrivilegeGroupParts(COMMON_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupService, never()).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all privilege group parts with pages, but missing size")
+    @Test
+    public void testGetAllPrivilegeGroupPartsPageableMissingSize() {
+        mockDefaultGetAllPrivilegeGroups();
+
+        ResponseWrapper<List<PrivilegeGroupPartDto>> response = cut.getAllPrivilegeGroupParts(COMMON_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of elements");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupService, never()).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all privilege group parts with pages")
+    @Test
+    public void testGetAllPrivilegeGroupPartsPageable() {
+        mockDefaultGetAllPrivilegeGroups();
+
+        ResponseWrapper<List<PrivilegeGroupPartDto>> response = cut.getAllPrivilegeGroupParts(COMMON_GROUP_IDENTIFICATION, 2, 20);
 
         checkOk(response);
 

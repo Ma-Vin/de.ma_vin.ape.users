@@ -87,6 +87,11 @@ public class PrivilegeGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/group/privilege/getAllPrivilegeGroups", getIdentification(commonGroupAlias)));
     }
 
+    @When("Controller is called to get all privilege group parts from common group with alias {string}")
+    public void callControllerToGetAllPrivilegeGroupParts(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/privilege/getAllPrivilegeGroupParts", getIdentification(commonGroupAlias)));
+    }
+
     @When("Controller is called to get all privilege groups at page {int} with size {int} from common group with alias {string}")
     public void callControllerToGetAllPrivilegeGroups(int page, int size, String commonGroupAlias) {
         MultiValueMap<String, String> getAllPrivilegeGroupValues = createValueMap("page", "" + page

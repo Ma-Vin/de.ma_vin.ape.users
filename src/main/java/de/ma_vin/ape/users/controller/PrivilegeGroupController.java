@@ -3,7 +3,10 @@ package de.ma_vin.ape.users.controller;
 
 import de.ma_vin.ape.users.model.domain.group.PrivilegeGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.PrivilegeGroupDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.PrivilegeGroupPartDto;
+import de.ma_vin.ape.users.model.gen.mapper.GroupPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.utils.controller.response.ResponseUtil;
@@ -16,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createSuccessResponse;
 
@@ -85,17 +88,34 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
     ResponseWrapper<List<PrivilegeGroupDto>> getAllPrivilegeGroups(@PathVariable String commonGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        int pageToUse = page == null ? DEFAULT_PAGE : page;
-        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+        return getAllPrivilegeGroups(commonGroupIdentification, page, size, GroupTransportMapper::convertToPrivilegeGroupDto);
+    }
 
-        List<PrivilegeGroup> privilegeGroups = page == null && size == null
-                ? privilegeGroupService.findAllPrivilegeGroups(commonGroupIdentification)
-                : privilegeGroupService.findAllPrivilegeGroups(commonGroupIdentification, pageToUse, sizeToUse);
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
+    @GetMapping("/getAllPrivilegeGroupParts/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<PrivilegeGroupPartDto>> getAllPrivilegeGroupParts(@PathVariable String commonGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        List<PrivilegeGroupDto> result = privilegeGroups.stream()
-                .map(GroupTransportMapper::convertToPrivilegeGroupDto)
-                .collect(Collectors.toList());
+        return getAllPrivilegeGroups(commonGroupIdentification, page, size, GroupPartTransportMapper::convertToPrivilegeGroupPartDto);
+    }
 
-        return createPageableResponse(result, page, size);
+    /**
+     * Loads all privilege groups and converts them to a wrapped list of {@code T} elements
+     *
+     * @param commonGroupIdentification the parent common group
+     * @param page                      zero-based page index, must not be negative.
+     * @param size                      the size of the page to be returned, must be greater than 0.
+     * @param mapper                    a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                       the transport model
+     * @return a wrapped list of loaded privilege groups
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllPrivilegeGroups(String commonGroupIdentification
+            , Integer page, Integer size, Function<PrivilegeGroup, T> mapper) {
+
+        return getAllSubElements(commonGroupIdentification, page, size
+                , identification -> privilegeGroupService.findAllPrivilegeGroups(identification)
+                , (identification, pageToUse, sizeToUse) -> privilegeGroupService.findAllPrivilegeGroups(identification, pageToUse, sizeToUse)
+                , mapper);
     }
 }

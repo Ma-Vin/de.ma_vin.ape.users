@@ -8,6 +8,8 @@ import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 public abstract class AbstractDefaultOperationController {
@@ -169,6 +171,38 @@ public abstract class AbstractDefaultOperationController {
         return createSuccessResponse(result);
     }
 
+
+    /**
+     * Loads sub elements with given {@link SubElementsLoader} and {@link PagingSubElementsLoader} from a parent
+     *
+     * @param parentIdentification    parent whose sub elements are to load
+     * @param page                    zero-based page index, must not be negative.
+     * @param size                    the size of the page to be returned, must be greater than 0.
+     * @param subElementsLoader       the loader to use without paging
+     * @param pagingSubElementsLoader the loader to use with paging
+     * @param mapper                  a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <S>                     the domain model
+     * @param <T>                     the transport model
+     * @return a wrapped list of loaded sub elements
+     */
+    protected <S extends IIdentifiable, T extends ITransportable> ResponseWrapper<List<T>> getAllSubElements(String parentIdentification
+            , Integer page, Integer size, SubElementsLoader<S> subElementsLoader, PagingSubElementsLoader<S> pagingSubElementsLoader
+            , Function<S, T> mapper) {
+
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        List<S> subElements = page == null && size == null
+                ? subElementsLoader.loadSubElements(parentIdentification)
+                : pagingSubElementsLoader.loadSubElements(parentIdentification, pageToUse, sizeToUse);
+
+        List<T> result = subElements.stream()
+                .map(mapper)
+                .collect(Collectors.toList());
+
+        return createPageableResponse(result, page, size);
+    }
+
     @FunctionalInterface
     protected interface Searcher<T extends IIdentifiable> {
         Optional<T> find(String identification);
@@ -202,5 +236,15 @@ public abstract class AbstractDefaultOperationController {
     @FunctionalInterface
     protected interface SubEntitySearcher<T extends IIdentifiable> {
         void findAndAdd(T parent);
+    }
+
+    @FunctionalInterface
+    protected interface SubElementsLoader<T extends IIdentifiable> {
+        List<T> loadSubElements(String parentIdentification);
+    }
+
+    @FunctionalInterface
+    protected interface PagingSubElementsLoader<T extends IIdentifiable> {
+        List<T> loadSubElements(String parentIdentification, Integer page, Integer size);
     }
 }
