@@ -218,6 +218,8 @@ Feature: Testing methods of the user controller
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to get all user of base group with alias "base" and dissolving sub groups false
     Then The result is a <httpCodeRange>
+    When Controller is called to get all user parts of base group with alias "base" and dissolving sub groups false
+    Then The result is a <httpCodeRange>
     When Controller is called to get all user of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups false
     Then The result is a <httpCodeRange>
     Examples:

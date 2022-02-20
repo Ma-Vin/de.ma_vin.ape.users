@@ -64,6 +64,11 @@ Feature: Testing methods of the user controller
     And The status of the result should be "OK"
     And The identification at 0 is the same like the one of alias "directUser"
     And The "identification" property at response position 1 does not exists
+    When Controller is called to get all user parts of base group with alias "base" and dissolving sub groups false
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "directUser"
+    And The "identification" property at response position 1 does not exists
     When Controller is called to get all user of base group with alias "base" and dissolving sub groups true
     Then The result is Ok and Json
     And The status of the result should be "OK"

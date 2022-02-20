@@ -217,18 +217,38 @@ public class UserController extends AbstractDefaultOperationController {
             , @RequestParam(required = false) Boolean dissolveSubgroups
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        int pageToUse = page == null ? DEFAULT_PAGE : page;
-        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+        return getAllUsersFromBaseGroup(baseGroupIdentification, dissolveSubgroups, page, size, UserTransportMapper::convertToUserDto);
+    }
 
-        List<User> users = page == null && size == null
-                ? userService.findAllUsersAtBaseGroup(baseGroupIdentification, Boolean.TRUE.equals(dissolveSubgroups))
-                : userService.findAllUsersAtBaseGroup(baseGroupIdentification, pageToUse, sizeToUse);
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
+    @GetMapping("/getAllUserPartsFromBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserPartDto>> getAllUserPartsFromBaseGroup(@PathVariable String baseGroupIdentification
+            , @RequestParam(required = false) Boolean dissolveSubgroups
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        List<UserDto> result = users.stream()
-                .map(UserTransportMapper::convertToUserDto)
-                .collect(Collectors.toList());
+        return getAllUsersFromBaseGroup(baseGroupIdentification, dissolveSubgroups, page, size, UserPartTransportMapper::convertToUserPartDto);
+    }
 
-        ResponseWrapper<List<UserDto>> responseWrapper = createPageableResponse(result, page, size);
+    /**
+     * Loads all users and converts them to a wrapped list of {@code T} elements
+     *
+     * @param baseGroupIdentification the parent base group
+     * @param dissolveSubgroups       indicator if the users of subgroups should also be added
+     * @param page                    zero-based page index, must not be negative.
+     * @param size                    the size of the page to be returned, must be greater than 0.
+     * @param mapper                  a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                     the transport model
+     * @return a wrapped list of loaded users
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllUsersFromBaseGroup(String baseGroupIdentification
+            , Boolean dissolveSubgroups, Integer page, Integer size, Function<User, T> mapper) {
+
+        ResponseWrapper<List<T>> responseWrapper = getAllSubElements(baseGroupIdentification, page, size
+                , identification -> userService.findAllUsersAtBaseGroup(identification, Boolean.TRUE.equals(dissolveSubgroups))
+                , (identification, pageToUse, sizeToUse) -> userService.findAllUsersAtBaseGroup(identification, pageToUse, sizeToUse)
+                , mapper);
+
         if (Boolean.TRUE.equals(dissolveSubgroups) && (page != null || size != null)) {
             responseWrapper.addMessage("Dissolving subgroups is not available while using pages", Status.WARN);
         }
