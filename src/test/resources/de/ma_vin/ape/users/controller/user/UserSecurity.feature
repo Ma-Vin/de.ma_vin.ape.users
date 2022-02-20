@@ -18,11 +18,12 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           |
+      #| MANAGER     | 2xx           |
       | CONTRIBUTOR | 2xx           |
       | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to delete an user with role <roleOfToDelete>
     Given There exists an user with first name "New" and last name "User" with alias "userToDelete" at common group "common"
@@ -35,29 +36,30 @@ Feature: Testing methods of the user controller
       | role        | roleOfToDelete | httpCodeRange |
       | ADMIN       | ADMIN          | 2xx           |
       | MANAGER     | ADMIN          | 4xx           |
-      | CONTRIBUTOR | ADMIN          | 4xx           |
-      | VISITOR     | ADMIN          | 4xx           |
-      | BLOCKED     | ADMIN          | 4xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| CONTRIBUTOR | ADMIN          | 4xx           |
+      #| VISITOR     | ADMIN          | 4xx           |
+      #| BLOCKED     | ADMIN          | 4xx           |
       | ADMIN       | MANAGER        | 2xx           |
       | MANAGER     | MANAGER        | 4xx           |
-      | CONTRIBUTOR | MANAGER        | 4xx           |
-      | VISITOR     | MANAGER        | 4xx           |
-      | BLOCKED     | MANAGER        | 4xx           |
-      | ADMIN       | CONTRIBUTOR    | 2xx           |
+      #| CONTRIBUTOR | MANAGER        | 4xx           |
+      #| VISITOR     | MANAGER        | 4xx           |
+      #| BLOCKED     | MANAGER        | 4xx           |
+      #| ADMIN       | CONTRIBUTOR    | 2xx           |
       | MANAGER     | CONTRIBUTOR    | 2xx           |
-      | CONTRIBUTOR | CONTRIBUTOR    | 4xx           |
-      | VISITOR     | CONTRIBUTOR    | 4xx           |
-      | BLOCKED     | CONTRIBUTOR    | 4xx           |
-      | ADMIN       | VISITOR        | 2xx           |
+      #| CONTRIBUTOR | CONTRIBUTOR    | 4xx           |
+      #| VISITOR     | CONTRIBUTOR    | 4xx           |
+      #| BLOCKED     | CONTRIBUTOR    | 4xx           |
+      #| ADMIN       | VISITOR        | 2xx           |
       | MANAGER     | VISITOR        | 2xx           |
       | CONTRIBUTOR | VISITOR        | 4xx           |
-      | VISITOR     | VISITOR        | 4xx           |
-      | BLOCKED     | VISITOR        | 4xx           |
-      | ADMIN       | BLOCKED        | 2xx           |
+      #| VISITOR     | VISITOR        | 4xx           |
+      #| BLOCKED     | VISITOR        | 4xx           |
+      #| ADMIN       | BLOCKED        | 2xx           |
       | MANAGER     | BLOCKED        | 2xx           |
       | CONTRIBUTOR | BLOCKED        | 4xx           |
-      | VISITOR     | BLOCKED        | 4xx           |
-      | BLOCKED     | BLOCKED        | 4xx           |
+      #| VISITOR     | BLOCKED        | 4xx           |
+      #| BLOCKED     | BLOCKED        | 4xx           |
 
   Scenario Outline: Check <role> privilege to get and count an user
     Given There exists an user with first name "New" and last name "User" with alias "userToGet" at common group "common"
@@ -71,9 +73,10 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 2xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           |
+      #| MANAGER     | 2xx           |
+      #| CONTRIBUTOR | 2xx           |
       | VISITOR     | 2xx           |
       | BLOCKED     | 4xx           |
 
@@ -86,34 +89,35 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | roleOfToUpdate | httpCodeRange | aliasToUpdate | testName      |
+    # indirect included: test only the httpCode switch from ok to not ok
       | ADMIN       | ADMIN          | 2xx           | "anOtherUser" | an other user |
       | MANAGER     | ADMIN          | 4xx           | "anOtherUser" | an other user |
-      | CONTRIBUTOR | ADMIN          | 4xx           | "anOtherUser" | an other user |
-      | VISITOR     | ADMIN          | 4xx           | "anOtherUser" | an other user |
-      | BLOCKED     | ADMIN          | 4xx           | "anOtherUser" | an other user |
+      #| CONTRIBUTOR | ADMIN          | 4xx           | "anOtherUser" | an other user |
+      #| VISITOR     | ADMIN          | 4xx           | "anOtherUser" | an other user |
+      #| BLOCKED     | ADMIN          | 4xx           | "anOtherUser" | an other user |
       | ADMIN       | MANAGER        | 2xx           | "anOtherUser" | an other user |
       | MANAGER     | MANAGER        | 4xx           | "anOtherUser" | an other user |
-      | CONTRIBUTOR | MANAGER        | 4xx           | "anOtherUser" | an other user |
-      | VISITOR     | MANAGER        | 4xx           | "anOtherUser" | an other user |
-      | BLOCKED     | MANAGER        | 4xx           | "anOtherUser" | an other user |
-      | ADMIN       | CONTRIBUTOR    | 2xx           | "anOtherUser" | an other user |
+      #| CONTRIBUTOR | MANAGER        | 4xx           | "anOtherUser" | an other user |
+      #| VISITOR     | MANAGER        | 4xx           | "anOtherUser" | an other user |
+      #| BLOCKED     | MANAGER        | 4xx           | "anOtherUser" | an other user |
+      #| ADMIN       | CONTRIBUTOR    | 2xx           | "anOtherUser" | an other user |
       | MANAGER     | CONTRIBUTOR    | 2xx           | "anOtherUser" | an other user |
       | CONTRIBUTOR | CONTRIBUTOR    | 4xx           | "anOtherUser" | an other user |
-      | VISITOR     | CONTRIBUTOR    | 4xx           | "anOtherUser" | an other user |
-      | BLOCKED     | CONTRIBUTOR    | 4xx           | "anOtherUser" | an other user |
-      | ADMIN       | VISITOR        | 2xx           | "anOtherUser" | an other user |
+      #| VISITOR     | CONTRIBUTOR    | 4xx           | "anOtherUser" | an other user |
+      #| BLOCKED     | CONTRIBUTOR    | 4xx           | "anOtherUser" | an other user |
+      #| ADMIN       | VISITOR        | 2xx           | "anOtherUser" | an other user |
       | MANAGER     | VISITOR        | 2xx           | "anOtherUser" | an other user |
       | CONTRIBUTOR | VISITOR        | 4xx           | "anOtherUser" | an other user |
-      | VISITOR     | VISITOR        | 4xx           | "anOtherUser" | an other user |
-      | BLOCKED     | VISITOR        | 4xx           | "anOtherUser" | an other user |
-      | ADMIN       | BLOCKED        | 2xx           | "anOtherUser" | an other user |
+      #| VISITOR     | VISITOR        | 4xx           | "anOtherUser" | an other user |
+      #| BLOCKED     | VISITOR        | 4xx           | "anOtherUser" | an other user |
+      #| ADMIN       | BLOCKED        | 2xx           | "anOtherUser" | an other user |
       | MANAGER     | BLOCKED        | 2xx           | "anOtherUser" | an other user |
       | CONTRIBUTOR | BLOCKED        | 4xx           | "anOtherUser" | an other user |
-      | VISITOR     | BLOCKED        | 4xx           | "anOtherUser" | an other user |
-      | BLOCKED     | BLOCKED        | 4xx           | "anOtherUser" | an other user |
-      | ADMIN       | ADMIN          | 2xx           | "user"        | itself        |
-      | MANAGER     | MANAGER        | 2xx           | "user"        | itself        |
-      | CONTRIBUTOR | CONTRIBUTOR    | 2xx           | "user"        | itself        |
+      #| VISITOR     | BLOCKED        | 4xx           | "anOtherUser" | an other user |
+      #| BLOCKED     | BLOCKED        | 4xx           | "anOtherUser" | an other user |
+      #| ADMIN       | ADMIN          | 2xx           | "user"        | itself        |
+      #| MANAGER     | MANAGER        | 2xx           | "user"        | itself        |
+      #| CONTRIBUTOR | CONTRIBUTOR    | 2xx           | "user"        | itself        |
       | VISITOR     | VISITOR        | 2xx           | "user"        | itself        |
       | BLOCKED     | BLOCKED        | 4xx           | "user"        | itself        |
 
@@ -126,14 +130,15 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange | aliasToUpdate | testName      |
+    # indirect included: test only the httpCode switch from ok to not ok
       | ADMIN       | 2xx           | "anOtherUser" | an other user |
       | MANAGER     | 4xx           | "anOtherUser" | an other user |
-      | CONTRIBUTOR | 4xx           | "anOtherUser" | an other user |
-      | VISITOR     | 4xx           | "anOtherUser" | an other user |
-      | BLOCKED     | 4xx           | "anOtherUser" | an other user |
-      | ADMIN       | 2xx           | "user"        | itself        |
-      | MANAGER     | 2xx           | "user"        | itself        |
-      | CONTRIBUTOR | 2xx           | "user"        | itself        |
+      #| CONTRIBUTOR | 4xx           | "anOtherUser" | an other user |
+      #| VISITOR     | 4xx           | "anOtherUser" | an other user |
+      #| BLOCKED     | 4xx           | "anOtherUser" | an other user |
+      #| ADMIN       | 2xx           | "user"        | itself        |
+      #| MANAGER     | 2xx           | "user"        | itself        |
+      #| CONTRIBUTOR | 2xx           | "user"        | itself        |
       | VISITOR     | 2xx           | "user"        | itself        |
       | BLOCKED     | 4xx           | "user"        | itself        |
 
@@ -145,11 +150,12 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
+    # indirect included: test only the httpCode switch from ok to not ok
       | ADMIN       | 2xx           |
       | MANAGER     | 4xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      #| CONTRIBUTOR | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to add, count and remove user at privilege group
     Given There exists a privilege group with name "Privilege Group" with alias "privilege" at common group "common"
@@ -167,7 +173,8 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange | httpCodeRangeCount |
-      | ADMIN       | 2xx           | 2xx                |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           | 2xx                |
       | MANAGER     | 2xx           | 2xx                |
       | CONTRIBUTOR | 4xx           | 2xx                |
       | VISITOR     | 4xx           | 2xx                |
@@ -189,8 +196,9 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange | httpCodeRangeCount |
-      | ADMIN       | 2xx           | 2xx                |
-      | MANAGER     | 2xx           | 2xx                |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           | 2xx                |
+      #| MANAGER     | 2xx           | 2xx                |
       | CONTRIBUTOR | 2xx           | 2xx                |
       | VISITOR     | 4xx           | 2xx                |
       | BLOCKED     | 4xx           | 4xx                |
@@ -212,8 +220,9 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 2xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           |
+      #| MANAGER     | 2xx           |
+      #| CONTRIBUTOR | 2xx           |
       | VISITOR     | 2xx           |
       | BLOCKED     | 4xx           |

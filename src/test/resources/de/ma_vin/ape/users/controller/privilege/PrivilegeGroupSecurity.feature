@@ -18,11 +18,12 @@ Feature: Testing methods of the privilege group controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           |
       | MANAGER     | 2xx           |
       | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to delete a privilege group
     Given There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"
@@ -32,11 +33,12 @@ Feature: Testing methods of the privilege group controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           |
       | MANAGER     | 2xx           |
       | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to get and count privilege group
     Given There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"
@@ -52,9 +54,10 @@ Feature: Testing methods of the privilege group controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 2xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           |
+      #| MANAGER     | 2xx           |
+      #| CONTRIBUTOR | 2xx           |
       | VISITOR     | 2xx           |
       | BLOCKED     | 4xx           |
 
@@ -67,8 +70,9 @@ Feature: Testing methods of the privilege group controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange | value         |
-      | ADMIN       | 2xx           | "admin"       |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           | "admin"       |
       | MANAGER     | 2xx           | "manager"     |
       | CONTRIBUTOR | 4xx           | "contributor" |
-      | VISITOR     | 4xx           | "visitor"     |
-      | BLOCKED     | 4xx           | "blocked"     |
+      #| VISITOR     | 4xx           | "visitor"     |
+      #| BLOCKED     | 4xx           | "blocked"     |

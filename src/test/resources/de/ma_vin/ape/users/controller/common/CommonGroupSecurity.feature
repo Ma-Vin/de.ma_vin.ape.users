@@ -18,9 +18,10 @@ Feature: Testing methods of the common group controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 2xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           |
+      #| MANAGER     | 2xx           |
+      #| CONTRIBUTOR | 2xx           |
       | VISITOR     | 2xx           |
       | BLOCKED     | 4xx           |
 
@@ -33,9 +34,10 @@ Feature: Testing methods of the common group controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
-      | ADMIN       | 2xx           |
-      | MANAGER     | 2xx           |
-      | CONTRIBUTOR | 2xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| ADMIN       | 2xx           |
+      #| MANAGER     | 2xx           |
+      #| CONTRIBUTOR | 2xx           |
       | VISITOR     | 2xx           |
       | BLOCKED     | 4xx           |
 
@@ -48,8 +50,9 @@ Feature: Testing methods of the common group controller
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange | value         |
+    # indirect included: test only the httpCode switch from ok to not ok
       | ADMIN       | 2xx           | "admin"       |
       | MANAGER     | 4xx           | "manager"     |
-      | CONTRIBUTOR | 4xx           | "contributor" |
-      | VISITOR     | 4xx           | "visitor"     |
-      | BLOCKED     | 4xx           | "blocked"     |
+      #| CONTRIBUTOR | 4xx           | "contributor" |
+      #| VISITOR     | 4xx           | "visitor"     |
+      #| BLOCKED     | 4xx           | "blocked"     |

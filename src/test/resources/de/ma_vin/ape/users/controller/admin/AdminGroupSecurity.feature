@@ -20,10 +20,11 @@ Feature: Testing security at methods of the admin group controller
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |
-      | MANAGER     | 4xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| MANAGER     | 4xx           |
+      #| CONTRIBUTOR | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to delete an admin
     Given There exists an admin with first name "New" and last name "Admin" with alias "adminToDelete" at admin group "adminGroup"
@@ -34,10 +35,11 @@ Feature: Testing security at methods of the admin group controller
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |
-      | MANAGER     | 4xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| MANAGER     | 4xx           |
+      #| CONTRIBUTOR | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to get and count an admin
     Given There exists an admin with first name "New" and last name "Admin" with alias "adminToGet" at admin group "adminGroup"
@@ -52,10 +54,11 @@ Feature: Testing security at methods of the admin group controller
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |
-      | MANAGER     | 4xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| MANAGER     | 4xx           |
+      #| CONTRIBUTOR | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to update admin
     Given There exists an admin with first name "New" and last name "Admin" with alias "adminToUpdate" at admin group "adminGroup"
@@ -67,10 +70,11 @@ Feature: Testing security at methods of the admin group controller
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |
-      | MANAGER     | 4xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| MANAGER     | 4xx           |
+      #| CONTRIBUTOR | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to set password of admin
     Given There exists an admin with first name "New" and last name "Admin" with alias "adminToUpdate" at admin group "adminGroup"
@@ -81,10 +85,11 @@ Feature: Testing security at methods of the admin group controller
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |
-      | MANAGER     | 4xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| MANAGER     | 4xx           |
+      #| CONTRIBUTOR | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to get admin group
     Given There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
@@ -94,10 +99,11 @@ Feature: Testing security at methods of the admin group controller
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |
-      | MANAGER     | 4xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| MANAGER     | 4xx           |
+      #| CONTRIBUTOR | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
 
   Scenario Outline: Check <role> privilege to update admin group
     Given There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
@@ -108,7 +114,8 @@ Feature: Testing security at methods of the admin group controller
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |
-      | MANAGER     | 4xx           |
-      | CONTRIBUTOR | 4xx           |
-      | VISITOR     | 4xx           |
-      | BLOCKED     | 4xx           |
+    # indirect included: test only the httpCode switch from ok to not ok
+      #| MANAGER     | 4xx           |
+      #| CONTRIBUTOR | 4xx           |
+      #| VISITOR     | 4xx           |
+      #| BLOCKED     | 4xx           |
