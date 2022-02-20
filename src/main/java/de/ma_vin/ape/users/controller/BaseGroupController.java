@@ -5,8 +5,11 @@ import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
+import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.BaseGroupPartDto;
+import de.ma_vin.ape.users.model.gen.mapper.GroupPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
 import de.ma_vin.ape.users.service.BaseGroupService;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -85,18 +89,35 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     ResponseWrapper<List<BaseGroupDto>> getAllBaseGroups(@PathVariable String commonGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        int pageToUse = page == null ? DEFAULT_PAGE : page;
-        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+        return getAllBaseGroups(commonGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
+    }
 
-        List<BaseGroup> baseGroups = page == null && size == null
-                ? baseGroupService.findAllBaseGroups(commonGroupIdentification)
-                : baseGroupService.findAllBaseGroups(commonGroupIdentification, pageToUse, sizeToUse);
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
+    @GetMapping("/getAllBaseGroupParts/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupPartDto>> getAllBaseGroupParts(@PathVariable String commonGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        List<BaseGroupDto> result = baseGroups.stream()
-                .map(GroupTransportMapper::convertToBaseGroupDto)
-                .collect(Collectors.toList());
+        return getAllBaseGroups(commonGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+    }
 
-        return createPageableResponse(result, page, size);
+    /**
+     * Loads all base groups and converts them to a wrapped list of {@code T} elements
+     *
+     * @param commonGroupIdentification the parent common group
+     * @param page                      zero-based page index, must not be negative.
+     * @param size                      the size of the page to be returned, must be greater than 0.
+     * @param mapper                    a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                       the transport model
+     * @return a wrapped list of loaded base groups
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllBaseGroups(String commonGroupIdentification
+            , Integer page, Integer size, Function<BaseGroup, T> mapper) {
+
+        return getAllSubElements(commonGroupIdentification, page, size
+                , identification -> baseGroupService.findAllBaseGroups(identification)
+                , (identification, pageToUse, sizeToUse) -> baseGroupService.findAllBaseGroups(identification, pageToUse, sizeToUse)
+                , mapper);
     }
 
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")

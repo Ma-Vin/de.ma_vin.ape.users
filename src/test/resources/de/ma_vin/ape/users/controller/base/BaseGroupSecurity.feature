@@ -48,6 +48,8 @@ Feature: Testing security at methods of the base group controller
     Then The result is a <httpCodeRange>
     When Controller is called to count base groups at common group with alias "common"
     Then The result is a <httpCodeRange>
+    When Controller is called to get all base group parts from common group with alias "common"
+    Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 2xx           |
