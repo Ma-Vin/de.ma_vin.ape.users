@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 
@@ -365,7 +364,7 @@ public class UserController extends AbstractDefaultOperationController {
         List<T> result = rolesWithUsers.entrySet().stream()
                 .flatMap(e -> e.getValue().stream()
                         .map(u -> mapper.map(u, e.getKey())))
-                .collect(Collectors.toList());
+                .toList();
 
         ResponseWrapper<List<T>> responseWrapper = createPageableResponse(result, page, size);
         if (Boolean.TRUE.equals(dissolveSubgroups) && (page != null || size != null)) {

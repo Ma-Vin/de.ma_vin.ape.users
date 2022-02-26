@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @Data
@@ -127,7 +126,7 @@ public class CommonGroupService extends AbstractRepositoryService {
     public List<CommonGroup> findAllCommonGroups() {
         log.debug("Search for all common groups");
 
-        List<CommonGroup> result = commonGroupRepository.findAll().stream().map(dao -> GroupAccessMapper.convertToCommonGroup(dao, false)).collect(Collectors.toList());
+        List<CommonGroup> result = commonGroupRepository.findAll().stream().map(dao -> GroupAccessMapper.convertToCommonGroup(dao, false)).toList();
 
         log.debug("{} common groups found", result.size());
         return result;
@@ -148,7 +147,7 @@ public class CommonGroupService extends AbstractRepositoryService {
 
         List<CommonGroup> result = commonGroupRepository.findAll(PageRequest.of(page, size))
                 .stream().map(dao -> GroupAccessMapper.convertToCommonGroup(dao, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug("{} common groups found  at page {} and size {}, page, size", result.size(), page, size);
         return result;

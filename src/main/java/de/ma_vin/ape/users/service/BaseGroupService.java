@@ -21,7 +21,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @Data
@@ -170,7 +169,7 @@ public class BaseGroupService extends AbstractRepositoryService {
         List<BaseGroup> result = findAllBaseGroups(new CommonGroupDaoExt(parentIdentification), null, null)
                 .stream()
                 .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
         return result;
@@ -190,7 +189,7 @@ public class BaseGroupService extends AbstractRepositoryService {
         List<BaseGroup> result = findAllBaseGroups(new CommonGroupDaoExt(parentIdentification), page, size)
                 .stream()
                 .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
@@ -223,7 +222,7 @@ public class BaseGroupService extends AbstractRepositoryService {
         List<BaseGroup> result = findAllBasesAtBaseGroup(new BaseGroupDaoExt(parentIdentification), null, null)
                 .stream()
                 .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification);
         return result;
@@ -243,7 +242,7 @@ public class BaseGroupService extends AbstractRepositoryService {
         List<BaseGroup> result = findAllBasesAtBaseGroup(new BaseGroupDaoExt(parentIdentification), page, size)
                 .stream()
                 .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
@@ -278,7 +277,7 @@ public class BaseGroupService extends AbstractRepositoryService {
         List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, null, null)
                 .stream()
                 .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
         return result;
@@ -299,7 +298,7 @@ public class BaseGroupService extends AbstractRepositoryService {
         List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, page, size)
                 .stream()
                 .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
@@ -352,11 +351,11 @@ public class BaseGroupService extends AbstractRepositoryService {
         if (page == null || size == null) {
             return baseToBaseGroupRepository.findAllByBaseGroup(parent).stream()
                     .map(BaseGroupToBaseGroupDao::getSubBaseGroup)
-                    .collect(Collectors.toList());
+                    .toList();
         }
         return baseToBaseGroupRepository.findAllByBaseGroup(parent, PageRequest.of(page, size)).stream()
                 .map(BaseGroupToBaseGroupDao::getSubBaseGroup)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -383,11 +382,11 @@ public class BaseGroupService extends AbstractRepositoryService {
         if (page == null || size == null) {
             return privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent).stream()
                     .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
-                    .collect(Collectors.toList());
+                    .toList();
         }
         return privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent, PageRequest.of(page, size)).stream()
                 .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -406,11 +405,11 @@ public class BaseGroupService extends AbstractRepositoryService {
         if (page == null || size == null) {
             return privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(parent, role).stream()
                     .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
-                    .collect(Collectors.toList());
+                    .toList();
         }
         return privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(parent, role, PageRequest.of(page, size)).stream()
                 .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

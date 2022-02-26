@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @Data
@@ -93,7 +92,7 @@ public class AdminGroupService extends AbstractRepositoryService {
     public List<AdminGroup> findAllAdminGroups() {
         log.debug("Search for all admin groups");
 
-        List<AdminGroup> result = adminGroupRepository.findAll().stream().map(dao -> GroupAccessMapper.convertToAdminGroup(dao, false)).collect(Collectors.toList());
+        List<AdminGroup> result = adminGroupRepository.findAll().stream().map(dao -> GroupAccessMapper.convertToAdminGroup(dao, false)).toList();
 
         log.debug("{} admin groups found", result.size());
         return result;

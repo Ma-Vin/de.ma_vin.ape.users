@@ -9,7 +9,6 @@ import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 
 public abstract class AbstractDefaultOperationController {
@@ -198,7 +197,7 @@ public abstract class AbstractDefaultOperationController {
 
         List<T> result = subElements.stream()
                 .map(mapper)
-                .collect(Collectors.toList());
+                .toList();
 
         return createPageableResponse(result, page, size);
     }

@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 @Data
@@ -169,7 +168,7 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
         List<PrivilegeGroup> result = findAllPrivilegeGroups(new CommonGroupDaoExt(parentIdentification), null, null)
                 .stream()
                 .map(pg -> GroupAccessMapper.convertToPrivilegeGroup(pg, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
         return result;
@@ -189,7 +188,7 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
         List<PrivilegeGroup> result = findAllPrivilegeGroups(new CommonGroupDaoExt(parentIdentification), page, size)
                 .stream()
                 .map(pg -> GroupAccessMapper.convertToPrivilegeGroup(pg, false))
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;

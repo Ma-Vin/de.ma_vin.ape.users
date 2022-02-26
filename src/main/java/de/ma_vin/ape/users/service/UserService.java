@@ -28,7 +28,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @Log4j2
@@ -239,7 +238,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllUsers(new AdminGroupDaoExt(parentIdentification), null, null)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, ADMIN_GROUP_LOG_PARAM, parentIdentification);
         return result;
@@ -276,7 +275,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllUsers(new AdminGroupDaoExt(parentIdentification), page, size)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, ADMIN_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
@@ -294,7 +293,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllUsers(new CommonGroupDaoExt(parentIdentification), null, null)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification);
         return result;
@@ -314,7 +313,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllUsers(new CommonGroupDaoExt(parentIdentification), page, size)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .collect(Collectors.toList());
+                .toList();
 
         log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, COMMON_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
@@ -358,7 +357,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllUsers(new BaseGroupDaoExt(parentIdentification), page, size)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+                .sorted(Comparator.comparing(User::getIdentification)).toList();
 
         log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification, page, size);
         return result;
@@ -378,7 +377,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllAvailableUsers(baseGroupDao, null, null)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+                .sorted(Comparator.comparing(User::getIdentification)).toList();
 
         log.debug(SEARCH_FOR_RESULT_LOG_MESSAGE, result.size(), AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
         return result;
@@ -400,7 +399,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllAvailableUsers(baseGroupDao, page, size)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+                .sorted(Comparator.comparing(User::getIdentification)).toList();
 
         log.debug(SEARCH_FOR_RESULT_PAGE_LOG_MESSAGE, result.size(), AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification, page, size);
         return result;
@@ -471,14 +470,14 @@ public class UserService extends AbstractRepositoryService {
                             result.computeIfAbsent(e.getKey(), r -> new ArrayList<>())
                                     .addAll(e.getValue().stream()
                                             .map(UserAccessMapper::convertToUser)
-                                            .collect(Collectors.toList())
+                                            .toList()
                                     )
                     );
         } else {
             result.put(role, findAllUsers(parent, role, page, size).stream()
                     .map(UserAccessMapper::convertToUser)
                     .sorted(Comparator.comparing(User::getIdentification))
-                    .collect(Collectors.toList()));
+                    .toList());
         }
         return result;
     }
@@ -527,7 +526,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllAvailableUsers(privilegeGroupDao, null, null)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+                .sorted(Comparator.comparing(User::getIdentification)).toList();
 
         log.debug(SEARCH_FOR_RESULT_LOG_MESSAGE, result.size(), AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
         return result;
@@ -549,7 +548,7 @@ public class UserService extends AbstractRepositoryService {
         List<User> result = findAllAvailableUsers(privilegeGroupDao, page, size)
                 .stream()
                 .map(UserAccessMapper::convertToUser)
-                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+                .sorted(Comparator.comparing(User::getIdentification)).toList();
 
         log.debug(SEARCH_FOR_RESULT_PAGE_LOG_MESSAGE, result.size(), AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification, page, size);
         return result;
@@ -640,11 +639,11 @@ public class UserService extends AbstractRepositoryService {
         if (page == null || size == null) {
             return baseGroupToUserRepository.findAllByBaseGroup(parent).stream()
                     .map(BaseGroupToUserDao::getUser)
-                    .collect(Collectors.toList());
+                    .toList();
         }
         return baseGroupToUserRepository.findAllByBaseGroup(parent, PageRequest.of(page, size)).stream()
                 .map(BaseGroupToUserDao::getUser)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -660,11 +659,11 @@ public class UserService extends AbstractRepositoryService {
         if (page == null || size == null) {
             return privilegeGroupToUserRepository.findAllByPrivilegeGroupAndFilterRole(parent, role).stream()
                     .map(PrivilegeGroupToUserDao::getUser)
-                    .collect(Collectors.toList());
+                    .toList();
         }
         return privilegeGroupToUserRepository.findAllByPrivilegeGroupAndFilterRole(parent, role, PageRequest.of(page, size)).stream()
                 .map(PrivilegeGroupToUserDao::getUser)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
