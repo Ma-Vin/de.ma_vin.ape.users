@@ -226,6 +226,20 @@ public class UserServiceTest {
         verify(baseGroupToUserRepository).countByBaseGroup(any());
     }
 
+    @DisplayName("Count available users for base group")
+    @Test
+    public void testCountAvailableUsersForBaseGroup() {
+        when(baseGroupRepository.getById(eq(BASE_GROUP_ID))).thenReturn(baseGroupDao);
+        when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(baseGroupToUserRepository.countAvailableUsers(eq(baseGroupDao), eq(commonGroupDao))).thenReturn(42L);
+
+        Long result = cut.countAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(baseGroupToUserRepository).countAvailableUsers(any(), any());
+    }
+
     @DisplayName("Count users at privilege group")
     @Test
     public void testCountUsersAtPrivilegeGroup() {
@@ -523,6 +537,69 @@ public class UserServiceTest {
 
         when(baseGroupService.findBaseGroupTree(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
         when(baseGroup.getAllUsers()).thenReturn(Set.of(user, otherUser));
+    }
+
+    @DisplayName("Find all available users for base group")
+    @Test
+    public void testFindAllAvailableUsersForBaseGroup() {
+        mockDefaultFindAllAvailableUsersForBaseGroup();
+
+        List<User> result = cut.findAllAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(baseGroupToUserRepository).findAvailableUsers(any(), any());
+        verify(baseGroupToUserRepository, never()).findAvailableUsers(any(), any(), any());
+    }
+
+    @DisplayName("Find all available users for base group with pages")
+    @Test
+    public void testFindAllAvailableUsersForBaseGroupPageable() {
+        mockDefaultFindAllAvailableUsersForBaseGroup();
+
+        List<User> result = cut.findAllAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(baseGroupToUserRepository, never()).findAvailableUsers(any(), any());
+        verify(baseGroupToUserRepository).findAvailableUsers(any(), any(), any());
+    }
+
+    @DisplayName("Find all available users for base group with pages, but missing page")
+    @Test
+    public void testFindAllAvailableUsersForBaseGroupPageableMissingPage() {
+        mockDefaultFindAllAvailableUsersForBaseGroup();
+
+        List<User> result = cut.findAllAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(baseGroupToUserRepository).findAvailableUsers(any(), any());
+        verify(baseGroupToUserRepository, never()).findAvailableUsers(any(), any(), any());
+    }
+
+    @DisplayName("Find all available users for base group with pages, but missing size")
+    @Test
+    public void testFindAllAvailableUsersForBaseGroupPageableMissingSize() {
+        mockDefaultFindAllAvailableUsersForBaseGroup();
+
+        List<User> result = cut.findAllAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(baseGroupToUserRepository).findAvailableUsers(any(), any());
+        verify(baseGroupToUserRepository, never()).findAvailableUsers(any(), any(), any());
+    }
+
+    private void mockDefaultFindAllAvailableUsersForBaseGroup() {
+        when(baseGroupRepository.getById(eq(BASE_GROUP_ID))).thenReturn(baseGroupDao);
+        when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(baseGroupToUserRepository.findAvailableUsers(eq(baseGroupDao), eq(commonGroupDao))).thenReturn(Collections.singletonList(userDao));
+        when(baseGroupToUserRepository.findAvailableUsers(eq(baseGroupDao), eq(commonGroupDao), any())).thenReturn(Collections.singletonList(userDao));
     }
 
     @DisplayName("Find all direct users at privilege group")

@@ -42,6 +42,7 @@ public class UserService extends AbstractRepositoryService {
     public static final String PRIVILEGE_GROUP_LOG_PARAM = "privilege group";
     public static final String USER_LOG_PARAM = "user";
     public static final String USERS_LOG_PARAM = "users";
+    public static final String AVAILABLE_USERS_LOG_PARAM = " available users";
 
     @Autowired
     private UserResourceService userResourceService;
@@ -178,6 +179,23 @@ public class UserService extends AbstractRepositoryService {
         long result = countUsers(parent);
 
         log.debug(COUNT_RESULT_LOG_MESSAGE, result, USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
+     * Counts all available users for a base group
+     *
+     * @param baseGroupIdentification identification of the base group
+     * @return number of users
+     */
+    public Long countAvailableUsersForBaseGroup(String baseGroupIdentification) {
+        log.debug(COUNT_FOR_START_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
+
+        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+
+        long result = baseGroupToUserRepository.countAvailableUsers(baseGroupDao, baseGroupDao.getParentCommonGroup());
+
+        log.debug(COUNT_FOR_RESULT_LOG_MESSAGE, result, AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
         return Long.valueOf(result);
     }
 
@@ -326,6 +344,48 @@ public class UserService extends AbstractRepositoryService {
                 .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
 
         log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, parentIdentification, page, size);
+        return result;
+    }
+
+    /**
+     * Searches for all available user who are not added to the base group yet
+     *
+     * @param baseGroupIdentification identification of the base group
+     * @return List of users
+     */
+    public List<User> findAllAvailableUsersForBaseGroup(String baseGroupIdentification) {
+        log.debug(SEARCH_FOR_START_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
+
+        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+
+        List<User> result = findAllAvailableUsers(baseGroupDao, null, null)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+
+        log.debug(SEARCH_FOR_RESULT_LOG_MESSAGE, result.size(), AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all available user who are not added to the base group yet
+     *
+     * @param baseGroupIdentification identification of the base group
+     * @param page                    zero-based page index, must not be negative.
+     * @param size                    the size of the page to be returned, must be greater than 0.
+     * @return List of users
+     */
+    public List<User> findAllAvailableUsersForBaseGroup(String baseGroupIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_FOR_START_PAGE_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, page, size, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
+
+        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+
+        List<User> result = findAllAvailableUsers(baseGroupDao, page, size)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+
+        log.debug(SEARCH_FOR_RESULT_PAGE_LOG_MESSAGE, result.size(), AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification, page, size);
         return result;
     }
 
@@ -565,6 +625,21 @@ public class UserService extends AbstractRepositoryService {
                     .forEach(ptu -> result.computeIfAbsent(ptu.getFilterRole(), r -> new ArrayList<>()).add(ptu.getUser()));
         }
         return result;
+    }
+
+    /**
+     * Searches for all available user who are not added to the base group yet
+     *
+     * @param baseGroupDao base group
+     * @param page         zero-based page index, must not be negative.
+     * @param size         the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
+     */
+    private List<UserDao> findAllAvailableUsers(BaseGroupDao baseGroupDao, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return baseGroupToUserRepository.findAvailableUsers(baseGroupDao, baseGroupDao.getParentCommonGroup());
+        }
+        return baseGroupToUserRepository.findAvailableUsers(baseGroupDao, baseGroupDao.getParentCommonGroup(), PageRequest.of(page, size));
     }
 
     /**

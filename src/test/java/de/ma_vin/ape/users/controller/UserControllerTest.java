@@ -830,6 +830,159 @@ public class UserControllerTest {
         when(userService.findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
     }
 
+    @DisplayName("Count available users for base group")
+    @Test
+    public void testCountAvailableUsersForBaseGroup() {
+        when(userService.countAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of result elements");
+
+        verify(userService).countAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+    }
+
+
+    @DisplayName("Get all available users for base group")
+    @Test
+    public void testGetAvailableUsersForBaseGroup() {
+        mockDefaultGetAvailableUsersForBaseGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+        verify(userService, never()).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all available users for base group with pages, but missing page")
+    @Test
+    public void testGetAvailableUsersForBaseGroupPageableMissingPage() {
+        mockDefaultGetAvailableUsersForBaseGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available users for base group with pages, but missing size")
+    @Test
+    public void testGetAvailableUsersForBaseGroupPageableMissingSize() {
+        mockDefaultGetAvailableUsersForBaseGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all available users for base group with pages")
+    @Test
+    public void testGetAvailableUsersForBaseGroupPageable() {
+        mockDefaultGetAvailableUsersForBaseGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAvailableUsersForBaseGroup(BASE_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available user parts for base group")
+    @Test
+    public void testGetAvailableUserPartsForBaseGroup() {
+        mockDefaultGetAvailableUsersForBaseGroup();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAvailableUserPartsForBaseGroup(BASE_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+        verify(userService, never()).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all available user parts for base group with pages, but missing page")
+    @Test
+    public void testGetAvailableUserPartsForBaseGroupPageableMissingPage() {
+        mockDefaultGetAvailableUsersForBaseGroup();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAvailableUserPartsForBaseGroup(BASE_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available user parts for base group with pages, but missing size")
+    @Test
+    public void testGetAvailableUserPartsForBaseGroupPageableMissingSize() {
+        mockDefaultGetAvailableUsersForBaseGroup();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAvailableUserPartsForBaseGroup(BASE_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all available user parts for base group with pages")
+    @Test
+    public void testGetAvailableUserPartsForBaseGroupPageable() {
+        mockDefaultGetAvailableUsersForBaseGroup();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAvailableUserPartsForBaseGroup(BASE_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultGetAvailableUsersForBaseGroup() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userService.findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
+        when(userService.findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
+    }
+
     @DisplayName("Count users at privilege group")
     @Test
     public void testCountUsersAtPrivilegeGroup() {

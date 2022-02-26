@@ -59,6 +59,20 @@ Feature: Testing methods of the user controller
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The response is 1
+    When Controller is called to count available users for base group with alias "base"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
+    When Controller is called to get all available users for base group with alias "base"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "indirectUser"
+    And The "identification" property at response position 1 does not exists
+    When Controller is called to get all available user parts for base group with alias "base"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "indirectUser"
+    And The "identification" property at response position 1 does not exists
     When Controller is called to get all user of base group with alias "base" and dissolving sub groups false
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -199,6 +213,32 @@ Feature: Testing methods of the user controller
     And The identification at 3 is the same like the one of alias "user4"
     And The "identification" property at response position 4 does not exists
     When Controller is called to get all users at page 1 with size 4 from common group with alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user5"
+    And The "identification" property at response position 1 does not exists
+    When Controller is called to get all available users at page 0 with size 4 for base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user1"
+    And The identification at 1 is the same like the one of alias "user2"
+    And The identification at 2 is the same like the one of alias "user3"
+    And The identification at 3 is the same like the one of alias "user4"
+    And The "identification" property at response position 4 does not exists
+    When Controller is called to get all available users at page 1 with size 4 for base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user5"
+    And The "identification" property at response position 1 does not exists
+    When Controller is called to get all available user parts at page 0 with size 4 for base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "user1"
+    And The identification at 1 is the same like the one of alias "user2"
+    And The identification at 2 is the same like the one of alias "user3"
+    And The identification at 3 is the same like the one of alias "user4"
+    And The "identification" property at response position 4 does not exists
+    When Controller is called to get all available user parts at page 1 with size 4 for base group with alias "parentBase"
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The identification at 0 is the same like the one of alias "user5"

@@ -20,12 +20,18 @@ public abstract class AbstractRepositoryService {
     public static final String DELETE_SUB_ENTITY_LOG_MESSAGE = "{} {} are also to delete by deletion of {} with identification \"{}\" and id \"{}\"";
 
     public static final String SEARCH_START_LOG_MESSAGE = "Search for {} at {} with identification \"{}\"";
+    public static final String SEARCH_FOR_START_LOG_MESSAGE = "Search {} for {} with identification \"{}\"";
     public static final String SEARCH_START_PAGE_LOG_MESSAGE = "Search for {} page {} with size {} at {} with identification \"{}\"";
+    public static final String SEARCH_FOR_START_PAGE_LOG_MESSAGE = "Search {} page {} with size {} for {} with identification \"{}\"";
     public static final String SEARCH_RESULT_LOG_MESSAGE = "{} {} are found at {} with identification \"{}\"";
+    public static final String SEARCH_FOR_RESULT_LOG_MESSAGE = "{} {} are found for {} with identification \"{}\"";
     public static final String SEARCH_RESULT_PAGE_LOG_MESSAGE = "{} {} are found at {} with identification \"{}\" and page {} with size {}";
+    public static final String SEARCH_FOR_RESULT_PAGE_LOG_MESSAGE = "{} {} are found for {} with identification \"{}\" and page {} with size {}";
 
     public static final String COUNT_START_LOG_MESSAGE = "Count {} at {} with identification \"{}\"";
+    public static final String COUNT_FOR_START_LOG_MESSAGE = "Count {} for {} with identification \"{}\"";
     public static final String COUNT_RESULT_LOG_MESSAGE = "{} {} are count at {} with identification \"{}\"";
+    public static final String COUNT_FOR_RESULT_LOG_MESSAGE = "{} {} are count for {} with identification \"{}\"";
 
 
     /**

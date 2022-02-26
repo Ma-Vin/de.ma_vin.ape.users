@@ -194,6 +194,14 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     When Controller is called to count users at base group with alias "base"
     Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all user of base group with alias "base" and dissolving sub groups false
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all user parts of base group with alias "base" and dissolving sub groups false
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to count available users for base group with alias "base"
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all available user parts for base group with alias "base"
+    Then The result is a <httpCodeRangeCount>
     When Controller is called to remove the user with alias "userAdded" from base group with alias "base"
     Then The result is a <httpCodeRange>
     Examples:

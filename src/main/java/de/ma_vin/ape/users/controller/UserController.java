@@ -257,6 +257,50 @@ public class UserController extends AbstractDefaultOperationController {
         return responseWrapper;
     }
 
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
+    @GetMapping("/countAvailableUsersForBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countAvailableUsersForBaseGroup(@PathVariable String baseGroupIdentification) {
+        return createSuccessResponse(userService.countAvailableUsersForBaseGroup(baseGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
+    @GetMapping("/getAvailableUsersForBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserDto>> getAvailableUsersForBaseGroup(@PathVariable String baseGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return getAvailableUsersForBaseGroup(baseGroupIdentification, page, size, UserTransportMapper::convertToUserDto);
+    }
+
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
+    @GetMapping("/getAvailableUserPartsForBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserPartDto>> getAvailableUserPartsForBaseGroup(@PathVariable String baseGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return getAvailableUsersForBaseGroup(baseGroupIdentification, page, size, UserPartTransportMapper::convertToUserPartDto);
+    }
+
+    /**
+     * Loads all users who are not added to the base group yet and converts them to a wrapped list of {@code T} elements
+     *
+     * @param baseGroupIdentification the parent base group
+     * @param page                    zero-based page index, must not be negative.
+     * @param size                    the size of the page to be returned, must be greater than 0.
+     * @param mapper                  a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                     the transport model
+     * @return a wrapped list of loaded users
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAvailableUsersForBaseGroup(String baseGroupIdentification
+            , Integer page, Integer size, Function<User, T> mapper) {
+
+        return getAllSubElements(baseGroupIdentification, page, size
+                , identification -> userService.findAllAvailableUsersForBaseGroup(identification)
+                , (identification, pageToUse, sizeToUse) -> userService.findAllAvailableUsersForBaseGroup(identification, pageToUse, sizeToUse)
+                , mapper);
+    }
+
     @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/countUsersAtPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody

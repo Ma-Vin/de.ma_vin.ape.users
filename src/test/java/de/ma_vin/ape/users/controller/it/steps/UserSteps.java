@@ -177,6 +177,35 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/user/getAllUsersFromBaseGroup", getIdentification(baseGroupAlias), getAllUsersValues));
     }
 
+    @When("Controller is called to count available users for base group with alias {string}")
+    public void callControllerToCountAvailableUsersForBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/countAvailableUsersForBaseGroup", getIdentification(baseGroupAlias)));
+    }
+
+    @When("Controller is called to get all available users for base group with alias {string}")
+    public void callControllerToGetAllAvailableUsersForBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/getAvailableUsersForBaseGroup", getIdentification(baseGroupAlias)));
+    }
+
+    @When("Controller is called to get all available users at page {int} with size {int} for base group with alias {string}")
+    public void callControllerToGetAllAvailableUsersForBaseGroup(int page, int size, String baseGroupAlias) {
+        MultiValueMap<String, String> getAllUsersValues = createValueMap("page", "" + page
+                , "size", "" + size);
+        shared.setResultActions(performGetWithAuthorization("/user/getAvailableUsersForBaseGroup", getIdentification(baseGroupAlias), getAllUsersValues));
+    }
+
+    @When("Controller is called to get all available user parts for base group with alias {string}")
+    public void callControllerToGetAllAvailableUserPartsForBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/getAvailableUserPartsForBaseGroup", getIdentification(baseGroupAlias)));
+    }
+
+    @When("Controller is called to get all available user parts at page {int} with size {int} for base group with alias {string}")
+    public void callControllerToGetAllAvailableUserPartsForBaseGroup(int page, int size, String baseGroupAlias) {
+        MultiValueMap<String, String> getAllUsersValues = createValueMap("page", "" + page
+                , "size", "" + size);
+        shared.setResultActions(performGetWithAuthorization("/user/getAvailableUserPartsForBaseGroup", getIdentification(baseGroupAlias), getAllUsersValues));
+    }
+
     @When("Controller is called to add the user with alias {string} as {roleValue} to privilege group with alias {string}")
     public void callControllerToAddUserToPrivilegeGroup(String userAlias, Role role, String privilegeGroupAlias) {
         UserIdRoleDto baseGroupIdRoleDto = new UserIdRoleDto();
