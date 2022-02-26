@@ -74,13 +74,13 @@ Feature: Testing methods of the user controller
     When Controller is called to get all user parts from common group with identification of "common"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
+      | role    | httpCodeRange |
     # indirect included: test only the httpCode switch from ok to not ok
       #| ADMIN       | 2xx           |
       #| MANAGER     | 2xx           |
       #| CONTRIBUTOR | 2xx           |
-      | VISITOR     | 2xx           |
-      | BLOCKED     | 4xx           |
+      | VISITOR | 2xx           |
+      | BLOCKED | 4xx           |
 
   Scenario Outline: Check <role> privilege to update <testName> with role <roleOfToUpdate>
     Given There exists an user with first name "New", last name "User", password "1 Dummy Password!" and role <roleOfToUpdate> with alias "anOtherUser" at common group "common"
@@ -131,18 +131,18 @@ Feature: Testing methods of the user controller
     When Controller is called to set the password "Abcdefg123_!" of user with the identification of the alias <aliasToUpdate>
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange | aliasToUpdate | testName      |
+      | role    | httpCodeRange | aliasToUpdate | testName      |
     # indirect included: test only the httpCode switch from ok to not ok
-      | ADMIN       | 2xx           | "anOtherUser" | an other user |
-      | MANAGER     | 4xx           | "anOtherUser" | an other user |
+      | ADMIN   | 2xx           | "anOtherUser" | an other user |
+      | MANAGER | 4xx           | "anOtherUser" | an other user |
       #| CONTRIBUTOR | 4xx           | "anOtherUser" | an other user |
       #| VISITOR     | 4xx           | "anOtherUser" | an other user |
       #| BLOCKED     | 4xx           | "anOtherUser" | an other user |
       #| ADMIN       | 2xx           | "user"        | itself        |
       #| MANAGER     | 2xx           | "user"        | itself        |
       #| CONTRIBUTOR | 2xx           | "user"        | itself        |
-      | VISITOR     | 2xx           | "user"        | itself        |
-      | BLOCKED     | 4xx           | "user"        | itself        |
+      | VISITOR | 2xx           | "user"        | itself        |
+      | BLOCKED | 4xx           | "user"        | itself        |
 
   Scenario Outline: Check <role> privilege to set the role of an user
     Given There exists an user with first name "New" and last name "User" with alias "userToUpdate" at common group "common"
@@ -151,10 +151,10 @@ Feature: Testing methods of the user controller
     When Controller is called to set the role CONTRIBUTOR of user with the identification of the alias "userToUpdate"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
+      | role    | httpCodeRange |
     # indirect included: test only the httpCode switch from ok to not ok
-      | ADMIN       | 2xx           |
-      | MANAGER     | 4xx           |
+      | ADMIN   | 2xx           |
+      | MANAGER | 4xx           |
       #| CONTRIBUTOR | 4xx           |
       #| VISITOR     | 4xx           |
       #| BLOCKED     | 4xx           |
@@ -170,6 +170,14 @@ Feature: Testing methods of the user controller
     When Controller is called to add the user with alias "userToAdd" as MANAGER to privilege group with alias "privilege"
     Then The result is a <httpCodeRange>
     When Controller is called to count users at privilege group with alias "privilege" with role NOT_RELEVANT
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all user of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups false
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all user parts of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups false
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to count available users for privilege group with alias "privilege"
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all available user parts for privilege group with alias "privilege"
     Then The result is a <httpCodeRangeCount>
     When Controller is called to remove the user with alias "userAdded" from privilege group with alias "privilege"
     Then The result is a <httpCodeRange>
@@ -233,10 +241,10 @@ Feature: Testing methods of the user controller
     When Controller is called to get all user parts of privilege group with alias "privilege" with role NOT_RELEVANT and dissolving sub groups false
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
+      | role    | httpCodeRange |
     # indirect included: test only the httpCode switch from ok to not ok
       #| ADMIN       | 2xx           |
       #| MANAGER     | 2xx           |
       #| CONTRIBUTOR | 2xx           |
-      | VISITOR     | 2xx           |
-      | BLOCKED     | 4xx           |
+      | VISITOR | 2xx           |
+      | BLOCKED | 4xx           |

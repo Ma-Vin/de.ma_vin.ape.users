@@ -292,6 +292,21 @@ public class UserServiceTest {
         verify(privilegeGroupToUserRepository, never()).countByPrivilegeGroupAndFilterRole(any(), any());
     }
 
+    @DisplayName("Count available users for privilege group")
+    @Test
+    public void testCountAvailableUsersForPrivilegeGroup() {
+        when(privilegeGroupRepository.getById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
+        when(privilegeGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(privilegeGroupToUserRepository.countAvailableUsers(eq(privilegeGroupDao), eq(commonGroupDao))).thenReturn(42L);
+
+        Long result = cut.countAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeGroupToUserRepository).countAvailableUsers(any(), any());
+    }
+
+
     @DisplayName("Find all users at common group")
     @Test
     public void testFindAllUsersAtCommonGroups() {
@@ -895,6 +910,70 @@ public class UserServiceTest {
         when(privilegeGroup.getUsersByRole(any(), any())).thenReturn(Collections.emptyList());
         when(privilegeGroup.getUsersByRole(eq(Role.MANAGER), any())).thenReturn(Collections.singletonList(user));
         when(privilegeGroupService.findPrivilegeGroupTree(any())).thenReturn(Optional.of(privilegeGroup));
+    }
+
+
+    @DisplayName("Find all available users for privilege group")
+    @Test
+    public void testFindAllAvailableUsersForPrivilegeGroup() {
+        mockDefaultFindAllAvailableUsersForPrivilegeGroup();
+
+        List<User> result = cut.findAllAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository).findAvailableUsers(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAvailableUsers(any(), any(), any());
+    }
+
+    @DisplayName("Find all available users for privilege group with pages")
+    @Test
+    public void testFindAllAvailableUsersForPrivilegeGroupPageable() {
+        mockDefaultFindAllAvailableUsersForPrivilegeGroup();
+
+        List<User> result = cut.findAllAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository, never()).findAvailableUsers(any(), any());
+        verify(privilegeGroupToUserRepository).findAvailableUsers(any(), any(), any());
+    }
+
+    @DisplayName("Find all available users for privilege group with pages, but missing page")
+    @Test
+    public void testFindAllAvailableUsersForPrivilegeGroupPageableMissingPage() {
+        mockDefaultFindAllAvailableUsersForPrivilegeGroup();
+
+        List<User> result = cut.findAllAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository).findAvailableUsers(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAvailableUsers(any(), any(), any());
+    }
+
+    @DisplayName("Find all available users for privilege group with pages, but missing size")
+    @Test
+    public void testFindAllAvailableUsersForPrivilegeGroupPageableMissingSize() {
+        mockDefaultFindAllAvailableUsersForPrivilegeGroup();
+
+        List<User> result = cut.findAllAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of users at result");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first user entry");
+
+        verify(privilegeGroupToUserRepository).findAvailableUsers(any(), any());
+        verify(privilegeGroupToUserRepository, never()).findAvailableUsers(any(), any(), any());
+    }
+
+    private void mockDefaultFindAllAvailableUsersForPrivilegeGroup() {
+        when(privilegeGroupRepository.getById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
+        when(privilegeGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(privilegeGroupToUserRepository.findAvailableUsers(eq(privilegeGroupDao), eq(commonGroupDao))).thenReturn(Collections.singletonList(userDao));
+        when(privilegeGroupToUserRepository.findAvailableUsers(eq(privilegeGroupDao), eq(commonGroupDao), any())).thenReturn(Collections.singletonList(userDao));
     }
 
     @DisplayName("Save user with admin group parent")

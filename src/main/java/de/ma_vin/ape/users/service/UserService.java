@@ -246,6 +246,23 @@ public class UserService extends AbstractRepositoryService {
     }
 
     /**
+     * Counts all available users for a privilege group
+     *
+     * @param privilegeGroupIdentification identification of the privilege group
+     * @return number of users
+     */
+    public Long countAvailableUsersForPrivilegeGroup(String privilegeGroupIdentification) {
+        log.debug(COUNT_FOR_START_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+
+        long result = privilegeGroupToUserRepository.countAvailableUsers(privilegeGroupDao, privilegeGroupDao.getParentCommonGroup());
+
+        log.debug(COUNT_FOR_RESULT_LOG_MESSAGE, result, AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
      * Searches for all user children of a parent admin group
      *
      * @param parentIdentification identification of the parent
@@ -495,6 +512,49 @@ public class UserService extends AbstractRepositoryService {
         return result;
     }
 
+
+    /**
+     * Searches for all available user who are not added to the privilege group yet
+     *
+     * @param privilegeGroupIdentification identification of the privilege group
+     * @return List of users
+     */
+    public List<User> findAllAvailableUsersForPrivilegeGroup(String privilegeGroupIdentification) {
+        log.debug(SEARCH_FOR_START_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+
+        List<User> result = findAllAvailableUsers(privilegeGroupDao, null, null)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+
+        log.debug(SEARCH_FOR_RESULT_LOG_MESSAGE, result.size(), AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all available user who are not added to the privilege group yet
+     *
+     * @param privilegeGroupIdentification identification of the privilege group
+     * @param page                         zero-based page index, must not be negative.
+     * @param size                         the size of the page to be returned, must be greater than 0.
+     * @return List of users
+     */
+    public List<User> findAllAvailableUsersForPrivilegeGroup(String privilegeGroupIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_FOR_START_PAGE_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, page, size, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+
+        List<User> result = findAllAvailableUsers(privilegeGroupDao, page, size)
+                .stream()
+                .map(UserAccessMapper::convertToUser)
+                .sorted(Comparator.comparing(User::getIdentification)).collect(Collectors.toList());
+
+        log.debug(SEARCH_FOR_RESULT_PAGE_LOG_MESSAGE, result.size(), AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification, page, size);
+        return result;
+    }
+
     /**
      * Count all user children of a parent admin group
      *
@@ -640,6 +700,21 @@ public class UserService extends AbstractRepositoryService {
             return baseGroupToUserRepository.findAvailableUsers(baseGroupDao, baseGroupDao.getParentCommonGroup());
         }
         return baseGroupToUserRepository.findAvailableUsers(baseGroupDao, baseGroupDao.getParentCommonGroup(), PageRequest.of(page, size));
+    }
+
+    /**
+     * Searches for all available user who are not added to the privilege group yet
+     *
+     * @param privilegeGroupDao privilege group
+     * @param page              zero-based page index, must not be negative.
+     * @param size              the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
+     */
+    private List<UserDao> findAllAvailableUsers(PrivilegeGroupDao privilegeGroupDao, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return privilegeGroupToUserRepository.findAvailableUsers(privilegeGroupDao, privilegeGroupDao.getParentCommonGroup());
+        }
+        return privilegeGroupToUserRepository.findAvailableUsers(privilegeGroupDao, privilegeGroupDao.getParentCommonGroup(), PageRequest.of(page, size));
     }
 
     /**

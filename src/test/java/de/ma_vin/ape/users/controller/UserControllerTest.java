@@ -1183,6 +1183,157 @@ public class UserControllerTest {
         when(userService.findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any())).thenReturn(rolesAndUsers);
     }
 
+    @DisplayName("Count available users for privilege group")
+    @Test
+    public void testCountAvailableUsersForPrivilegeGroup() {
+        when(userService.countAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of result elements");
+
+        verify(userService).countAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Get all available users for privilege group")
+    @Test
+    public void testGetAvailableUsersForPrivilegeGroup() {
+        mockDefaultGetAvailableUsersForPrivilegeGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(userService, never()).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all available users for privilege group with pages, but missing page")
+    @Test
+    public void testGetAvailableUsersForPrivilegeGroupPageableMissingPage() {
+        mockDefaultGetAvailableUsersForPrivilegeGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available users for privilege group with pages, but missing size")
+    @Test
+    public void testGetAvailableUsersForPrivilegeGroupPageableMissingSize() {
+        mockDefaultGetAvailableUsersForPrivilegeGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all available users for privilege group with pages")
+    @Test
+    public void testGetAvailableUsersForPrivilegeGroupPageable() {
+        mockDefaultGetAvailableUsersForPrivilegeGroup();
+
+        ResponseWrapper<List<UserDto>> response = cut.getAvailableUsersForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available user parts for privilege group")
+    @Test
+    public void testGetAvailableUserPartsForPrivilegeGroup() {
+        mockDefaultGetAvailableUsersForPrivilegeGroup();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAvailableUserPartsForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(userService, never()).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all available user parts for privilege group with pages, but missing page")
+    @Test
+    public void testGetAvailableUserPartsForPrivilegeGroupPageableMissingPage() {
+        mockDefaultGetAvailableUsersForPrivilegeGroup();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAvailableUserPartsForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available user parts for privilege group with pages, but missing size")
+    @Test
+    public void testGetAvailableUserPartsForPrivilegeGroupPageableMissingSize() {
+        mockDefaultGetAvailableUsersForPrivilegeGroup();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAvailableUserPartsForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all available user parts for privilege group with pages")
+    @Test
+    public void testGetAvailableUserPartsForPrivilegeGroupPageable() {
+        mockDefaultGetAvailableUsersForPrivilegeGroup();
+
+        ResponseWrapper<List<UserPartDto>> response = cut.getAvailableUserPartsForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(USER_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(userService, never()).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(userService).findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultGetAvailableUsersForPrivilegeGroup() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userService.findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
+        when(userService.findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
+    }
 
     @DisplayName("Set users password")
     @Test

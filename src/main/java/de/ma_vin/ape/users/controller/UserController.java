@@ -374,6 +374,50 @@ public class UserController extends AbstractDefaultOperationController {
         return responseWrapper;
     }
 
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/countAvailableUsersForPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countAvailableUsersForPrivilegeGroup(@PathVariable String privilegeGroupIdentification) {
+        return createSuccessResponse(userService.countAvailableUsersForPrivilegeGroup(privilegeGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/getAvailableUsersForPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserDto>> getAvailableUsersForPrivilegeGroup(@PathVariable String privilegeGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return getAvailableUsersForPrivilegeGroup(privilegeGroupIdentification, page, size, UserTransportMapper::convertToUserDto);
+    }
+
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/getAvailableUserPartsForPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UserPartDto>> getAvailableUserPartsForPrivilegeGroup(@PathVariable String privilegeGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return getAvailableUsersForPrivilegeGroup(privilegeGroupIdentification, page, size, UserPartTransportMapper::convertToUserPartDto);
+    }
+
+    /**
+     * Loads all users who are not added to the privilege group yet and converts them to a wrapped list of {@code T} elements
+     *
+     * @param privilegeGroupIdentification the privilege group
+     * @param page                         zero-based page index, must not be negative.
+     * @param size                         the size of the page to be returned, must be greater than 0.
+     * @param mapper                       a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                          the transport model
+     * @return a wrapped list of loaded users
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAvailableUsersForPrivilegeGroup(String privilegeGroupIdentification
+            , Integer page, Integer size, Function<User, T> mapper) {
+
+        return getAllSubElements(privilegeGroupIdentification, page, size
+                , identification -> userService.findAllAvailableUsersForPrivilegeGroup(identification)
+                , (identification, pageToUse, sizeToUse) -> userService.findAllAvailableUsersForPrivilegeGroup(identification, pageToUse, sizeToUse)
+                , mapper);
+    }
+
     @FunctionalInterface
     private interface UserRoleMapper<T extends IBasicTransportable> {
         T map(User user, Role role);

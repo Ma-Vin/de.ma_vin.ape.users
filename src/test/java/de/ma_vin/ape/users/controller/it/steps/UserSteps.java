@@ -243,6 +243,35 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/user/getAllUsersFromPrivilegeGroup", getIdentification(privilegeGroupAlias), getAllUsersValues));
     }
 
+    @When("Controller is called to count available users for privilege group with alias {string}")
+    public void callControllerToCountAvailableUsersForPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/countAvailableUsersForPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    }
+
+    @When("Controller is called to get all available users for privilege group with alias {string}")
+    public void callControllerToGetAllAvailableUsersForPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/getAvailableUsersForPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    }
+
+    @When("Controller is called to get all available users at page {int} with size {int} for privilege group with alias {string}")
+    public void callControllerToGetAllAvailableUsersForPrivilegeGroup(int page, int size, String privilegeGroupAlias) {
+        MultiValueMap<String, String> getAllUsersValues = createValueMap("page", "" + page
+                , "size", "" + size);
+        shared.setResultActions(performGetWithAuthorization("/user/getAvailableUsersForPrivilegeGroup", getIdentification(privilegeGroupAlias), getAllUsersValues));
+    }
+
+    @When("Controller is called to get all available user parts for privilege group with alias {string}")
+    public void callControllerToGetAllAvailableUserPartsForPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/getAvailableUserPartsForPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    }
+
+    @When("Controller is called to get all available user parts at page {int} with size {int} for privilege group with alias {string}")
+    public void callControllerToGetAllAvailableUserPartsForPrivilegeGroup(int page, int size, String privilegeGroupAlias) {
+        MultiValueMap<String, String> getAllUsersValues = createValueMap("page", "" + page
+                , "size", "" + size);
+        shared.setResultActions(performGetWithAuthorization("/user/getAvailableUserPartsForPrivilegeGroup", getIdentification(privilegeGroupAlias), getAllUsersValues));
+    }
+
     @When("Controller is called to remove the user with alias {string} from privilege group with alias {string}")
     public void callControllerToRemoveUserFromPrivilegeGroup(String userAlias, String privilegeGroupAlias) {
         shared.setResultActions(performPatchWithAuthorization("/user/removeUserFromPrivilegeGroup", getIdentification(privilegeGroupAlias)
