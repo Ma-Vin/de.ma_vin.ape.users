@@ -82,6 +82,20 @@ Feature: Testing methods of the base group controller
   Scenario: Add, count and remove base groups at privilege one
     Given There exists a privilege group with name "Parent Privilege Group Name" with alias "parentPrivilege" at common group "common"
     And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    When Controller is called to count available base groups for privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
+    When Controller is called to get all available base groups for privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "subBase"
+    And The "identification" property at response position 1 does not exists
+    When Controller is called to get all available base group parts for privilege group with alias "parentPrivilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "subBase"
+    And The "identification" property at response position 1 does not exists
     When Controller is called to add the base group with alias "subBase" as MANAGER to privilege group with alias "parentPrivilege"
     Then The result is Ok and Json
     And The status of the result should be "OK"

@@ -668,6 +668,158 @@ public class BaseGroupControllerTest {
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
     }
 
+    @DisplayName("Count available base groups for privilege group")
+    @Test
+    public void testCountAvailableBasesForPrivilegeGroup() {
+        when(baseGroupService.countAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Long.valueOf(42L));
+
+        ResponseWrapper<Long> response = cut.countAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+
+        assertEquals(Long.valueOf(42L), response.getResponse(), "Wrong number of result elements");
+
+        verify(baseGroupService).countAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Get all available base groups for privilege group")
+    @Test
+    public void testGetAvailableBasesForPrivilegeGroup() {
+        mockDefaultGetAvailableBasesForPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService, never()).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all available base groups for privilege group with pages, but missing page")
+    @Test
+    public void testGetAvailableBasesForPrivilegeGroupPageableMissingPage() {
+        mockDefaultGetAvailableBasesForPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available base groups for privilege group with pages, but missing size")
+    @Test
+    public void testGetAvailableBasesForPrivilegeGroupPageableMissingSize() {
+        mockDefaultGetAvailableBasesForPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all available base groups for privilege group with pages")
+    @Test
+    public void testGetAvailableBasesForPrivilegeGroupPageable() {
+        mockDefaultGetAvailableBasesForPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available base group parts for privilege group")
+    @Test
+    public void testGetAvailableBasePartsForPrivilegeGroup() {
+        mockDefaultGetAvailableBasesForPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllAvailableBasePartsForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, null);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService, never()).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any());
+    }
+
+    @DisplayName("Get all available base group parts for privilege group with pages, but missing page")
+    @Test
+    public void testGetAvailableBasePartsForPrivilegeGroupPageableMissingPage() {
+        mockDefaultGetAvailableBasesForPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllAvailableBasePartsForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), eq(Integer.valueOf(20)));
+    }
+
+    @DisplayName("Get all available base group for privilege group with pages, but missing size")
+    @Test
+    public void testGetAvailableBasePartsForPrivilegeGroupPageableMissingSize() {
+        mockDefaultGetAvailableBasesForPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllAvailableBasePartsForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, null);
+
+        checkWarn(response);
+
+        assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), any());
+    }
+
+    @DisplayName("Get all available base group for privilege group with pages")
+    @Test
+    public void testGetAvailableBasePartsForPrivilegeGroupPageable() {
+        mockDefaultGetAvailableBasesForPrivilegeGroup();
+
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllAvailableBasePartsForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 2, 20);
+
+        checkOk(response);
+
+        assertEquals(1, response.getResponse().size(), "Wrong number of result elements");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupService, never()).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
+    }
+
+    private void mockDefaultGetAvailableBasesForPrivilegeGroup() {
+        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupService.findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroup));
+        when(baseGroupService.findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(baseGroup));
+    }
+
     @DisplayName("Get all base groups")
     @Test
     public void testGetAllBaseGroups() {

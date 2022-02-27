@@ -60,6 +60,8 @@ public class BaseGroupServiceTest {
     @Mock
     private PrivilegeGroupDao privilegeGroupDao;
     @Mock
+    private CommonGroupDao commonGroupDao;
+    @Mock
     private UserDao userDao;
 
     @BeforeEach
@@ -389,12 +391,32 @@ public class BaseGroupServiceTest {
         when(privilegeToBaseGroupRepository.countByPrivilegeGroup(any())).thenReturn(42L);
         when(privilegeToBaseGroupRepository.countByPrivilegeGroupAndFilterRole(any(), any())).thenReturn(0L);
 
-        Long result = cut.countBasesAtPrivilegeGroup(COMMON_GROUP_IDENTIFICATION, null);
+        Long result = cut.countBasesAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null);
         assertNotNull(result, "The result should not be null");
         assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
 
         verify(privilegeToBaseGroupRepository).countByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository, never()).countByPrivilegeGroupAndFilterRole(any(), any());
+    }
+
+    @DisplayName("Count available base groups for privilege group")
+    @Test
+    public void testCountAvailableBasesForPrivilegeGroup() {
+        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
+        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+
+        when(privilegeGroupRepository.getById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
+        when(privilegeToBaseGroupRepository.countAvailableBaseGroups(eq(privilegeGroupDao), eq(commonGroupDao))).thenReturn(42L);
+
+        Long result = cut.countAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeToBaseGroupRepository).countAvailableBaseGroups(any(), any());
     }
 
     @DisplayName("Count base groups at privilege group with role")
@@ -584,6 +606,82 @@ public class BaseGroupServiceTest {
             });
         }
     }
+
+    @DisplayName("Find all available base groups for privilege group")
+    @Test
+    public void testFindAllAvailableBasesForPrivilegeGroup() {
+        defaultMockFindAllAvailableBasesForPrivilegeGroup();
+
+        List<BaseGroup> result = cut.findAllAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeToBaseGroupRepository).findAvailableBaseGroups(any(), any());
+        verify(privilegeToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
+    }
+
+    @DisplayName("Find available base groups for privilege group, with pages")
+    @Test
+    public void testFindAllAvailableBasesForPrivilegeGroupPageable() {
+        defaultMockFindAllAvailableBasesForPrivilegeGroup();
+
+        List<BaseGroup> result = cut.findAllAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any());
+        verify(privilegeToBaseGroupRepository).findAvailableBaseGroups(any(), any(), any());
+    }
+
+    @DisplayName("Find all available base groups for privilege group with pages, but missing page")
+    @Test
+    public void testFindAllAvailableBasesForPrivilegeGroupPageableMissingPage() {
+        defaultMockFindAllAvailableBasesForPrivilegeGroup();
+
+        List<BaseGroup> result = cut.findAllAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeToBaseGroupRepository).findAvailableBaseGroups(any(), any());
+        verify(privilegeToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
+    }
+
+    @DisplayName("Find all available base groups for privilege group with pages, but missing size")
+    @Test
+    public void testFindAllAvailableBasesForPrivilegeGroupPageableMissingSize() {
+        defaultMockFindAllAvailableBasesForPrivilegeGroup();
+
+        List<BaseGroup> result = cut.findAllAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeToBaseGroupRepository).findAvailableBaseGroups(any(), any());
+        verify(privilegeToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
+    }
+
+    private void defaultMockFindAllAvailableBasesForPrivilegeGroup() {
+        when(privilegeGroupDao.getId()).thenReturn(PRIVILEGE_GROUP_ID);
+        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(privilegeGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+
+        when(privilegeGroupRepository.getById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
+        when(privilegeToBaseGroupRepository.findAvailableBaseGroups(eq(privilegeGroupDao), eq(commonGroupDao))).thenReturn(Collections.singletonList(baseGroupDao));
+        when(privilegeToBaseGroupRepository.findAvailableBaseGroups(eq(privilegeGroupDao), eq(commonGroupDao), any())).thenReturn(Collections.singletonList(baseGroupDao));
+    }
+
 
     @DisplayName("Save base group")
     @Test

@@ -89,6 +89,14 @@ Feature: Testing security at methods of the base group controller
     Then The result is a <httpCodeRange>
     When Controller is called to count sub base groups at privilege group with alias "parentPrivilege"
     Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all sub base groups of privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to count available base groups for privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all available base groups for privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all available base group parts for privilege group with alias "parentPrivilege"
+    Then The result is a <httpCodeRangeCount>
     When Controller is called to remove the base group with alias "subBase" from privilege group with alias "parentPrivilege"
     Then The result is a <httpCodeRange>
     Examples:

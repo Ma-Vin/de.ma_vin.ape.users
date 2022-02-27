@@ -184,6 +184,50 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , mapper);
     }
 
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/countAvailableBasesForPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countAvailableBasesForPrivilegeGroup(@PathVariable String privilegeGroupIdentification) {
+        return createSuccessResponse(baseGroupService.countAvailableBasesForPrivilegeGroup(privilegeGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/getAllAvailableBasesForPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupDto>> getAllAvailableBasesForPrivilegeGroup(@PathVariable String privilegeGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return findAllAvailableBasesForPrivilegeGroup(privilegeGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
+    }
+
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/getAllAvailableBasePartsForPrivilegeGroup/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupPartDto>> getAllAvailableBasePartsForPrivilegeGroup(@PathVariable String privilegeGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return findAllAvailableBasesForPrivilegeGroup(privilegeGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+    }
+
+    /**
+     * Loads all base groups which are not added to the privilege group yet and converts them to a wrapped list of {@code T} elements
+     *
+     * @param privilegeGroupIdentification the privilege group
+     * @param page                         zero-based page index, must not be negative.
+     * @param size                         the size of the page to be returned, must be greater than 0.
+     * @param mapper                       a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                          the transport model
+     * @return a wrapped list of loaded base groups
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> findAllAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification
+            , Integer page, Integer size, Function<BaseGroup, T> mapper) {
+
+        return getAllSubElements(privilegeGroupIdentification, page, size
+                , identification -> baseGroupService.findAllAvailableBasesForPrivilegeGroup(identification)
+                , (identification, pageToUse, sizeToUse) -> baseGroupService.findAllAvailableBasesForPrivilegeGroup(identification, pageToUse, sizeToUse)
+                , mapper);
+    }
+
     @PreAuthorize("isContributor(#parentGroupIdentification, 'BASE')")
     @PatchMapping("/addBaseToBaseGroup/{parentGroupIdentification}")
     public @ResponseBody

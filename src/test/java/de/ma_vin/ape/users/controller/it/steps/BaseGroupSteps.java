@@ -172,6 +172,11 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/group/base/countBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias), countBaseAtPrivilegeGroupValues));
     }
 
+    @When("Controller is called to count available base groups for privilege group with alias {string}")
+    public void callControllerToCountAvailableBasesForPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/countAvailableBasesForPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    }
+
     @When("Controller is called to get all sub base groups of privilege group with alias {string}")
     public void callControllerToFindAllBaseAtPrivilegeGroup(String privilegeGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
@@ -193,6 +198,16 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     public void callControllerToFindAllBaseAtPrivilegeGroup(int page, int size, String privilegeGroupAlias) {
         MultiValueMap<String, String> getAllBaseGroupValues = createValueMap("page", "" + page, "size", "" + size);
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias), getAllBaseGroupValues));
+    }
+
+    @When("Controller is called to get all available base groups for privilege group with alias {string}")
+    public void callControllerToGetAllAvailableBasesForPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllAvailableBasesForPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    }
+
+    @When("Controller is called to get all available base group parts for privilege group with alias {string}")
+    public void callControllerToGetAllAvailableBasePartsForPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllAvailableBasePartsForPrivilegeGroup", getIdentification(privilegeGroupAlias)));
     }
 
     @When("Controller is called to count base groups at common group with alias {string}")

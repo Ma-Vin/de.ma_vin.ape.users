@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +29,7 @@ import java.util.Optional;
 public class BaseGroupService extends AbstractRepositoryService {
     public static final String GROUP_LOG_PARAM = "base group";
     public static final String GROUPS_LOG_PARAM = "base groups";
+    public static final String AVAILABLE_GROUPS_LOG_PARAM = " available users";
     public static final String COMMON_GROUP_LOG_PARAM = "common group";
     public static final String PRIVILEGE_GROUP_LOG_PARAM = "privilege group";
 
@@ -265,6 +267,23 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Counts all available base groups for a privilege group
+     *
+     * @param privilegeGroupIdentification identification of the privilege group
+     * @return number of base groups
+     */
+    public Long countAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification) {
+        log.debug(COUNT_FOR_START_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+
+        long result = privilegeToBaseGroupRepository.countAvailableBaseGroups(privilegeGroupDao, privilegeGroupDao.getParentCommonGroup());
+
+        log.debug(COUNT_FOR_RESULT_LOG_MESSAGE, result, AVAILABLE_GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
      * Searches for all base groups at a parent privilege group with a given role
      *
      * @param parentIdentification identification of the parent
@@ -305,6 +324,49 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Searches for all available base groups who are not added to the privilege group yet
+     *
+     * @param privilegeGroupIdentification identification of the privilege group
+     * @return List of base groups
+     */
+    public List<BaseGroup> findAllAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification) {
+        log.debug(SEARCH_FOR_START_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+
+        List<BaseGroup> result = findAllAvailableBaseGroups(privilegeGroupDao, null, null)
+                .stream()
+                .map(b -> GroupAccessMapper.convertToBaseGroup(b, false))
+                .sorted(Comparator.comparing(BaseGroup::getIdentification)).toList();
+
+        log.debug(SEARCH_FOR_RESULT_LOG_MESSAGE, result.size(), AVAILABLE_GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all available base groups who are not added to the privilege group yet
+     *
+     * @param privilegeGroupIdentification identification of the privilege group
+     * @param page                         zero-based page index, must not be negative.
+     * @param size                         the size of the page to be returned, must be greater than 0.
+     * @return List of base groups
+     */
+    public List<BaseGroup> findAllAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_FOR_START_PAGE_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, page, size, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
+
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+
+        List<BaseGroup> result = findAllAvailableBaseGroups(privilegeGroupDao, page, size)
+                .stream()
+                .map(b -> GroupAccessMapper.convertToBaseGroup(b, false))
+                .sorted(Comparator.comparing(BaseGroup::getIdentification)).toList();
+
+        log.debug(SEARCH_FOR_RESULT_PAGE_LOG_MESSAGE, result.size(), AVAILABLE_GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification, page, size);
+        return result;
+    }
+
+
+    /**
      * Count all base groups
      *
      * @param parent parent common group
@@ -327,6 +389,21 @@ public class BaseGroupService extends AbstractRepositoryService {
             return baseGroupRepository.findByParentCommonGroup(parent);
         }
         return baseGroupRepository.findByParentCommonGroup(parent, PageRequest.of(page, size));
+    }
+
+    /**
+     * Searches for all available base groups which are not added to the privilege group yet
+     *
+     * @param privilegeGroupDao privilege group
+     * @param page              zero-based page index, must not be negative.
+     * @param size              the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
+     */
+    private List<BaseGroupDao> findAllAvailableBaseGroups(PrivilegeGroupDao privilegeGroupDao, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return privilegeToBaseGroupRepository.findAvailableBaseGroups(privilegeGroupDao, privilegeGroupDao.getParentCommonGroup());
+        }
+        return privilegeToBaseGroupRepository.findAvailableBaseGroups(privilegeGroupDao, privilegeGroupDao.getParentCommonGroup(), PageRequest.of(page, size));
     }
 
     /**
