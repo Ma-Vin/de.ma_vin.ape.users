@@ -291,4 +291,48 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , (identification, pageToUse, sizeToUse) -> baseGroupService.findAllBasesAtBaseGroup(identification, pageToUse, sizeToUse)
                 , mapper);
     }
+
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
+    @GetMapping("/countAvailableBasesForBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<Long> countAvailableBasesForBaseGroup(@PathVariable String baseGroupIdentification) {
+        return createSuccessResponse(baseGroupService.countAvailableBasesForBaseGroup(baseGroupIdentification));
+    }
+
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
+    @GetMapping("/getAllAvailableBasesForBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupDto>> getAllAvailableBasesForBaseGroup(@PathVariable String baseGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return findAllAvailableBasesForBaseGroup(baseGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
+    }
+
+    @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
+    @GetMapping("/getAllAvailableBasePartsForBaseGroup/{baseGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<BaseGroupPartDto>> getAllAvailableBasePartsForBaseGroup(@PathVariable String baseGroupIdentification
+            , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
+
+        return findAllAvailableBasesForBaseGroup(baseGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+    }
+
+    /**
+     * Loads all base groups which are not added to the base group yet and converts them to a wrapped list of {@code T} elements
+     *
+     * @param baseGroupIdentification the base group
+     * @param page                    zero-based page index, must not be negative.
+     * @param size                    the size of the page to be returned, must be greater than 0.
+     * @param mapper                  a mapper to convert the loaded sub elements from the domain to the transport model
+     * @param <T>                     the transport model
+     * @return a wrapped list of loaded base groups
+     */
+    private <T extends ITransportable> ResponseWrapper<List<T>> findAllAvailableBasesForBaseGroup(String baseGroupIdentification
+            , Integer page, Integer size, Function<BaseGroup, T> mapper) {
+
+        return getAllSubElements(baseGroupIdentification, page, size
+                , identification -> baseGroupService.findAllAvailableBasesForBaseGroup(identification)
+                , (identification, pageToUse, sizeToUse) -> baseGroupService.findAllAvailableBasesForBaseGroup(identification, pageToUse, sizeToUse)
+                , mapper);
+    }
 }

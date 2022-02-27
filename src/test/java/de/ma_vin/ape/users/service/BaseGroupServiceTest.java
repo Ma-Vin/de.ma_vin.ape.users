@@ -306,6 +306,26 @@ public class BaseGroupServiceTest {
         verify(baseToBaseGroupRepository).countByBaseGroup(any());
     }
 
+    @DisplayName("Count available base groups for base group")
+    @Test
+    public void testCountAvailableBasesForBaseGroup() {
+        when(parentBaseGroupDao.getId()).thenReturn(PARENT_BASE_GROUP_ID);
+        when(parentBaseGroupDao.getIdentification()).thenReturn(PARENT_BASE_GROUP_IDENTIFICATION);
+        when(parentBaseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+
+        when(baseGroupRepository.getById(eq(PARENT_BASE_GROUP_ID))).thenReturn(parentBaseGroupDao);
+        when(baseToBaseGroupRepository.countAvailableBaseGroups(eq(parentBaseGroupDao), eq(commonGroupDao))).thenReturn(42L);
+
+        Long result = cut.countAvailableBasesForBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
+
+        verify(baseGroupRepository).getById(any());
+        verify(baseToBaseGroupRepository).countAvailableBaseGroups(any(), any());
+    }
+
     @DisplayName("Find all base groups at base group")
     @Test
     public void testFindAllBasesAtBaseGroup() {
@@ -383,6 +403,82 @@ public class BaseGroupServiceTest {
             }
             return Collections.emptyList();
         });
+    }
+
+
+    @DisplayName("Find all available base groups for privilege group")
+    @Test
+    public void testFindAllAvailableBasesForBaseGroup() {
+        defaultMockFindAllAvailableBasesForBaseGroup();
+
+        List<BaseGroup> result = cut.findAllAvailableBasesForBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupRepository).getById(any());
+        verify(baseToBaseGroupRepository).findAvailableBaseGroups(any(), any());
+        verify(baseToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
+    }
+
+    @DisplayName("Find available base groups for privilege group, with pages")
+    @Test
+    public void testFindAllAvailableBasesForBaseGroupPageable() {
+        defaultMockFindAllAvailableBasesForBaseGroup();
+
+        List<BaseGroup> result = cut.findAllAvailableBasesForBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 1, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupRepository).getById(any());
+        verify(baseToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any());
+        verify(baseToBaseGroupRepository).findAvailableBaseGroups(any(), any(), any());
+    }
+
+    @DisplayName("Find all available base groups for privilege group with pages, but missing page")
+    @Test
+    public void testFindAllAvailableBasesForBaseGroupPageableMissingPage() {
+        defaultMockFindAllAvailableBasesForBaseGroup();
+
+        List<BaseGroup> result = cut.findAllAvailableBasesForBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, null, 20);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupRepository).getById(any());
+        verify(baseToBaseGroupRepository).findAvailableBaseGroups(any(), any());
+        verify(baseToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
+    }
+
+    @DisplayName("Find all available base groups for privilege group with pages, but missing size")
+    @Test
+    public void testFindAllAvailableBasesForBaseGroupPageableMissingSize() {
+        defaultMockFindAllAvailableBasesForBaseGroup();
+
+        List<BaseGroup> result = cut.findAllAvailableBasesForBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 1, null);
+        assertNotNull(result, "The result should not be null");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+
+        verify(baseGroupRepository).getById(any());
+        verify(baseToBaseGroupRepository).findAvailableBaseGroups(any(), any());
+        verify(baseToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
+    }
+
+    private void defaultMockFindAllAvailableBasesForBaseGroup() {
+        when(parentBaseGroupDao.getId()).thenReturn(PARENT_BASE_GROUP_ID);
+        when(parentBaseGroupDao.getIdentification()).thenReturn(PARENT_BASE_GROUP_IDENTIFICATION);
+        when(parentBaseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
+        when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(baseGroupDao.getId()).thenReturn(BASE_GROUP_ID);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+
+        when(baseGroupRepository.getById(eq(PARENT_BASE_GROUP_ID))).thenReturn(parentBaseGroupDao);
+        when(baseToBaseGroupRepository.findAvailableBaseGroups(eq(parentBaseGroupDao), eq(commonGroupDao))).thenReturn(Collections.singletonList(baseGroupDao));
+        when(baseToBaseGroupRepository.findAvailableBaseGroups(eq(parentBaseGroupDao), eq(commonGroupDao), any())).thenReturn(Collections.singletonList(baseGroupDao));
     }
 
     @DisplayName("Count base groups at privilege group")

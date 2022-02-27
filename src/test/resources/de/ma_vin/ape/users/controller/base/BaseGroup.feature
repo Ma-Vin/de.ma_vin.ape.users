@@ -52,6 +52,20 @@ Feature: Testing methods of the base group controller
   Scenario: Add, count and remove sub base groups
     Given There exists a base group with name "Parent Base Group Name" with alias "parentBase" at common group "common"
     And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    When Controller is called to count available base groups for base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The response is 1
+    When Controller is called to get all available base groups for base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "subBase"
+    And The "identification" property at response position 1 does not exists
+    When Controller is called to get all available base group parts for base group with alias "parentBase"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "subBase"
+    And The "identification" property at response position 1 does not exists
     When Controller is called to add the base group with alias "subBase" to base group with alias "parentBase"
     Then The result is Ok and Json
     And The status of the result should be "OK"

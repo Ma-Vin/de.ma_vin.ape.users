@@ -126,6 +126,11 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/group/base/countBaseAtBaseGroup", getIdentification(baseGroupAlias)));
     }
 
+    @When("Controller is called to count available base groups for base group with alias {string}")
+    public void callControllerToCountAvailableBasesForBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/countAvailableBasesForBaseGroup", getIdentification(baseGroupAlias)));
+    }
+
     @When("Controller is called to get all sub groups of base group with alias {string}")
     public void callControllerToFindAllBaseAtBaseGroup(String baseGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias)));
@@ -140,6 +145,16 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     public void callControllerToFindAllBaseAtBaseGroup(int page, int size, String baseGroupAlias) {
         MultiValueMap<String, String> getAllBaseGroupValues = createValueMap("page", "" + page, "size", "" + size);
         shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias), getAllBaseGroupValues));
+    }
+
+    @When("Controller is called to get all available base groups for base group with alias {string}")
+    public void callControllerToGetAllAvailableBasesForBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllAvailableBasesForBaseGroup", getIdentification(baseGroupAlias)));
+    }
+
+    @When("Controller is called to get all available base group parts for base group with alias {string}")
+    public void callControllerToGetAllAvailableBasePartsForBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllAvailableBasePartsForBaseGroup", getIdentification(baseGroupAlias)));
     }
 
     @When("Controller is called to add the base group with alias {string} as {roleValue} to privilege group with alias {string}")

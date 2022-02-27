@@ -53,13 +53,13 @@ Feature: Testing security at methods of the base group controller
     When Controller is called to get all base group parts from common group with alias "common"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
+      | role    | httpCodeRange |
     # indirect included: test only the httpCode switch from ok to not ok
       #| ADMIN       | 2xx           |
       #| MANAGER     | 2xx           |
       #| CONTRIBUTOR | 2xx           |
-      | VISITOR     | 2xx           |
-      | BLOCKED     | 4xx           |
+      | VISITOR | 2xx           |
+      | BLOCKED | 4xx           |
 
   Scenario Outline: Check <role> privilege to update base group
     Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"
@@ -120,6 +120,14 @@ Feature: Testing security at methods of the base group controller
     Then The result is a <httpCodeRange>
     When Controller is called to count sub base groups at base group with alias "parentBase"
     Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all sub groups of base group with alias "parentBase"
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to count available base groups for base group with alias "parentBase"
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all available base groups for base group with alias "parentBase"
+    Then The result is a <httpCodeRangeCount>
+    When Controller is called to get all available base group parts for base group with alias "parentBase"
+    Then The result is a <httpCodeRangeCount>
     When Controller is called to remove the base group with alias "subBase" from base group with alias "parentBase"
     Then The result is a <httpCodeRange>
     Examples:
@@ -151,10 +159,10 @@ Feature: Testing security at methods of the base group controller
     When Controller is called to get all sub group parts of base group with alias "parentBase"
     Then The result is a <httpCodeRange>
     Examples:
-      | role        | httpCodeRange |
+      | role    | httpCodeRange |
     # indirect included: test only the httpCode switch from ok to not ok
       #| ADMIN       | 2xx           |
       #| MANAGER     | 2xx           |
       #| CONTRIBUTOR | 2xx           |
-      | VISITOR     | 2xx           |
-      | BLOCKED     | 4xx           |
+      | VISITOR | 2xx           |
+      | BLOCKED | 4xx           |

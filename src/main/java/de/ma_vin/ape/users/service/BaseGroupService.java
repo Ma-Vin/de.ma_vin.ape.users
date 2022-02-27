@@ -213,6 +213,23 @@ public class BaseGroupService extends AbstractRepositoryService {
     }
 
     /**
+     * Counts all available base groups for a base group
+     *
+     * @param baseGroupIdentification identification of the base group
+     * @return number of base groups
+     */
+    public Long countAvailableBasesForBaseGroup(String baseGroupIdentification) {
+        log.debug(COUNT_FOR_START_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, GROUP_LOG_PARAM, baseGroupIdentification);
+
+        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+
+        long result = baseToBaseGroupRepository.countAvailableBaseGroups(baseGroupDao, baseGroupDao.getParentCommonGroup());
+
+        log.debug(COUNT_FOR_RESULT_LOG_MESSAGE, result, AVAILABLE_GROUPS_LOG_PARAM, GROUP_LOG_PARAM, baseGroupIdentification);
+        return Long.valueOf(result);
+    }
+
+    /**
      * Searches for all base groups at an other parent base group
      *
      * @param parentIdentification identification of the parent
@@ -433,6 +450,63 @@ public class BaseGroupService extends AbstractRepositoryService {
         return baseToBaseGroupRepository.findAllByBaseGroup(parent, PageRequest.of(page, size)).stream()
                 .map(BaseGroupToBaseGroupDao::getSubBaseGroup)
                 .toList();
+    }
+
+    /**
+     * Searches for all available base groups who are not added to the other base group yet
+     *
+     * @param baseGroupIdentification identification of the base group
+     * @return List of base groups
+     */
+    public List<BaseGroup> findAllAvailableBasesForBaseGroup(String baseGroupIdentification) {
+        log.debug(SEARCH_FOR_START_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, GROUP_LOG_PARAM, baseGroupIdentification);
+
+        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+
+        List<BaseGroup> result = findAllAvailableBaseGroups(baseGroupDao, null, null)
+                .stream()
+                .map(b -> GroupAccessMapper.convertToBaseGroup(b, false))
+                .sorted(Comparator.comparing(BaseGroup::getIdentification)).toList();
+
+        log.debug(SEARCH_FOR_RESULT_LOG_MESSAGE, result.size(), AVAILABLE_GROUPS_LOG_PARAM, GROUP_LOG_PARAM, baseGroupIdentification);
+        return result;
+    }
+
+    /**
+     * Searches for all available base groups who are not added to the other base group yet
+     *
+     * @param baseGroupIdentification identification of the base group
+     * @param page                    zero-based page index, must not be negative.
+     * @param size                    the size of the page to be returned, must be greater than 0.
+     * @return List of base groups
+     */
+    public List<BaseGroup> findAllAvailableBasesForBaseGroup(String baseGroupIdentification, Integer page, Integer size) {
+        log.debug(SEARCH_FOR_START_PAGE_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, page, size, GROUP_LOG_PARAM, baseGroupIdentification);
+
+        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+
+        List<BaseGroup> result = findAllAvailableBaseGroups(baseGroupDao, page, size)
+                .stream()
+                .map(b -> GroupAccessMapper.convertToBaseGroup(b, false))
+                .sorted(Comparator.comparing(BaseGroup::getIdentification)).toList();
+
+        log.debug(SEARCH_FOR_RESULT_PAGE_LOG_MESSAGE, result.size(), AVAILABLE_GROUPS_LOG_PARAM, GROUP_LOG_PARAM, baseGroupIdentification, page, size);
+        return result;
+    }
+
+    /**
+     * Searches for all available base groups which are not added to the other base group yet
+     *
+     * @param baseGroupDao base group
+     * @param page         zero-based page index, must not be negative.
+     * @param size         the size of the page to be returned, must be greater than 0.
+     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
+     */
+    private List<BaseGroupDao> findAllAvailableBaseGroups(BaseGroupDao baseGroupDao, Integer page, Integer size) {
+        if (page == null || size == null) {
+            return baseToBaseGroupRepository.findAvailableBaseGroups(baseGroupDao, baseGroupDao.getParentCommonGroup());
+        }
+        return baseToBaseGroupRepository.findAvailableBaseGroups(baseGroupDao, baseGroupDao.getParentCommonGroup(), PageRequest.of(page, size));
     }
 
     /**
