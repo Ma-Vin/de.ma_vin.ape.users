@@ -1,4 +1,4 @@
-package de.ma_vin.ape.users.security.service;
+package de.ma_vin.ape.users.security.service.token;
 
 import de.ma_vin.ape.users.exceptions.JwtGeneratingException;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
@@ -53,6 +53,8 @@ public class TokenIssuerServiceTest {
     private TokenIssuerService.TokenInfo tokenInfo;
     @Mock
     private UserDao userDao;
+    @Mock
+    private ITokenStorageService tokenStorageService;
 
     private Header header;
     private Payload payload;
@@ -69,6 +71,7 @@ public class TokenIssuerServiceTest {
 
         cut = new TokenIssuerService();
         cut.setUserRepository(userRepository);
+        cut.setTokenStorageService(tokenStorageService);
         cut.setEncoder(encoder);
         cut.setSecret(SECRET);
         cut.setTokenExpiresInSeconds(TOKEN_EXPIRATION);
@@ -86,14 +89,16 @@ public class TokenIssuerServiceTest {
         when(tokenInfo.getToken()).thenReturn(token);
         when(tokenInfo.getRefreshToken()).thenReturn(refreshToken);
         when(tokenInfo.containsScope(any())).thenReturn(Boolean.TRUE);
+
+        when(tokenStorageService.findToken(any())).thenReturn(Optional.empty());
+        when(tokenStorageService.findToken(eq("abc"))).thenReturn(Optional.of(tokenInfo));
+        when(tokenStorageService.getUuid()).thenReturn("abcd");
     }
 
     @DisplayName("The encoded token is invalid cause unable to decode")
     @Test
     public void testIsValidFailToDecode() throws JwtGeneratingException {
         String encodedToken = token.getEncodedToken() + "a";
-
-        cut.getInMemoryTokens().put("abc", tokenInfo);
 
         assertFalse(cut.isValid(encodedToken), "The token should not be valid");
     }
@@ -103,7 +108,7 @@ public class TokenIssuerServiceTest {
     public void testIsValidUnknown() throws JwtGeneratingException {
         String encodedToken = token.getEncodedToken();
 
-        cut.getInMemoryTokens().put("abcd", tokenInfo);
+        when(tokenStorageService.findToken(any())).thenReturn(Optional.empty());
 
         assertFalse(cut.isValid(encodedToken), "The token should not be valid");
     }
@@ -113,8 +118,6 @@ public class TokenIssuerServiceTest {
     public void testIsValidExpired() throws JwtGeneratingException {
         SystemProperties.getInstance().setTestingDateTime(payload.getExpAsLocalDateTime().plus(1, ChronoUnit.SECONDS));
         String encodedToken = token.getEncodedToken();
-
-        cut.getInMemoryTokens().put("abc", tokenInfo);
 
         assertFalse(cut.isValid(encodedToken), "The token should not be valid");
     }
@@ -127,8 +130,6 @@ public class TokenIssuerServiceTest {
         JsonWebToken otherToken = new JsonWebToken(header, otherPayload, signature);
         String encodedToken = otherToken.getEncodedToken();
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         assertFalse(cut.isValid(encodedToken), "The token should not be valid");
     }
 
@@ -136,8 +137,6 @@ public class TokenIssuerServiceTest {
     @Test
     public void testIsValid() throws JwtGeneratingException {
         String encodedToken = token.getEncodedToken();
-
-        cut.getInMemoryTokens().put("abc", tokenInfo);
 
         assertTrue(cut.isValid(encodedToken), "The token should be valid");
     }
@@ -147,8 +146,6 @@ public class TokenIssuerServiceTest {
     public void testIsValidWithScope() throws JwtGeneratingException {
         String encodedToken = token.getEncodedToken();
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         assertTrue(cut.isValid(encodedToken, "read"), "The token should be valid");
     }
 
@@ -157,11 +154,11 @@ public class TokenIssuerServiceTest {
     public void testGetTokenFailToDecode() throws JwtGeneratingException {
         String encodedToken = token.getEncodedToken() + "a";
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         Optional<JsonWebToken> result = cut.getToken(encodedToken);
         assertNotNull(result, "There should token should be any result");
         assertTrue(result.isEmpty(), "There should not be any token at the result");
+
+        verify(tokenStorageService, never()).findToken(any());
     }
 
     @DisplayName("The encoded token could not be determined cause the token is not known")
@@ -169,11 +166,13 @@ public class TokenIssuerServiceTest {
     public void testGetTokenUnknown() throws JwtGeneratingException {
         String encodedToken = token.getEncodedToken();
 
-        cut.getInMemoryTokens().put("abcd", tokenInfo);
+        when(tokenStorageService.findToken(any())).thenReturn(Optional.empty());
 
         Optional<JsonWebToken> result = cut.getToken(encodedToken);
         assertNotNull(result, "There should token should be any result");
         assertTrue(result.isEmpty(), "There should not be any token at the result");
+
+        verify(tokenStorageService).findToken(any());
     }
 
     @DisplayName("The encoded token could not be determined cause the token is expired")
@@ -182,11 +181,11 @@ public class TokenIssuerServiceTest {
         SystemProperties.getInstance().setTestingDateTime(payload.getExpAsLocalDateTime().plus(1, ChronoUnit.SECONDS));
         String encodedToken = token.getEncodedToken();
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         Optional<JsonWebToken> result = cut.getToken(encodedToken);
         assertNotNull(result, "There should token should be any result");
         assertTrue(result.isEmpty(), "There should not be any token at the result");
+
+        verify(tokenStorageService).findToken(any());
     }
 
     @DisplayName("The encoded token could not be determined cause is different to the known one")
@@ -197,11 +196,11 @@ public class TokenIssuerServiceTest {
         JsonWebToken otherToken = new JsonWebToken(header, otherPayload, signature);
         String encodedToken = otherToken.getEncodedToken();
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         Optional<JsonWebToken> result = cut.getToken(encodedToken);
         assertNotNull(result, "There should token should be any result");
         assertTrue(result.isEmpty(), "There should not be any token at the result");
+
+        verify(tokenStorageService).findToken(any());
     }
 
     @DisplayName("The encoded token could be determined")
@@ -209,12 +208,12 @@ public class TokenIssuerServiceTest {
     public void testGetToken() throws JwtGeneratingException {
         String encodedToken = token.getEncodedToken();
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         Optional<JsonWebToken> result = cut.getToken(encodedToken);
         assertNotNull(result, "There should token should be any result");
         assertTrue(result.isPresent(), "There should be a token at the result");
         assertEquals(token, result.get(), "Wrong token");
+
+        verify(tokenStorageService).findToken(any());
     }
 
     @DisplayName("Issue a new pair of token and refresh token with user and password")
@@ -232,6 +231,8 @@ public class TokenIssuerServiceTest {
 
         verify(userRepository).findById(eq(1L));
         verify(encoder).matches(eq(USER_URL_DECODED_PWD), eq(USER_PWD));
+        verify(tokenStorageService).getUuid();
+        verify(tokenStorageService).putTokenInfo(any(), any());
     }
 
     @DisplayName("Issue a new pair of token and refresh token with user, password and scope")
@@ -249,6 +250,8 @@ public class TokenIssuerServiceTest {
 
         verify(userRepository).findById(eq(1L));
         verify(encoder).matches(eq(USER_URL_DECODED_PWD), eq(USER_PWD));
+        verify(tokenStorageService).getUuid();
+        verify(tokenStorageService).putTokenInfo(any(), any());
     }
 
     @DisplayName("Issue a new pair of token and refresh token with missing user")
@@ -264,6 +267,8 @@ public class TokenIssuerServiceTest {
 
         verify(userRepository).findById(eq(1L));
         verify(encoder, never()).matches(eq(USER_URL_DECODED_PWD), eq(USER_PWD));
+        verify(tokenStorageService, never()).getUuid();
+        verify(tokenStorageService, never()).putTokenInfo(any(), any());
     }
 
     @DisplayName("Issue a new pair of token and refresh token with wrong user password")
@@ -279,6 +284,8 @@ public class TokenIssuerServiceTest {
 
         verify(userRepository).findById(eq(1L));
         verify(encoder).matches(eq(USER_URL_DECODED_PWD), eq(USER_PWD));
+        verify(tokenStorageService, never()).getUuid();
+        verify(tokenStorageService, never()).putTokenInfo(any(), any());
     }
 
     @DisplayName("Issue a new pair of implicit token and refresh token with user and password")
@@ -296,6 +303,8 @@ public class TokenIssuerServiceTest {
 
         verify(userRepository).findById(eq(1L));
         verify(encoder, never()).encode(eq(USER_PWD));
+        verify(tokenStorageService).getUuid();
+        verify(tokenStorageService).putTokenInfo(any(), any());
     }
 
     @DisplayName("Issue a new pair of implicit token and refresh token with user, password and scope")
@@ -313,6 +322,8 @@ public class TokenIssuerServiceTest {
 
         verify(userRepository).findById(eq(1L));
         verify(encoder, never()).encode(eq(USER_PWD));
+        verify(tokenStorageService).getUuid();
+        verify(tokenStorageService).putTokenInfo(any(), any());
     }
 
     @DisplayName("Issue a new pair of implicit token and refresh token with missing user")
@@ -328,6 +339,8 @@ public class TokenIssuerServiceTest {
 
         verify(userRepository).findById(eq(1L));
         verify(encoder, never()).encode(eq(USER_PWD));
+        verify(tokenStorageService, never()).getUuid();
+        verify(tokenStorageService, never()).putTokenInfo(any(), any());
     }
 
     @DisplayName("Issue a new pair of client token and refresh token with user and password")
@@ -338,6 +351,9 @@ public class TokenIssuerServiceTest {
         assertTrue(result.isPresent(), "The result should be present");
         assertNotNull(result.get().getToken(), "The token should not be null");
         assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+
+        verify(tokenStorageService).getUuid();
+        verify(tokenStorageService).putTokenInfo(any(), any());
     }
 
     @DisplayName("Issue a new pair of client token and refresh token with user, password and scope")
@@ -348,6 +364,9 @@ public class TokenIssuerServiceTest {
         assertTrue(result.isPresent(), "The result should be present");
         assertNotNull(result.get().getToken(), "The token should not be null");
         assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+
+        verify(tokenStorageService).getUuid();
+        verify(tokenStorageService).putTokenInfo(any(), any());
     }
 
     @DisplayName("Refresh a valid token")
@@ -356,8 +375,6 @@ public class TokenIssuerServiceTest {
         String encodedToken = token.getEncodedToken();
         String encodedRefreshToken = refreshToken.getEncodedToken();
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         Optional<TokenIssuerService.TokenInfo> result = cut.refresh(encodedRefreshToken);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isPresent(), "The result should be present");
@@ -365,6 +382,10 @@ public class TokenIssuerServiceTest {
         assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
         assertNotEquals(encodedToken, result.get().getToken().getEncodedToken(), "The token should be changed");
         assertNotEquals(encodedRefreshToken, result.get().getRefreshToken().getEncodedToken(), "The refresh token should be changed");
+
+        verify(tokenStorageService, times(2)).findToken(any());
+        verify(tokenStorageService).getUuid();
+        verify(tokenStorageService).putTokenInfo(any(), any());
     }
 
     @DisplayName("Refresh a invalid token")
@@ -372,11 +393,13 @@ public class TokenIssuerServiceTest {
     public void testRefreshInvalidToken() throws JwtGeneratingException {
         String encodedRefreshToken = refreshToken.getEncodedToken() + "_mod";
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         Optional<TokenIssuerService.TokenInfo> result = cut.refresh(encodedRefreshToken);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
+
+        verify(tokenStorageService, never()).findToken(any());
+        verify(tokenStorageService, never()).getUuid();
+        verify(tokenStorageService, never()).putTokenInfo(any(), any());
     }
 
     @DisplayName("Refresh a expired token")
@@ -385,36 +408,29 @@ public class TokenIssuerServiceTest {
         String encodedRefreshToken = refreshToken.getEncodedToken();
         SystemProperties.getInstance().setTestingDateTime(refreshPayload.getExpAsLocalDateTime().plus(30L, ChronoUnit.MINUTES));
 
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-
         Optional<TokenIssuerService.TokenInfo> result = cut.refresh(encodedRefreshToken);
         assertNotNull(result, "There should be a result");
         assertTrue(result.isEmpty(), "The result should be empty");
+
+        verify(tokenStorageService).findToken(any());
+        verify(tokenStorageService, never()).getUuid();
+        verify(tokenStorageService, never()).putTokenInfo(any(), any());
     }
 
     @DisplayName("Clear all tokens")
     @Test
     public void testClearAllTokens() {
-        when(tokenInfo.getExpiresAtLeast()).thenReturn(LocalDateTime.of(2021, 7, 1, 0, 0), LocalDateTime.of(2021, 7, 2, 0, 0));
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-        cut.getInMemoryTokens().put("def", tokenInfo);
-
         cut.clearAllTokens();
 
-        assertTrue(cut.getInMemoryTokens().isEmpty(), "All tokens should be cleared");
+        verify(tokenStorageService).clearAllTokens();
     }
 
     @DisplayName("Clear all expired tokens")
     @Test
     public void testClearExpiredTokens() {
-        when(tokenInfo.getExpiresAtLeast()).thenReturn(LocalDateTime.of(2021, 7, 1, 0, 0), LocalDateTime.of(2021, 7, 2, 0, 0));
-        cut.getInMemoryTokens().put("abc", tokenInfo);
-        cut.getInMemoryTokens().put("def", tokenInfo);
-
         cut.clearExpiredTokens();
 
-        assertFalse(cut.getInMemoryTokens().isEmpty(), "In memory tokens should not be empty");
-        assertTrue(cut.getInMemoryTokens().containsKey("def"), "The latest token should be still contained");
+        verify(tokenStorageService).clearExpiredTokens(eq(SystemProperties.getSystemDateTime()));
     }
 
 

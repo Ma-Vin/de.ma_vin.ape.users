@@ -42,7 +42,7 @@ public class PayloadTest {
         try {
             String result = cut.getJsonBase64UrlEncoded();
             assertNotNull(result, "There should be some result");
-            assertEquals("eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOjE2MjUxNzY4MDAsIm5iZiI6bnVsbCwiaWF0IjoxNjI1MDkwNDAwLCJqdGkiOiJhYmMiLCJ0aW1lWm9uZSI6IkV1cm9wZS9CZXJsaW4ifQ", result, "Wrong result");
+            assertEquals("eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOjE2MjUxNzY4MDAsIm5iZiI6MTYyNTA5MDQwMCwiaWF0IjoxNjI1MDkwNDAwLCJqdGkiOiJhYmMiLCJ0aW1lWm9uZSI6IkV1cm9wZS9CZXJsaW4ifQ", result, "Wrong result");
         } catch (JwtGeneratingException e) {
             fail("Non expected JwtGeneratingException: " + e.getMessage());
         }

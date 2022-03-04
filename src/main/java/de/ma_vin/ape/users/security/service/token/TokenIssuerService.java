@@ -1,4 +1,4 @@
-package de.ma_vin.ape.users.security.service;
+package de.ma_vin.ape.users.security.service.token;
 
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
@@ -7,10 +7,8 @@ import de.ma_vin.ape.users.security.jwt.JsonWebToken;
 import de.ma_vin.ape.users.security.jwt.Payload;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import de.ma_vin.ape.utils.properties.SystemProperties;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Service to provide operations on tokens
@@ -33,6 +30,8 @@ public class TokenIssuerService {
     private UserRepository userRepository;
     @Autowired
     private BCryptPasswordEncoder encoder;
+    @Autowired
+    private ITokenStorageService tokenStorageService;
 
     @Value("${tokenSecret}")
     private String secret;
@@ -43,14 +42,11 @@ public class TokenIssuerService {
     @Value("${encodingAlgorithm}")
     private String encodingAlgorithm;
 
-    @Setter(AccessLevel.PRIVATE)
-    private Map<String, TokenInfo> inMemoryTokens = new HashMap<>();
-
     /**
      * Clears all existing tokens
      */
     public void clearAllTokens() {
-        inMemoryTokens.clear();
+        tokenStorageService.clearAllTokens();
     }
 
     /**
@@ -58,12 +54,7 @@ public class TokenIssuerService {
      */
     public void clearExpiredTokens() {
         LocalDateTime now = SystemProperties.getSystemDateTime();
-        Set<String> keysToRemove = inMemoryTokens.entrySet().stream()
-                .filter(e -> e.getValue().getExpiresAtLeast() == null || e.getValue().getExpiresAtLeast().isBefore(now))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
-        log.debug("{} entries are expired", keysToRemove.size());
-        keysToRemove.forEach(inMemoryTokens::remove);
+        tokenStorageService.clearExpiredTokens(now);
     }
 
     /**
@@ -81,7 +72,13 @@ public class TokenIssuerService {
         if (refreshToken.isEmpty()) {
             return Optional.empty();
         }
-        TokenInfo tokenInfo = inMemoryTokens.remove(refreshToken.get().getPayload().getJti());
+        Optional<TokenInfo> tokenInfoOpt = tokenStorageService.findToken(refreshToken.get().getPayload().getJti());
+        if (tokenInfoOpt.isEmpty()) {
+            log.warn("The token {} is unknown", encodedRefreshToken);
+            return Optional.empty();
+        }
+
+        TokenInfo tokenInfo = tokenInfoOpt.get();
 
         LocalDateTime now = SystemProperties.getSystemDateTime();
         if (refreshToken.get().getPayload().getExpAsLocalDateTime().isBefore(now)) {
@@ -89,7 +86,9 @@ public class TokenIssuerService {
             return Optional.empty();
         }
 
-        String uuid = getUUID();
+        String uuid = tokenStorageService.getUuid();
+        tokenStorageService.clearToken(tokenInfo.getId());
+        tokenInfo.setId(uuid);
 
         tokenInfo.getToken().getPayload().setIatAsLocalDateTime(now);
         tokenInfo.getToken().getPayload().setNbfAsLocalDateTime(now);
@@ -103,7 +102,7 @@ public class TokenIssuerService {
 
         tokenInfo.setExpiresAtLeast(tokenInfo.getRefreshToken().getPayload().getExpAsLocalDateTime());
 
-        inMemoryTokens.put(uuid, tokenInfo);
+        tokenStorageService.putTokenInfo(uuid, tokenInfo);
 
         return Optional.of(tokenInfo);
     }
@@ -204,7 +203,7 @@ public class TokenIssuerService {
     private Optional<TokenInfo> issueInternal(String issuerUrl, String username, String scopes) {
         LocalDateTime now = SystemProperties.getSystemDateTime();
 
-        String uuid = getUUID();
+        String uuid = tokenStorageService.getUuid();
 
         Payload payload = new Payload(issuerUrl, username, null, now.plus(tokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
         Payload refreshPayload = new Payload(issuerUrl, username, null, now.plus(refreshTokenExpiresInSeconds, ChronoUnit.SECONDS), now, now, uuid);
@@ -214,17 +213,9 @@ public class TokenIssuerService {
                 , new JsonWebToken(encodingAlgorithm, secret, refreshPayload)
                 , scopes);
 
-        inMemoryTokens.put(uuid, tokenInfo);
+        tokenStorageService.putTokenInfo(uuid, tokenInfo);
 
         return Optional.of(tokenInfo);
-    }
-
-    private String getUUID() {
-        String uuid = UUID.randomUUID().toString();
-        while (inMemoryTokens.containsKey(uuid)) {
-            uuid = UUID.randomUUID().toString();
-        }
-        return uuid;
     }
 
     /**
@@ -286,11 +277,12 @@ public class TokenIssuerService {
             log.error("The {} {} could not be decoded", logText, encodedToken);
             return Optional.empty();
         }
-        if (!inMemoryTokens.containsKey(token.get().getPayload().getJti())) {
+        Optional<TokenInfo> tokenInfoOpt = tokenStorageService.findToken(token.get().getPayload().getJti());
+        if (tokenInfoOpt.isEmpty()) {
             log.error("The {} {} is unknown", logText, encodedToken);
             return Optional.empty();
         }
-        TokenInfo tokenInfo = inMemoryTokens.get(token.get().getPayload().getJti());
+        TokenInfo tokenInfo = tokenInfoOpt.get();
         JsonWebToken referenceToken = isToken ? tokenInfo.getToken() : tokenInfo.getRefreshToken();
         if (!referenceToken.getPayload().equals(token.get().getPayload())) {
             log.error("The {} {} is different to the known one", logText, encodedToken);

@@ -24,7 +24,7 @@ public class Payload {
 
     private static ZoneId defaultZoneId = SystemProperties.getZoneId();
 
-    protected static void reInitZoneId(){
+    protected static void reInitZoneId() {
         Payload.defaultZoneId = SystemProperties.getZoneId();
     }
 
@@ -40,7 +40,7 @@ public class Payload {
      * @param jti JWT ID
      */
     public Payload(String iss, String sub, String aud, LocalDateTime exp, LocalDateTime nbf, LocalDateTime iat, String jti) {
-        this(iss, sub, aud, getLocalDateTimeToLong(exp), getLocalDateTimeToLong(nbf), getLocalDateTimeToLong(iat), jti
+        this(iss, sub, aud, getLocalDateTimeToLong(exp), nbf != null ? getLocalDateTimeToLong(nbf) : getLocalDateTimeToLong(iat), getLocalDateTimeToLong(iat), jti
                 , defaultZoneId.toString());
     }
 

@@ -207,5 +207,30 @@
                 </entity>
             </entities>
         </grouping>
+        <grouping groupingPackage="security">
+            <entities>
+                <entity baseName="Token" models="DAO" description="Table with issued tokens">
+                    <fields>
+                        <field fieldName="uuid" type="String" shortDescription="uuid of the token"/>
+                        <field fieldName="userIdentification" type="String"
+                               shortDescription="identification of the token owner"/>
+                        <field fieldName="token" type="String" shortDescription="the token of the user">
+                            <daoInfo length="511"/>
+                        </field>
+                        <field fieldName="refreshToken" type="String" shortDescription="the refresh token of the user">
+                            <daoInfo length="511"/>
+                        </field>
+                        <field fieldName="validFrom" type="LocalDateTime" typePackage="java.time"
+                               shortDescription="start time from which the token is valid"/>
+                        <field fieldName="expiresAtLeast" type="LocalDateTime" typePackage="java.time"
+                               shortDescription="End time until the refresh token is valid"/>
+                        <field fieldName="scopes" type="String" shortDescription="the scopes of the issued token"/>
+                    </fields>
+                    <indices>
+                        <index indexName="IX_TOKEN_UUID" fieldList="uuid" isUnique="true"/>
+                    </indices>
+                </entity>
+            </entities>
+        </grouping>
     </groupings>
 </conf:config>

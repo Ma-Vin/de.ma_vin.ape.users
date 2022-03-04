@@ -6,7 +6,7 @@ import de.ma_vin.ape.users.properties.AuthClients;
 import de.ma_vin.ape.users.security.jwt.JsonWebToken;
 import de.ma_vin.ape.users.security.jwt.Payload;
 import de.ma_vin.ape.users.security.service.AuthorizeCodeService;
-import de.ma_vin.ape.users.security.service.TokenIssuerService;
+import de.ma_vin.ape.users.security.service.token.TokenIssuerService;
 import de.ma_vin.ape.utils.properties.SystemProperties;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;

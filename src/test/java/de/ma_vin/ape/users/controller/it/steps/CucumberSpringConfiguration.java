@@ -15,7 +15,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
         classes = UserApplication.class)
 @AutoConfigureMockMvc
 @CucumberContextConfiguration
-@ActiveProfiles("integration-test")
+@ActiveProfiles({"integration-test", "database-token"})
 public class CucumberSpringConfiguration {
 
 }

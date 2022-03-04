@@ -24,8 +24,8 @@ public class JsonWebTokenTest {
     private static final String SECRET = "SomeDummySecret";
     public static final String VALID_TOKEN = String.format("%s.%s.%s"
             , "eyJ0eXAiOiJKV1QiLCJjdHkiOm51bGwsImFsZyI6IkhTMjU2In0"
-            , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOjE2MjUxNzY4MDAsIm5iZiI6bnVsbCwiaWF0IjoxNjI1MDkwNDAwLCJqdGkiOiJhYmMiLCJ0aW1lWm9uZSI6IkV1cm9wZS9CZXJsaW4ifQ"
-            , "CA5ztwdM1kypkDJyQ7gP3PDCXoNyaMq873T8yt6iaOs");
+            , "eyJpc3MiOiJNZSIsInN1YiI6Ik1lIiwiYXVkIjpudWxsLCJleHAiOjE2MjUxNzY4MDAsIm5iZiI6MTYyNTA5MDQwMCwiaWF0IjoxNjI1MDkwNDAwLCJqdGkiOiJhYmMiLCJ0aW1lWm9uZSI6IkV1cm9wZS9CZXJsaW4ifQ"
+            , "gSR2FZTz-TAgTmvgVm3WeGJ987dbh4ewyNVjBui6Qfo");
 
     private AutoCloseable openMocks;
     private JsonWebToken cut;

@@ -8,7 +8,7 @@ import de.ma_vin.ape.users.security.jwt.Header;
 import de.ma_vin.ape.users.security.jwt.JsonWebToken;
 import de.ma_vin.ape.users.security.jwt.Payload;
 import de.ma_vin.ape.users.security.service.AuthorizeCodeService;
-import de.ma_vin.ape.users.security.service.TokenIssuerService;
+import de.ma_vin.ape.users.security.service.token.TokenIssuerService;
 import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
