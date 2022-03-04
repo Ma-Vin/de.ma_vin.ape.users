@@ -13,3 +13,9 @@ APE spring boot application for user authentication and groupings
 * [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Ma-Vin_de.ma_vin.ape.users&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=Ma-Vin_de.ma_vin.ape.users)  [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=Ma-Vin_de.ma_vin.ape.users&metric=sqale_index)](https://sonarcloud.io/dashboard?id=Ma-Vin_de.ma_vin.ape.users)  [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=Ma-Vin_de.ma_vin.ape.users&metric=code_smells)](https://sonarcloud.io/dashboard?id=Ma-Vin_de.ma_vin.ape.users)
 * [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Ma-Vin_de.ma_vin.ape.users&metric=coverage)](https://sonarcloud.io/dashboard?id=Ma-Vin_de.ma_vin.ape.users)
 * [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Ma-Vin_de.ma_vin.ape.users&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=Ma-Vin_de.ma_vin.ape.users)  [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Ma-Vin_de.ma_vin.ape.users&metric=ncloc)](https://sonarcloud.io/dashboard?id=Ma-Vin_de.ma_vin.ape.users)
+
+## Profiles
+* ***database-token***: persists the issued tokens and refresh tokens at a database table *Tokens*. 
+In this case it is possible to use more than one application instance.
+* ***memory-token***: holds the issued tokens and refresh tokens at a map. 
+In this case it is not possible to share them between different application instances.
