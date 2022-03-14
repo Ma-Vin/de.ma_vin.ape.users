@@ -232,5 +232,102 @@
                 </entity>
             </entities>
         </grouping>
+        <grouping groupingPackage="history">
+            <entities>
+                <entity baseName="AbstractChange" description="Abstract change events of entities during history"
+                        models="DOMAIN_DAO" isAbstract="true">
+                    <fields>
+                        <field fieldName="changeType" type="ChangeType" typePackage="de.ma_vin.ape.users.enums"
+                               isTypeEnum="true" shortDescription="The general type of action"/>
+                        <field fieldName="action" type="String" shortDescription="The concrete action of this change"/>
+                        <field fieldName="changeTime" type="LocalDateTime" typePackage="java.time"
+                               shortDescription="date time of the change"/>
+                        <field fieldName="deletionInformation" type="String"
+                               shortDescription="Additional information if a target or editor was deleted and can not be referenced anymore"/>
+                    </fields>
+                    <references>
+                        <reference referenceName="editor" targetEntity="User"
+                                   shortDescription="User who made the change"/>
+                    </references>
+                </entity>
+                <entity baseName="Change" models="DTO" description="Change events of entities during history">
+                    <fields>
+                        <field fieldName="subjectIdentification" type="String"
+                               shortDescription="The subject which is effected"/>
+                        <field fieldName="changeType" type="ChangeType" typePackage="de.ma_vin.ape.users.enums"
+                               isTypeEnum="true" shortDescription="The general type of action"/>
+                        <field fieldName="action" type="String" shortDescription="The concrete action of this change"/>
+                        <field fieldName="targetIdentification" type="String"
+                               shortDescription="The target which is effected"/>
+                        <field fieldName="editor" type="String" shortDescription="Editor of the change"/>
+                        <field fieldName="changeTime" type="LocalDateTime" typePackage="java.time"
+                               shortDescription="date time of the change"/>
+                    </fields>
+                </entity>
+            </entities>
+        </grouping>
+        <grouping groupingPackage="group.history">
+            <entities>
+                <entity baseName="AdminGroupChange" parent="AbstractChange" identificationPrefix="HAG"
+                        models="DOMAIN_DAO" description="change events of admin groups during history">
+                    <references>
+                        <reference referenceName="adminGroup" targetEntity="AdminGroup"
+                                   shortDescription="Admin group whose changes are logged"/>
+                        <reference referenceName="admin" targetEntity="User"
+                                   shortDescription="Admin who is affected by change"/>
+                    </references>
+                </entity>
+                <entity baseName="CommonGroupChange" parent="AbstractChange" identificationPrefix="HCG"
+                        models="DOMAIN_DAO" description="change events of common groups during history">
+                    <references>
+                        <reference referenceName="commonGroup" targetEntity="CommonGroup"
+                                   shortDescription="Common group whose changes are logged"/>
+                        <reference referenceName="user" targetEntity="User"
+                                   shortDescription="User who is affected by change"/>
+                        <reference referenceName="baseGroup" targetEntity="BaseGroup"
+                                   shortDescription="Base group which is affected by change"/>
+                        <reference referenceName="privilegeGroup" targetEntity="PrivilegeGroup"
+                                   shortDescription="Privilege group which is affected by change"/>
+                    </references>
+                </entity>
+                <entity baseName="PrivilegeGroupChange" parent="AbstractChange" identificationPrefix="HPG"
+                        models="DOMAIN_DAO" description="change events of privilege groups during history">
+                    <references>
+                        <reference referenceName="privilegeGroup" targetEntity="PrivilegeGroup"
+                                   shortDescription="Common group whose changes are logged"/>
+                        <reference referenceName="user" targetEntity="User"
+                                   shortDescription="User who is affected by change"/>
+                        <reference referenceName="baseGroup" targetEntity="BaseGroup"
+                                   shortDescription="Base group which is affected by change"/>
+                    </references>
+                </entity>
+                <entity baseName="BaseGroupChange" parent="AbstractChange" identificationPrefix="HBG"
+                        models="DOMAIN_DAO" description="change events of base groups during history">
+                    <references>
+                        <reference referenceName="baseGroup" targetEntity="BaseGroup"
+                                   shortDescription="Base group whose changes are logged"/>
+                        <reference referenceName="user" targetEntity="User"
+                                   shortDescription="User who is affected by change"/>
+                        <reference referenceName="subBaseGroup" targetEntity="BaseGroup"
+                                   shortDescription="Sub base group which is affected by change"/>
+                    </references>
+                </entity>
+            </entities>
+        </grouping>
+        <grouping groupingPackage="user.history">
+            <entities>
+                <entity baseName="UserChange" parent="AbstractChange" identificationPrefix="HU" models="DOMAIN_DAO"
+                        description="change events of users during history">
+                    <references>
+                        <reference referenceName="user" targetEntity="User"
+                                   shortDescription="User who is affected by change"/>
+                        <reference referenceName="image" targetEntity="UserResource"
+                                   shortDescription="image whose changes are logged"/>
+                        <reference referenceName="smallImage" targetEntity="UserResource"
+                                   shortDescription="small image whose changes are logged"/>
+                    </references>
+                </entity>
+            </entities>
+        </grouping>
     </groupings>
 </conf:config>
