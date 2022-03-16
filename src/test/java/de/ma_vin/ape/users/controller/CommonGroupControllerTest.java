@@ -22,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +32,7 @@ public class CommonGroupControllerTest {
 
     public static final Long COMMON_GROUP_ID = 1L;
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private AutoCloseable openMocks;
     private CommonGroupController cut;
@@ -41,6 +43,8 @@ public class CommonGroupControllerTest {
     private CommonGroup commonGroup;
     @Mock
     private CommonGroupDto commonGroupDto;
+    @Mock
+    private Principal principal;
 
 
     @BeforeEach
@@ -49,6 +53,8 @@ public class CommonGroupControllerTest {
 
         cut = new CommonGroupController();
         cut.setCommonGroupService(commonGroupService);
+
+        when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
     }
 
     @AfterEach
@@ -59,28 +65,28 @@ public class CommonGroupControllerTest {
     @DisplayName("Create a common group")
     @Test
     public void testCreateCommonGroup() {
-        when(commonGroupService.save(any())).thenAnswer(a -> {
+        when(commonGroupService.save(any(), any())).thenAnswer(a -> {
             ((CommonGroup) a.getArgument(0)).setIdentification(COMMON_GROUP_IDENTIFICATION);
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<CommonGroupDto> response = cut.createCommonGroup("SomeName");
+        ResponseWrapper<CommonGroupDto> response = cut.createCommonGroup(principal, "SomeName");
 
         checkOk(response);
 
-        verify(commonGroupService).save(any());
+        verify(commonGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Create a common group but without save result")
     @Test
     public void testCreateCommonGroupWithoutResult() {
-        when(commonGroupService.save(any())).thenAnswer(a -> Optional.empty());
+        when(commonGroupService.save(any(), any())).thenAnswer(a -> Optional.empty());
 
-        ResponseWrapper<CommonGroupDto> response = cut.createCommonGroup("SomeName");
+        ResponseWrapper<CommonGroupDto> response = cut.createCommonGroup(principal, "SomeName");
 
         checkError(response);
 
-        verify(commonGroupService).save(any());
+        verify(commonGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Delete a common group")
@@ -93,14 +99,14 @@ public class CommonGroupControllerTest {
             when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
             when(commonGroupService.commonGroupExits(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
             return null;
-        }).when(commonGroupService).delete(eq(commonGroup));
+        }).when(commonGroupService).delete(eq(commonGroup), any());
 
-        ResponseWrapper<Boolean> response = cut.deleteCommonGroup(COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteCommonGroup(principal, COMMON_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
         verify(commonGroupService).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(commonGroupService).delete(any());
+        verify(commonGroupService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(commonGroupService).commonGroupExits(eq(COMMON_GROUP_IDENTIFICATION));
     }
 
@@ -111,12 +117,12 @@ public class CommonGroupControllerTest {
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
         when(commonGroupService.commonGroupExits(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.deleteCommonGroup(COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteCommonGroup(principal, COMMON_GROUP_IDENTIFICATION);
 
         checkWarn(response);
 
         verify(commonGroupService).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(commonGroupService, never()).delete(any());
+        verify(commonGroupService, never()).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(commonGroupService, never()).commonGroupExits(eq(COMMON_GROUP_IDENTIFICATION));
     }
 
@@ -129,14 +135,14 @@ public class CommonGroupControllerTest {
         doAnswer(a -> {
             when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
             return null;
-        }).when(commonGroupService).delete(eq(commonGroup));
+        }).when(commonGroupService).delete(eq(commonGroup), any());
 
-        ResponseWrapper<Boolean> response = cut.deleteCommonGroup(COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteCommonGroup(principal, COMMON_GROUP_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(commonGroupService).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(commonGroupService).delete(any());
+        verify(commonGroupService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(commonGroupService).commonGroupExits(eq(COMMON_GROUP_IDENTIFICATION));
     }
 
@@ -308,14 +314,14 @@ public class CommonGroupControllerTest {
         when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupDto.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.of(commonGroup));
-        when(commonGroupService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(commonGroupService.save(any(), any())).then(a -> Optional.of(a.getArgument(0)));
 
-        ResponseWrapper<CommonGroupDto> response = cut.updateCommonGroup(commonGroupDto, COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<CommonGroupDto> response = cut.updateCommonGroup(principal, commonGroupDto, COMMON_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
         verify(commonGroupService).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(commonGroupService).save(any());
+        verify(commonGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Update a non existing common group")
@@ -323,14 +329,14 @@ public class CommonGroupControllerTest {
     public void testUpdateCommonGroupNonExisting() {
         when(commonGroupDto.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
-        when(commonGroupService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(commonGroupService.save(any(), any())).then(a -> Optional.of(a.getArgument(0)));
 
-        ResponseWrapper<CommonGroupDto> response = cut.updateCommonGroup(commonGroupDto, COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<CommonGroupDto> response = cut.updateCommonGroup(principal, commonGroupDto, COMMON_GROUP_IDENTIFICATION);
 
         checkError(response);
 
         verify(commonGroupService).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(commonGroupService, never()).save(any());
+        verify(commonGroupService, never()).save(any(), any());
     }
 
     @DisplayName("Update a common group without save return")
@@ -339,14 +345,14 @@ public class CommonGroupControllerTest {
         when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupDto.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.of(commonGroup));
-        when(commonGroupService.save(any())).then(a -> Optional.empty());
+        when(commonGroupService.save(any(), any())).then(a -> Optional.empty());
 
-        ResponseWrapper<CommonGroupDto> response = cut.updateCommonGroup(commonGroupDto, COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<CommonGroupDto> response = cut.updateCommonGroup(principal, commonGroupDto, COMMON_GROUP_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(commonGroupService).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(commonGroupService).save(any());
+        verify(commonGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Update a common group with different identification as parameter")
@@ -357,12 +363,12 @@ public class CommonGroupControllerTest {
         when(commonGroup.getIdentification()).thenReturn(otherIdentification);
         when(commonGroupDto.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(otherIdentification))).thenReturn(Optional.of(commonGroup));
-        when(commonGroupService.save(any())).then(a -> {
+        when(commonGroupService.save(any(), any())).then(a -> {
             storedIdentification.add(((CommonGroup) a.getArgument(0)).getIdentification());
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<CommonGroupDto> response = cut.updateCommonGroup(commonGroupDto, otherIdentification);
+        ResponseWrapper<CommonGroupDto> response = cut.updateCommonGroup(principal, commonGroupDto, otherIdentification);
 
         checkWarn(response, 1);
 
@@ -371,7 +377,7 @@ public class CommonGroupControllerTest {
 
         verify(commonGroupService).findCommonGroup(eq(otherIdentification));
         verify(commonGroupService, never()).findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(commonGroupService).save(any());
+        verify(commonGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Get parent common group of user")

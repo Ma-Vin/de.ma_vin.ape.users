@@ -11,9 +11,8 @@ public enum ChangeType {
     DELETE("Delete"),
     ADD("Add"),
     REMOVE("Remove"),
-    ACTIVATE("Activate"),
-    DEACTIVATE("Deactivate"),
-    MODIFY("Modify");
+    MODIFY("Modify"),
+    UNKNOWN("Unknown");
 
     final String typeName;
 

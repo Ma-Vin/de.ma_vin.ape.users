@@ -7,6 +7,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.CommonGroupRepository;
 import de.ma_vin.ape.users.persistence.UserRepository;
+import de.ma_vin.ape.users.service.history.CommonGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ import static org.mockito.MockitoAnnotations.openMocks;
 public class CommonGroupServiceTest {
     public static final Long COMMON_GROUP_ID = 1L;
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private CommonGroupService cut;
     private AutoCloseable openMocks;
@@ -55,6 +57,8 @@ public class CommonGroupServiceTest {
     private PrivilegeGroup privilegeGroup;
     @Mock
     private BaseGroup baseGroup;
+    @Mock
+    private CommonGroupChangeService commonGroupChangeService;
 
 
     @BeforeEach
@@ -67,6 +71,7 @@ public class CommonGroupServiceTest {
         cut.setUserRepository(userRepository);
         cut.setPrivilegeGroupService(privilegeGroupService);
         cut.setBaseGroupService(baseGroupService);
+        cut.setCommonGroupChangeService(commonGroupChangeService);
     }
 
     @AfterEach
@@ -82,7 +87,7 @@ public class CommonGroupServiceTest {
         when(baseGroupService.findAllBaseGroups(anyString())).thenReturn(Collections.emptyList());
         when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
 
-        cut.delete(commonGroup);
+        cut.delete(commonGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
         verify(userService, never()).delete(any());
@@ -91,6 +96,7 @@ public class CommonGroupServiceTest {
         verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
         verify(baseGroupService, never()).delete(any());
         verify(commonGroupRepository).delete(any());
+        verify(commonGroupChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Delete common group with sub entities")
@@ -101,7 +107,7 @@ public class CommonGroupServiceTest {
         when(baseGroupService.findAllBaseGroups(anyString())).thenReturn(Collections.singletonList(baseGroup));
         when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
 
-        cut.delete(commonGroup);
+        cut.delete(commonGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
         verify(userService).delete(eq(user));
@@ -110,6 +116,7 @@ public class CommonGroupServiceTest {
         verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
         verify(baseGroupService).delete(any());
         verify(commonGroupRepository).delete(any());
+        verify(commonGroupChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Check existence of common group")
@@ -289,12 +296,14 @@ public class CommonGroupServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<CommonGroup> result = cut.save(commonGroup);
+        Optional<CommonGroup> result = cut.save(commonGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(COMMON_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
 
         verify(commonGroupRepository).save(any());
+        verify(commonGroupChangeService).saveCreation(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(commonGroupChangeService, never()).saveChange(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Save existing common group")
@@ -306,12 +315,14 @@ public class CommonGroupServiceTest {
         when(commonGroupRepository.findById(eq(COMMON_GROUP_ID))).thenReturn(Optional.of(commonGroupDao));
         when(commonGroupRepository.save(any())).then(a -> a.getArgument(0));
 
-        Optional<CommonGroup> result = cut.save(commonGroup);
+        Optional<CommonGroup> result = cut.save(commonGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
 
         verify(commonGroupRepository).findById(eq(COMMON_GROUP_ID));
         verify(commonGroupRepository).save(any());
+        verify(commonGroupChangeService, never()).saveCreation(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(commonGroupChangeService).saveChange(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Save non existing common group")
@@ -323,11 +334,13 @@ public class CommonGroupServiceTest {
         when(commonGroupRepository.findById(eq(COMMON_GROUP_ID))).thenReturn(Optional.empty());
         when(commonGroupRepository.save(any())).then(a -> a.getArgument(0));
 
-        Optional<CommonGroup> result = cut.save(commonGroup);
+        Optional<CommonGroup> result = cut.save(commonGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be present");
 
         verify(commonGroupRepository).findById(eq(COMMON_GROUP_ID));
         verify(commonGroupRepository, never()).save(any());
+        verify(commonGroupChangeService, never()).saveCreation(any(), any());
+        verify(commonGroupChangeService, never()).saveChange(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 }

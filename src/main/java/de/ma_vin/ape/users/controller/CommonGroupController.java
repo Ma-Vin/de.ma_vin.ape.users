@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -33,8 +34,8 @@ public class CommonGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isGlobalAdmin()")
     @PostMapping("/createCommonGroup")
     public @ResponseBody
-    ResponseWrapper<CommonGroupDto> createCommonGroup(@RequestParam String groupName) {
-        Optional<CommonGroup> result = commonGroupService.save(new CommonGroupExt(groupName));
+    ResponseWrapper<CommonGroupDto> createCommonGroup(Principal principal, @RequestParam String groupName) {
+        Optional<CommonGroup> result = commonGroupService.save(new CommonGroupExt(groupName), principal.getName());
         if (result.isEmpty()) {
             return ResponseUtil.createEmptyResponseWithError(String.format("The group with name \"%s\" was not created", groupName));
         }
@@ -44,10 +45,10 @@ public class CommonGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isGlobalAdmin()")
     @DeleteMapping("/deleteCommonGroup/{commonGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> deleteCommonGroup(@PathVariable String commonGroupIdentification) {
+    ResponseWrapper<Boolean> deleteCommonGroup(Principal principal, @PathVariable String commonGroupIdentification) {
         return delete(commonGroupIdentification, CommonGroup.class
                 , identificationToDelete -> commonGroupService.findCommonGroup(identificationToDelete)
-                , objectToDelete -> commonGroupService.delete(objectToDelete)
+                , objectToDelete -> commonGroupService.delete(objectToDelete, principal.getName())
                 , identificationToCheck -> commonGroupService.commonGroupExits(identificationToCheck));
     }
 
@@ -99,10 +100,10 @@ public class CommonGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isAdmin(#commonGroupIdentification, 'COMMON')")
     @PutMapping("/updateCommonGroup/{commonGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<CommonGroupDto> updateCommonGroup(@RequestBody CommonGroupDto commonGroup, @PathVariable String commonGroupIdentification) {
+    ResponseWrapper<CommonGroupDto> updateCommonGroup(Principal principal, @RequestBody CommonGroupDto commonGroup, @PathVariable String commonGroupIdentification) {
         return update(commonGroup, commonGroupIdentification, CommonGroup.class
                 , identificationToUpdate -> commonGroupService.findCommonGroup(identificationToUpdate)
-                , objectToUpdate -> commonGroupService.save(objectToUpdate)
+                , objectToUpdate -> commonGroupService.save(objectToUpdate, principal.getName())
                 , GroupTransportMapper::convertToCommonGroupDto
                 , GroupTransportMapper::convertToCommonGroup
         );

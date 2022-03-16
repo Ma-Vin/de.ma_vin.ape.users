@@ -9,6 +9,7 @@ import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.CommonGroupRepository;
 import de.ma_vin.ape.users.persistence.UserRepository;
+import de.ma_vin.ape.users.service.history.CommonGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -36,22 +37,26 @@ public class CommonGroupService extends AbstractRepositoryService {
     private PrivilegeGroupService privilegeGroupService;
     @Autowired
     private BaseGroupService baseGroupService;
+    @Autowired
+    private CommonGroupChangeService commonGroupChangeService;
 
     /**
      * Deletes an common group from repository
      *
-     * @param commonGroup common group to delete
+     * @param commonGroup           common group to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    public void delete(CommonGroup commonGroup) {
-        delete(GroupAccessMapper.convertToCommonGroupDao(commonGroup, false));
+    public void delete(CommonGroup commonGroup, String deleterIdentification) {
+        delete(GroupAccessMapper.convertToCommonGroupDao(commonGroup, false), deleterIdentification);
     }
 
     /**
      * Deletes an commonGroupDao from repository
      *
-     * @param commonGroupDao common group to delete
+     * @param deleterIdentification The identification of the user who is deleting
+     * @param commonGroupDao        common group to delete
      */
-    private void delete(CommonGroupDao commonGroupDao) {
+    private void delete(CommonGroupDao commonGroupDao, String deleterIdentification) {
         log.debug(DELETE_BEGIN_LOG_MESSAGE, GROUP_LOG_PARAM, commonGroupDao.getIdentification(), commonGroupDao.getId());
 
         List<PrivilegeGroup> privilegeGroups = privilegeGroupService.findAllPrivilegeGroups(commonGroupDao.getIdentification());
@@ -69,6 +74,7 @@ public class CommonGroupService extends AbstractRepositoryService {
                 , commonGroupDao.getIdentification(), commonGroupDao.getId());
         users.forEach(userService::delete);
 
+        commonGroupChangeService.delete(commonGroupDao, deleterIdentification);
         commonGroupRepository.delete(commonGroupDao);
 
         log.debug(DELETE_END_LOG_MESSAGE, GROUP_LOG_PARAM, commonGroupDao.getIdentification(), commonGroupDao.getId());
@@ -170,12 +176,13 @@ public class CommonGroupService extends AbstractRepositoryService {
     /**
      * Stores an common group
      *
-     * @param commonGroup common group which should be stored
+     * @param commonGroup          common group which should be stored
+     * @param editorIdentification The identification of the user who is saving
      * @return Stored common group with additional generated ids, if missing before.
      * <br>
      * In case of not existing commonGroup for given identification, the result will be {@link Optional#empty()}
      */
-    public Optional<CommonGroup> save(CommonGroup commonGroup) {
+    public Optional<CommonGroup> save(CommonGroup commonGroup, String editorIdentification) {
         CommonGroupDao commonGroupDao = GroupAccessMapper.convertToCommonGroupDao(commonGroup, false);
 
         if (commonGroupDao.getIdentification() == null) {
@@ -184,6 +191,8 @@ public class CommonGroupService extends AbstractRepositoryService {
             CommonGroup result = GroupAccessMapper.convertToCommonGroup(commonGroupDao, false);
             log.debug("The common group with name {} was stored with id {} and corresponding identification {}"
                     , commonGroupDao.getGroupName(), commonGroupDao.getId(), result.getIdentification());
+
+            commonGroupChangeService.saveCreation(commonGroupDao, editorIdentification);
 
             return Optional.of(result);
         }
@@ -197,6 +206,8 @@ public class CommonGroupService extends AbstractRepositoryService {
         commonGroupDao = commonGroupRepository.save(commonGroupDao);
         CommonGroup result = GroupAccessMapper.convertToCommonGroup(commonGroupDao, false);
         log.debug("The common group with identification {} was saved", result.getIdentification());
+
+        commonGroupChangeService.saveChange(commonGroupDao, storedCommonGroupDao.get(), editorIdentification);
 
         return Optional.of(result);
     }

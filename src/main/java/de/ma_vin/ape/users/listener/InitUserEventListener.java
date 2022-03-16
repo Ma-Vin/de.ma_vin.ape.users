@@ -88,7 +88,7 @@ public class InitUserEventListener {
         }
 
         CommonGroupExt commonGroup = new CommonGroupExt("common");
-        Optional<CommonGroup> storedCommonGroup = commonGroupService.save(commonGroup);
+        Optional<CommonGroup> storedCommonGroup = commonGroupService.save(commonGroup, storedUser.get().getIdentification());
         if (storedCommonGroup.isEmpty()) {
             log.error("could not initialize database with default common group");
         }

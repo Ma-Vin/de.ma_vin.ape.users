@@ -71,7 +71,7 @@ public class InitUserEventListenerTest {
             ((AdminGroup) a.getArgument(0)).setIdentification(ADMIN_GROUP_IDENTIFICATION);
             return Optional.of(a.getArgument(0));
         });
-        when(commonGroupService.save(any())).then(a -> {
+        when(commonGroupService.save(any(), any())).then(a -> {
             ((CommonGroup) a.getArgument(0)).setIdentification(COMMON_GROUP_IDENTIFICATION);
             return Optional.of(a.getArgument(0));
         });
@@ -91,7 +91,7 @@ public class InitUserEventListenerTest {
         cut.onApplicationEvent(event);
 
         verify(adminGroupService, never()).save(any());
-        verify(commonGroupService, never()).save(any());
+        verify(commonGroupService, never()).save(any(), any());
         verify(userService, never()).saveAtAdminGroup(any(), anyString());
     }
 
@@ -102,7 +102,7 @@ public class InitUserEventListenerTest {
         cut.onApplicationEvent(event);
 
         verify(adminGroupService, never()).save(any());
-        verify(commonGroupService, never()).save(any());
+        verify(commonGroupService, never()).save(any(), any());
         verify(userService, never()).saveAtAdminGroup(any(), anyString());
     }
 
@@ -113,7 +113,7 @@ public class InitUserEventListenerTest {
         cut.onApplicationEvent(event);
 
         verify(adminGroupService, never()).save(any());
-        verify(commonGroupService, never()).save(any());
+        verify(commonGroupService, never()).save(any(), any());
         verify(userService, never()).saveAtAdminGroup(any(), anyString());
     }
 
@@ -123,7 +123,7 @@ public class InitUserEventListenerTest {
         cut.onApplicationEvent(event);
 
         verify(adminGroupService).save(any());
-        verify(commonGroupService).save(any());
+        verify(commonGroupService).save(any(), any());
         verify(userService).saveAtAdminGroup(any(), anyString());
     }
 
@@ -134,7 +134,7 @@ public class InitUserEventListenerTest {
         cut.onApplicationEvent(event);
 
         verify(adminGroupService).save(any());
-        verify(commonGroupService, never()).save(any());
+        verify(commonGroupService, never()).save(any(), any());
         verify(userService).saveAtAdminGroup(any(), anyString());
     }
 
@@ -147,7 +147,7 @@ public class InitUserEventListenerTest {
         cut.onApplicationEvent(event);
 
         verify(adminGroupService).save(any());
-        verify(commonGroupService, never()).save(any());
+        verify(commonGroupService, never()).save(any(), any());
         verify(userService, never()).saveAtAdminGroup(any(), anyString());
     }
 
@@ -159,7 +159,7 @@ public class InitUserEventListenerTest {
         cut.onApplicationEvent(event);
 
         verify(adminGroupService).save(any());
-        verify(commonGroupService, never()).save(any());
+        verify(commonGroupService, never()).save(any(), any());
         verify(userService).saveAtAdminGroup(any(), anyString());
     }
 
@@ -167,11 +167,11 @@ public class InitUserEventListenerTest {
     @Test
     public void testOnApplicationEventFailCommonGroup() {
         reset(commonGroupService);
-        when(commonGroupService.save(any())).then(a -> Optional.empty());
+        when(commonGroupService.save(any(), any())).then(a -> Optional.empty());
         cut.onApplicationEvent(event);
 
         verify(adminGroupService).save(any());
-        verify(commonGroupService).save(any());
+        verify(commonGroupService).save(any(), any());
         verify(userService).saveAtAdminGroup(any(), anyString());
     }
 }
