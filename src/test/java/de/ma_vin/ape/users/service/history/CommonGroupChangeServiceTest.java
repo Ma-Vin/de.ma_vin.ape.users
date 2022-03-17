@@ -52,12 +52,13 @@ public class CommonGroupChangeServiceTest {
     @DisplayName("Save a new common group")
     @Test
     public void testSaveCreation() {
-        cut.saveCreation(commonGroupDao, PRINCIPAL_IDENTIFICATION);
         when(commonGroupChangeRepository.save(any())).then(a -> {
             assertEquals(ChangeType.CREATE, ((CommonGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((CommonGroupChangeDao) a.getArgument(0)).getEditor(), "Missing editor");
             assertEquals(PRINCIPAL_IDENTIFICATION, ((CommonGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
             return null;
         });
+        cut.saveCreation(commonGroupDao, PRINCIPAL_IDENTIFICATION);
         verify(commonGroupChangeRepository).save(any());
     }
 
@@ -68,6 +69,7 @@ public class CommonGroupChangeServiceTest {
         when(storedCommonGroupDao.getGroupName()).thenReturn("123");
         when(commonGroupChangeRepository.save(any())).then(a -> {
             assertEquals(ChangeType.MODIFY, ((CommonGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((CommonGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
             assertEquals(PRINCIPAL_IDENTIFICATION, ((CommonGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
             assertEquals("GroupName: \"123\" -> \"abc\"", ((CommonGroupChangeDao) a.getArgument(0)).getAction(), "Wrong action");
             return null;
@@ -83,6 +85,7 @@ public class CommonGroupChangeServiceTest {
         when(storedCommonGroupDao.getGroupName()).thenReturn("123");
         when(commonGroupChangeRepository.save(any())).then(a -> {
             assertEquals(ChangeType.MODIFY, ((CommonGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((CommonGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
             assertEquals(PRINCIPAL_IDENTIFICATION, ((CommonGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
             assertEquals("GroupName: \"123\" -> \"null\"", ((CommonGroupChangeDao) a.getArgument(0)).getAction(), "Wrong action");
             return null;
@@ -98,6 +101,7 @@ public class CommonGroupChangeServiceTest {
         when(commonGroupDao.getGroupName()).thenReturn("abc");
         when(commonGroupChangeRepository.save(any())).then(a -> {
             assertEquals(ChangeType.MODIFY, ((CommonGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((CommonGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
             assertEquals(PRINCIPAL_IDENTIFICATION, ((CommonGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
             assertEquals("GroupName: \"null\" -> \"abc\"", ((CommonGroupChangeDao) a.getArgument(0)).getAction(), "Wrong action");
             return null;
@@ -113,6 +117,7 @@ public class CommonGroupChangeServiceTest {
         when(commonGroupDao.getGroupName()).thenReturn("abc");
         when(commonGroupChangeRepository.save(any())).then(a -> {
             assertEquals(ChangeType.UNKNOWN, ((CommonGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((CommonGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
             assertEquals(PRINCIPAL_IDENTIFICATION, ((CommonGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
             assertNull(((CommonGroupChangeDao) a.getArgument(0)).getAction(), "The action should be null");
             return null;
@@ -125,14 +130,17 @@ public class CommonGroupChangeServiceTest {
     @DisplayName("Delete a common group")
     @Test
     public void testDelete() {
-        cut.delete(commonGroupDao, PRINCIPAL_IDENTIFICATION);
         when(commonGroupChangeRepository.save(any())).then(a -> {
             assertEquals(ChangeType.DELETE, ((CommonGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((CommonGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
             assertEquals(PRINCIPAL_IDENTIFICATION, ((CommonGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
             assertEquals(COMMON_GROUP_IDENTIFICATION, ((CommonGroupChangeDao) a.getArgument(0)).getDeletionInformation(), "Wrong delete information");
             return null;
         });
+
+        cut.delete(commonGroupDao, PRINCIPAL_IDENTIFICATION);
+
         verify(commonGroupChangeRepository).save(any());
-        verify(commonGroupChangeRepository).markedAsDeleted(any(), eq(COMMON_GROUP_IDENTIFICATION));
+        verify(commonGroupChangeRepository).markedAsDeleted(any(CommonGroupDao.class), eq(COMMON_GROUP_IDENTIFICATION));
     }
 }

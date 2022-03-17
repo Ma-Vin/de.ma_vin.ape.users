@@ -56,6 +56,7 @@ public class CommonGroupChangeService extends AbstractChangeService<CommonGroupD
      */
     public void delete(CommonGroupDao deletedCommonGroupDao, String editorIdentification) {
         CommonGroupChangeDaoExt deletion = new CommonGroupChangeDaoExt(null, editorIdentification);
+        deletion.setDeletionInformation(deletedCommonGroupDao.getIdentification());
         deletion.setChangeType(ChangeType.DELETE);
         commonGroupChangeRepository.markedAsDeleted(deletedCommonGroupDao, deletedCommonGroupDao.getIdentification());
         commonGroupChangeRepository.save(deletion);
