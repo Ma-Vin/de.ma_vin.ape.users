@@ -70,13 +70,7 @@ public abstract class AbstractChangeService<T extends IIdentifiableDao> {
         if (updatedValue instanceof IIdentifiableDao || storedValue instanceof IIdentifiableDao) {
             return checkDifferentIdentification(valueName, updatedValue, storedValue);
         }
-        if (storedValue != null && updatedValue == null) {
-            return String.format(CHANGE_TEMPLATE, valueName, storedValue, "null");
-        }
-        if (storedValue == null && updatedValue != null) {
-            return String.format(CHANGE_TEMPLATE, valueName, "null", updatedValue);
-        }
-        if (!updatedValue.equals(storedValue)) {
+        if (updatedValue == null || !updatedValue.equals(storedValue)) {
             return String.format(CHANGE_TEMPLATE, valueName, storedValue, updatedValue);
         }
         return null;
@@ -91,13 +85,13 @@ public abstract class AbstractChangeService<T extends IIdentifiableDao> {
      * @return the difference as text. {@code null} if both values are null or they have equal identifications
      */
     protected String checkDifferentIdentification(String valueName, Object updatedValue, Object storedValue) {
-        if (updatedValue == null && storedValue != null && storedValue instanceof IIdentifiableDao identifiableDao) {
+        if (updatedValue == null && storedValue instanceof IIdentifiableDao identifiableDao) {
             return String.format(CHANGE_TEMPLATE, valueName, identifiableDao.getIdentification(), "null");
         }
-        if (updatedValue != null && storedValue == null && updatedValue instanceof IIdentifiableDao identifiableDao) {
+        if (storedValue == null && updatedValue instanceof IIdentifiableDao identifiableDao) {
             return String.format(CHANGE_TEMPLATE, valueName, "null", identifiableDao.getIdentification());
         }
-        if ((updatedValue == null && storedValue == null) || !(storedValue instanceof IIdentifiableDao) || !(updatedValue instanceof IIdentifiableDao)) {
+        if (!(storedValue instanceof IIdentifiableDao) || !(updatedValue instanceof IIdentifiableDao)) {
             return null;
         }
         if (!((IIdentifiableDao) updatedValue).getIdentification().equals(((IIdentifiableDao) storedValue).getIdentification())) {
