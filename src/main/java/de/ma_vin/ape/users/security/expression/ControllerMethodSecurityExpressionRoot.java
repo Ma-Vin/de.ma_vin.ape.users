@@ -140,7 +140,7 @@ public class ControllerMethodSecurityExpressionRoot extends SecurityExpressionRo
     }
 
     private Optional<String> getUsername() {
-        return getAuthentication().getPrincipal() instanceof OAuth2AuthenticatedPrincipal ?
-                Optional.of(((OAuth2AuthenticatedPrincipal) getAuthentication().getPrincipal()).getName()) : Optional.empty();
+        return getAuthentication().getPrincipal() instanceof OAuth2AuthenticatedPrincipal oAuth2AuthenticatedPrincipal ?
+                Optional.of(oAuth2AuthenticatedPrincipal.getName()) : Optional.empty();
     }
 }
