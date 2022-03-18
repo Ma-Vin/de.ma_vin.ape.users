@@ -76,7 +76,7 @@ public class InitUserEventListener {
 
         UserExt admin = new UserExt("admin", "global", Role.ADMIN);
         admin.setRawPassword(passwordEncoder, "admin");
-        Optional<User> storedUser = userService.saveAtAdminGroup(admin, storedAdminGroup.get().getIdentification());
+        Optional<User> storedUser = userService.saveAtAdminGroup(admin, storedAdminGroup.get().getIdentification(), null);
 
         if (storedUser.isEmpty()) {
             log.error("could not initialize database with default admin user");

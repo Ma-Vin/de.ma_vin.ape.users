@@ -18,7 +18,7 @@ import java.util.Optional;
 @Component
 @Data
 @Log4j2
-public class AdminGroupService extends AbstractRepositoryService {
+public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> {
     public static final String GROUP_LOG_PARAM = "admin group";
     public static final String GROUPS_LOG_PARAM = "admin groups";
 

@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.service.history;
 
 import de.ma_vin.ape.users.model.gen.dao.IIdentifiableDao;
+import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.InvocationTargetException;
@@ -9,6 +10,31 @@ import java.util.*;
 @Log4j2
 public abstract class AbstractChangeService<T extends IIdentifiableDao> {
     public static final String CHANGE_TEMPLATE = "%s: \"%s\" -> \"%s\"";
+
+    /**
+     * Store a creation event of a new object
+     *
+     * @param createdObject        the object which was created
+     * @param editorIdentification the identification of the creator
+     */
+    public abstract void saveCreation(T createdObject, String editorIdentification);
+
+    /**
+     * Stores a modification of an existing object
+     *
+     * @param updatedObject        the object after changes
+     * @param storedObject         the object before changes
+     * @param editorIdentification the identification of the modifier
+     */
+    public abstract void saveChange(T updatedObject, T storedObject, String editorIdentification);
+
+    /**
+     * Stores a deletion of an existing object and removes references to it
+     *
+     * @param deletedObject        the object to delete
+     * @param editorIdentification the identification of the deleter
+     */
+    public abstract void delete(T deletedObject, String editorIdentification);
 
     /**
      * Determines the differences between the actual and the stored object as text

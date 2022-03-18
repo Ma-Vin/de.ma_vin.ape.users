@@ -23,7 +23,7 @@ import java.util.Optional;
 @Component
 @Data
 @Log4j2
-public class CommonGroupService extends AbstractRepositoryService {
+public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao> {
     public static final String GROUP_LOG_PARAM = "common group";
     public static final String GROUPS_LOG_PARAM = "common groups";
 
@@ -67,7 +67,7 @@ public class CommonGroupService extends AbstractRepositoryService {
         List<BaseGroup> baseGroups = baseGroupService.findAllBaseGroups(commonGroupDao.getIdentification());
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, baseGroups.size(), BaseGroupService.GROUP_LOG_PARAM, GROUP_LOG_PARAM
                 , commonGroupDao.getIdentification(), commonGroupDao.getId());
-        baseGroups.forEach(baseGroupService::delete);
+        baseGroups.forEach(bg -> baseGroupService.delete(bg, deleterIdentification));
 
         List<User> users = userService.findAllUsersAtCommonGroup(commonGroupDao.getIdentification());
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, users.size(), UserService.USERS_LOG_PARAM, GROUP_LOG_PARAM

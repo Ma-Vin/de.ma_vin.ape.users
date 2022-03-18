@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +39,7 @@ public class AdminControllerTest {
     public static final String DEFAULT_USER_FIRST_NAME = "DummyFirstName";
     public static final String DEFAULT_USER_LAST_NAME = "DummyLastName";
     public static final String USER_PASSWORD = "1 Dummy Password!";
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private AdminController cut;
     private AutoCloseable openMocks;
@@ -54,6 +56,8 @@ public class AdminControllerTest {
     private AdminGroup adminGroup;
     @Mock
     private AdminGroupDto adminGroupDto;
+    @Mock
+    private Principal principal;
 
     @BeforeEach
     public void setUp() {
@@ -67,6 +71,8 @@ public class AdminControllerTest {
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.getFirstName()).thenReturn(DEFAULT_USER_FIRST_NAME);
         when(user.getLastName()).thenReturn(DEFAULT_USER_LAST_NAME);
+
+        when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
     }
 
     @AfterEach
@@ -77,27 +83,27 @@ public class AdminControllerTest {
     @DisplayName("Create an new global admin")
     @Test
     public void testCreateAdmin() {
-        when(userService.saveAtAdminGroup(any(), eq(ADMIN_GROUP_IDENTIFICATION))).thenReturn(Optional.of(user));
+        when(userService.saveAtAdminGroup(any(), eq(ADMIN_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION))).thenReturn(Optional.of(user));
 
-        ResponseWrapper<UserDto> response = cut.createAdmin(DEFAULT_USER_FIRST_NAME, DEFAULT_USER_LAST_NAME, ADMIN_GROUP_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.createAdmin(principal, DEFAULT_USER_FIRST_NAME, DEFAULT_USER_LAST_NAME, ADMIN_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
         assertEquals(USER_IDENTIFICATION, response.getResponse().getIdentification(), "Wrong identification at result");
 
-        verify(userService).saveAtAdminGroup(any(), eq(ADMIN_GROUP_IDENTIFICATION));
+        verify(userService).saveAtAdminGroup(any(), eq(ADMIN_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Create an new global admin, but not saved")
     @Test
     public void testCreateAdminNotSaved() {
-        when(userService.saveAtAdminGroup(any(), eq(ADMIN_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
+        when(userService.saveAtAdminGroup(any(), eq(ADMIN_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION))).thenReturn(Optional.empty());
 
-        ResponseWrapper<UserDto> response = cut.createAdmin(DEFAULT_USER_FIRST_NAME, DEFAULT_USER_LAST_NAME, ADMIN_GROUP_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.createAdmin(principal, DEFAULT_USER_FIRST_NAME, DEFAULT_USER_LAST_NAME, ADMIN_GROUP_IDENTIFICATION);
 
         checkError(response);
 
-        verify(userService).saveAtAdminGroup(any(), eq(ADMIN_GROUP_IDENTIFICATION));
+        verify(userService).saveAtAdminGroup(any(), eq(ADMIN_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
 
@@ -142,26 +148,26 @@ public class AdminControllerTest {
     @DisplayName("Set users password")
     @Test
     public void testSetAdminPassword() {
-        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.TRUE))).thenReturn(Boolean.TRUE);
+        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.TRUE), eq(PRINCIPAL_IDENTIFICATION))).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.setAdminPassword(USER_IDENTIFICATION, USER_PASSWORD);
+        ResponseWrapper<Boolean> response = cut.setAdminPassword(principal, USER_IDENTIFICATION, USER_PASSWORD);
 
         checkOk(response);
 
         assertTrue(response.getResponse(), "The result should be successful");
-        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.TRUE));
+        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.TRUE), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Set users password, but failed")
     @Test
     public void testSetAdminPasswordFailed() {
-        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.TRUE))).thenReturn(Boolean.FALSE);
+        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.TRUE), eq(PRINCIPAL_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.setAdminPassword(USER_IDENTIFICATION, USER_PASSWORD);
+        ResponseWrapper<Boolean> response = cut.setAdminPassword(principal, USER_IDENTIFICATION, USER_PASSWORD);
 
         checkError(response);
 
-        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.TRUE));
+        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.TRUE), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     private void mockDefaultGetAdmin() {
@@ -175,13 +181,13 @@ public class AdminControllerTest {
     public void testUpdateAdmin() {
         mockDefaultUpdateAdmin();
 
-        ResponseWrapper<UserDto> response = cut.updateAdmin(userDto, USER_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.updateAdmin(principal, userDto, USER_IDENTIFICATION);
 
         checkOk(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Update an non global admin")
@@ -191,13 +197,13 @@ public class AdminControllerTest {
 
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<UserDto> response = cut.updateAdmin(userDto, USER_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.updateAdmin(principal, userDto, USER_IDENTIFICATION);
 
         checkError(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService, never()).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService, never()).save(any(), any());
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Update an non existing user")
@@ -207,13 +213,13 @@ public class AdminControllerTest {
 
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
 
-        ResponseWrapper<UserDto> response = cut.updateAdmin(userDto, USER_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.updateAdmin(principal, userDto, USER_IDENTIFICATION);
 
         checkError(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService, never()).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService, never()).save(any(), any());
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Update an user without save return")
@@ -221,15 +227,15 @@ public class AdminControllerTest {
     public void testUpdateAdminNoSaveReturn() {
         mockDefaultUpdateAdminWithoutSaving();
 
-        when(userService.save(any())).then(a -> Optional.empty());
+        when(userService.save(any(), any())).then(a -> Optional.empty());
 
-        ResponseWrapper<UserDto> response = cut.updateAdmin(userDto, USER_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.updateAdmin(principal, userDto, USER_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Update an user with different identification as parameter")
@@ -239,13 +245,13 @@ public class AdminControllerTest {
 
         List<String> storedIdentification = new ArrayList<>();
         String otherIdentification = USER_IDENTIFICATION + "1";
-        when(userService.save(any())).then(a -> {
+        when(userService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> {
             storedIdentification.add(((User) a.getArgument(0)).getIdentification());
             return Optional.of(a.getArgument(0));
         });
         when(userService.findUser(eq(otherIdentification))).thenReturn(Optional.of(user));
 
-        ResponseWrapper<UserDto> response = cut.updateAdmin(userDto, otherIdentification);
+        ResponseWrapper<UserDto> response = cut.updateAdmin(principal, userDto, otherIdentification);
 
         checkWarn(response, 1);
 
@@ -254,8 +260,8 @@ public class AdminControllerTest {
 
         verify(userService).findUser(eq(otherIdentification));
         verify(userService, never()).findUser(eq(USER_IDENTIFICATION));
-        verify(userService).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Delete an user")
@@ -495,7 +501,7 @@ public class AdminControllerTest {
 
     private void mockDefaultUpdateAdmin() {
         mockDefaultUpdateAdminWithoutSaving();
-        when(userService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(userService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
     }
 
     private void mockDefaultUpdateAdminWithoutSaving() {

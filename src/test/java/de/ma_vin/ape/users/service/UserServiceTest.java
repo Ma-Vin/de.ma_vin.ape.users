@@ -14,6 +14,8 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.resource.UserResource;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.*;
+import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
+import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +48,7 @@ public class UserServiceTest {
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String USER_IMAGE_IDENTIFICATION = IdGenerator.generateIdentification(USER_IMAGE_ID, UserResource.ID_PREFIX);
     public static final String USER_SMALL_IMAGE_IDENTIFICATION = IdGenerator.generateIdentification(USER_SMALL_IMAGE_ID, UserResource.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private UserService cut;
     private AutoCloseable openMocks;
@@ -68,6 +71,10 @@ public class UserServiceTest {
     private BaseGroupService baseGroupService;
     @Mock
     private PrivilegeGroupService privilegeGroupService;
+    @Mock
+    private CommonGroupChangeRepository commonGroupChangeRepository;
+    @Mock
+    private BaseGroupChangeRepository baseGroupChangeRepository;
     @Mock
     private UserExt user;
     @Mock
@@ -106,6 +113,8 @@ public class UserServiceTest {
         cut.setBaseGroupRepository(baseGroupRepository);
         cut.setBaseToBaseGroupRepository(baseToBaseGroupRepository);
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
+        cut.setCommonGroupChangeRepository(commonGroupChangeRepository);
+        cut.setBaseGroupChangeRepository(baseGroupChangeRepository);
         cut.setUserResourceService(userResourceService);
         cut.setBaseGroupService(baseGroupService);
         cut.setPrivilegeGroupService(privilegeGroupService);
@@ -145,6 +154,8 @@ public class UserServiceTest {
 
         verify(userRepository).delete(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(commonGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
+        verify(baseGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
     }
 
     @DisplayName("Delete user with references")
@@ -156,6 +167,8 @@ public class UserServiceTest {
 
         verify(userRepository).delete(any());
         verify(userResourceService, times(2)).delete(any(UserResource.class));
+        verify(commonGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
+        verify(baseGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
     }
 
     @DisplayName("Check existence of user")
@@ -984,7 +997,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentAdminGroup(eq(USER_ID))).thenReturn(Optional.of(ADMIN_GROUP_ID));
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
 
-        Optional<User> result = cut.save(user);
+        Optional<User> result = cut.save(user, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
 
@@ -1003,7 +1016,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(ADMIN_GROUP_ID));
 
-        Optional<User> result = cut.save(user);
+        Optional<User> result = cut.save(user, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
 
@@ -1021,7 +1034,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
 
-        Optional<User> result = cut.save(user);
+        Optional<User> result = cut.save(user, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -1041,7 +1054,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(ADMIN_GROUP_ID));
 
-        Optional<User> result = cut.save(user);
+        Optional<User> result = cut.save(user, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -1064,7 +1077,7 @@ public class UserServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1084,7 +1097,7 @@ public class UserServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1114,7 +1127,7 @@ public class UserServiceTest {
         when(smallImageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
         when(smallImageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
 
-        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1145,7 +1158,7 @@ public class UserServiceTest {
         when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
         when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
 
-        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1176,7 +1189,7 @@ public class UserServiceTest {
         when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
         when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
 
-        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1205,7 +1218,7 @@ public class UserServiceTest {
         when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
         when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
 
-        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1227,7 +1240,7 @@ public class UserServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -1248,7 +1261,7 @@ public class UserServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1264,7 +1277,7 @@ public class UserServiceTest {
     public void testSaveAtCommonGroupExisting() {
         mockSaveAtCommonGroup();
 
-        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1290,7 +1303,7 @@ public class UserServiceTest {
         when(smallImageDao.getIdentification()).thenReturn(USER_SMALL_IMAGE_IDENTIFICATION);
         when(smallImageDao.getId()).thenReturn(USER_SMALL_IMAGE_ID);
 
-        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1317,7 +1330,7 @@ public class UserServiceTest {
         when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
         when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
 
-        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1344,7 +1357,7 @@ public class UserServiceTest {
         when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
         when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
 
-        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1369,7 +1382,7 @@ public class UserServiceTest {
         when(smallImageDao.getIdentification()).thenReturn(USER_IMAGE_IDENTIFICATION);
         when(smallImageDao.getId()).thenReturn(USER_IMAGE_ID);
 
-        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -1387,7 +1400,7 @@ public class UserServiceTest {
         when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.empty());
         mockSaveAtCommonGroup();
 
-        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION);
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -1583,7 +1596,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertTrue(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false), "The password should be set");
+        assertTrue(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false, PRINCIPAL_IDENTIFICATION), "The password should be set");
 
         verify(passwordEncoder).matches(eq("ABCDabcd1_"), any());
         verify(userRepository).save(any());
@@ -1598,7 +1611,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertTrue(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false), "The password should be set");
+        assertTrue(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false, PRINCIPAL_IDENTIFICATION), "The password should be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository).save(any());
@@ -1612,7 +1625,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq(USER_PASSWORD), any())).thenReturn(Boolean.TRUE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, USER_PASSWORD, false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, USER_PASSWORD, false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder).matches(eq(USER_PASSWORD), any());
         verify(userRepository, never()).save(any());
@@ -1626,7 +1639,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCabcd1_", false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCabcd1_", false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
@@ -1640,7 +1653,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("abcdabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "abcdabcd1_", false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "abcdabcd1_", false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
@@ -1654,7 +1667,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDABCD1_"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDABCD1_", false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDABCD1_", false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
@@ -1668,7 +1681,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDabcde_"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcde_", false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcde_", false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
@@ -1682,7 +1695,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDabcd12"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd12", false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd12", false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
@@ -1697,7 +1710,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
@@ -1710,7 +1723,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentAdminGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder).matches(eq("ABCDabcd1_"), any());
         verify(userRepository, never()).save(any());
@@ -1724,7 +1737,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(any(), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, null, false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, null, false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
@@ -1738,7 +1751,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(any(), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "", false), "The password should not be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "", false, PRINCIPAL_IDENTIFICATION), "The password should not be set");
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(userRepository, never()).save(any());
@@ -1754,7 +1767,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertTrue(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", true), "The password should be set");
+        assertTrue(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", true, PRINCIPAL_IDENTIFICATION), "The password should be set");
 
         verify(passwordEncoder).matches(eq("ABCDabcd1_"), any());
         verify(userRepository).save(any());
@@ -1768,7 +1781,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", true), "The password should be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", true, PRINCIPAL_IDENTIFICATION), "The password should be set");
 
         verify(passwordEncoder, never()).matches(eq("ABCDabcd1_"), any());
         verify(userRepository, never()).save(any());
@@ -1784,7 +1797,7 @@ public class UserServiceTest {
         when(userRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(userRepository.getIdOfParentCommonGroup(eq(USER_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
         when(passwordEncoder.matches(eq("ABCDabcd1_"), any())).thenReturn(Boolean.FALSE);
-        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false), "The password should be set");
+        assertFalse(cut.setPassword(USER_IDENTIFICATION, "ABCDabcd1_", false, PRINCIPAL_IDENTIFICATION), "The password should be set");
 
         verify(passwordEncoder, never()).matches(eq("ABCDabcd1_"), any());
         verify(userRepository, never()).save(any());
@@ -1795,7 +1808,7 @@ public class UserServiceTest {
     public void testSetRole() {
         mockSaveAtCommonGroup(Role.ADMIN);
 
-        assertTrue(cut.setRole(USER_IDENTIFICATION, Role.ADMIN), "The result should be true");
+        assertTrue(cut.setRole(USER_IDENTIFICATION, Role.ADMIN, PRINCIPAL_IDENTIFICATION), "The result should be true");
 
         verify(userRepository).save(any());
     }
@@ -1805,7 +1818,7 @@ public class UserServiceTest {
     public void testSetRoleNotFound() {
         mockSaveAtCommonGroup(Role.ADMIN);
 
-        assertFalse(cut.setRole(USER_IDENTIFICATION + "_1", Role.ADMIN), "The result should be true");
+        assertFalse(cut.setRole(USER_IDENTIFICATION + "_1", Role.ADMIN, PRINCIPAL_IDENTIFICATION), "The result should be true");
 
         verify(userRepository, never()).save(any());
     }
@@ -1815,7 +1828,7 @@ public class UserServiceTest {
     public void testSetRoleEqualRoleAgain() {
         mockSaveAtCommonGroup(Role.VISITOR);
 
-        assertTrue(cut.setRole(USER_IDENTIFICATION, Role.VISITOR), "The result should be true");
+        assertTrue(cut.setRole(USER_IDENTIFICATION, Role.VISITOR, PRINCIPAL_IDENTIFICATION), "The result should be true");
 
         verify(userRepository, never()).save(any());
     }
@@ -1832,7 +1845,7 @@ public class UserServiceTest {
             return a.getArgument(0);
         });
 
-        assertFalse(cut.setRole(USER_IDENTIFICATION, Role.ADMIN), "The result should be true");
+        assertFalse(cut.setRole(USER_IDENTIFICATION, Role.ADMIN, PRINCIPAL_IDENTIFICATION), "The result should be true");
 
         verify(userRepository, never()).save(any());
     }

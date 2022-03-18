@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -63,8 +64,8 @@ public class AdminController extends AbstractDefaultOperationController {
     @PreAuthorize("isGlobalAdmin()")
     @PostMapping("/createAdmin")
     public @ResponseBody
-    ResponseWrapper<UserDto> createAdmin(@RequestParam String firstName, @RequestParam String lastName, @RequestParam String adminGroupIdentification) {
-        Optional<User> result = userService.saveAtAdminGroup(new UserExt(firstName, lastName, Role.ADMIN), adminGroupIdentification);
+    ResponseWrapper<UserDto> createAdmin(Principal principal, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String adminGroupIdentification) {
+        Optional<User> result = userService.saveAtAdminGroup(new UserExt(firstName, lastName, Role.ADMIN), adminGroupIdentification, principal.getName());
         if (result.isEmpty()) {
             return ResponseUtil.createEmptyResponseWithError(String.format("The admin with name \"%s, %s\" was not created", lastName, firstName));
         }
@@ -138,10 +139,10 @@ public class AdminController extends AbstractDefaultOperationController {
     @PreAuthorize("isGlobalAdmin()")
     @PutMapping("/updateAdmin/{userIdentification}")
     public @ResponseBody
-    ResponseWrapper<UserDto> updateAdmin(@RequestBody UserDto user, @PathVariable String userIdentification) {
+    ResponseWrapper<UserDto> updateAdmin(Principal principal, @RequestBody UserDto user, @PathVariable String userIdentification) {
         return update(user, userIdentification, User.class
                 , getGlobalAdminSearcher()
-                , objectToUpdate -> userService.save(objectToUpdate)
+                , objectToUpdate -> userService.save(objectToUpdate, principal.getName())
                 , UserTransportMapper::convertToUserDto
                 , UserTransportMapper::convertToUser
         );
@@ -149,8 +150,8 @@ public class AdminController extends AbstractDefaultOperationController {
 
     @PreAuthorize("isGlobalAdmin()")
     @PatchMapping("/setAdminPassword/{userIdentification}")
-    public ResponseWrapper<Boolean> setAdminPassword(@PathVariable String userIdentification, @RequestBody String rawPassword) {
-        if (userService.setPassword(userIdentification, rawPassword, true)) {
+    public ResponseWrapper<Boolean> setAdminPassword(Principal principal, @PathVariable String userIdentification, @RequestBody String rawPassword) {
+        if (userService.setPassword(userIdentification, rawPassword, true, principal.getName())) {
             return createSuccessResponse(Boolean.TRUE);
         }
         return createEmptyResponseWithError(String.format("The password could not be set at user with identification %s", userIdentification));

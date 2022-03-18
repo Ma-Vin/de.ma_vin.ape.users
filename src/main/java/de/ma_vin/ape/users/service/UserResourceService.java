@@ -15,7 +15,7 @@ import java.util.Optional;
 @Component
 @Log4j2
 @Data
-public class UserResourceService extends AbstractRepositoryService {
+public class UserResourceService extends AbstractRepositoryService<UserResourceDao> {
     public static final String USER_RESOURCE_LOG_PARAM = "user resource";
 
     @Autowired

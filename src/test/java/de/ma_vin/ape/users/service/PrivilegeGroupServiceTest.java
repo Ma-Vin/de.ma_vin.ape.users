@@ -38,6 +38,7 @@ public class PrivilegeGroupServiceTest {
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private PrivilegeGroupService cut;
     private AutoCloseable openMocks;
@@ -307,7 +308,7 @@ public class PrivilegeGroupServiceTest {
         when(privilegeGroupRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(privilegeGroupRepository.getIdOfParentCommonGroup(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
 
-        Optional<PrivilegeGroup> result = cut.save(privilegeGroup);
+        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
 
@@ -326,7 +327,7 @@ public class PrivilegeGroupServiceTest {
         when(privilegeGroupRepository.save(any())).then(a -> a.getArgument(0));
         when(privilegeGroupRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
 
-        Optional<PrivilegeGroup> result = cut.save(privilegeGroup);
+        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -346,7 +347,7 @@ public class PrivilegeGroupServiceTest {
         when(privilegeGroupRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(privilegeGroupRepository.getIdOfParentCommonGroup(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
 
-        Optional<PrivilegeGroup> result = cut.save(privilegeGroup);
+        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
@@ -369,7 +370,7 @@ public class PrivilegeGroupServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, COMMON_GROUP_IDENTIFICATION);
+        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -391,7 +392,7 @@ public class PrivilegeGroupServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, COMMON_GROUP_IDENTIFICATION);
+        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
@@ -413,7 +414,7 @@ public class PrivilegeGroupServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, COMMON_GROUP_IDENTIFICATION);
+        Optional<PrivilegeGroup> result = cut.save(privilegeGroup, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 

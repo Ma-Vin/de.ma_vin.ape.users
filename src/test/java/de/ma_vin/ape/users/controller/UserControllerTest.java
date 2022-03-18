@@ -29,6 +29,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.security.Principal;
 import java.util.*;
 
 public class UserControllerTest {
@@ -42,6 +43,7 @@ public class UserControllerTest {
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
     public static final String USER_PASSWORD = "1 Dummy Password!";
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private AutoCloseable openMocks;
 
@@ -58,7 +60,7 @@ public class UserControllerTest {
     @Mock
     private UserIdRoleDto userIdRoleDto;
     @Mock
-    private PrivilegeGroupExt privilegeGroupExt;
+    private Principal principal;
 
     @BeforeEach
     public void setUp() {
@@ -67,6 +69,8 @@ public class UserControllerTest {
         cut = new UserController();
         cut.setUserService(userService);
         cut.setPrivilegeGroupService(privilegeGroupService);
+
+        when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
     }
 
     @AfterEach
@@ -77,28 +81,28 @@ public class UserControllerTest {
     @DisplayName("Create an user")
     @Test
     public void testCreateUser() {
-        when(userService.saveAtCommonGroup(any(), any())).thenAnswer(a -> {
+        when(userService.saveAtCommonGroup(any(), any(), eq(PRINCIPAL_IDENTIFICATION))).thenAnswer(a -> {
             ((User) a.getArgument(0)).setIdentification(USER_IDENTIFICATION);
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<UserDto> response = cut.createUser("FirstName", "LastName", COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.createUser(principal, "FirstName", "LastName", COMMON_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(userService).saveAtCommonGroup(any(), eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService).saveAtCommonGroup(any(), eq(COMMON_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Create an user but without save result")
     @Test
     public void testCreateUserWithoutResult() {
-        when(userService.saveAtCommonGroup(any(), any())).thenAnswer(a -> Optional.empty());
+        when(userService.saveAtCommonGroup(any(), any(), eq(PRINCIPAL_IDENTIFICATION))).thenAnswer(a -> Optional.empty());
 
-        ResponseWrapper<UserDto> response = cut.createUser("FirstName", "LastName", COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.createUser(principal, "FirstName", "LastName", COMMON_GROUP_IDENTIFICATION);
 
         checkError(response);
 
-        verify(userService).saveAtCommonGroup(any(), eq(COMMON_GROUP_IDENTIFICATION));
+        verify(userService).saveAtCommonGroup(any(), eq(COMMON_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Delete an user")
@@ -232,18 +236,18 @@ public class UserControllerTest {
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userDto.getRole()).thenReturn(Role.ADMIN);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.save(any())).then(a -> {
+        when(userService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> {
             assertEquals(Role.CONTRIBUTOR, ((User) a.getArgument(0)).getRole(), "The role should be the stored one");
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<UserDto> response = cut.updateUser(userDto, USER_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.updateUser(principal, userDto, USER_IDENTIFICATION);
 
         checkOk(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Update an global admin")
@@ -253,15 +257,15 @@ public class UserControllerTest {
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(userService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
 
-        ResponseWrapper<UserDto> response = cut.updateUser(userDto, USER_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.updateUser(principal, userDto, USER_IDENTIFICATION);
 
         checkError(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService, never()).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService, never()).save(any(), any());
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Update an non existing user")
@@ -269,15 +273,15 @@ public class UserControllerTest {
     public void testUpdateUserNonExisting() {
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
-        when(userService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(userService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
 
-        ResponseWrapper<UserDto> response = cut.updateUser(userDto, USER_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.updateUser(principal, userDto, USER_IDENTIFICATION);
 
         checkError(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService, never()).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService, never()).save(any(), any());
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Update an user without save return")
@@ -287,15 +291,15 @@ public class UserControllerTest {
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.save(any())).then(a -> Optional.empty());
+        when(userService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.empty());
 
-        ResponseWrapper<UserDto> response = cut.updateUser(userDto, USER_IDENTIFICATION);
+        ResponseWrapper<UserDto> response = cut.updateUser(principal, userDto, USER_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Update an user with different identification as parameter")
@@ -307,12 +311,12 @@ public class UserControllerTest {
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findUser(eq(otherIdentification))).thenReturn(Optional.of(user));
-        when(userService.save(any())).then(a -> {
+        when(userService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> {
             storedIdentification.add(((User) a.getArgument(0)).getIdentification());
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<UserDto> response = cut.updateUser(userDto, otherIdentification);
+        ResponseWrapper<UserDto> response = cut.updateUser(principal, userDto, otherIdentification);
 
         checkWarn(response, 1);
 
@@ -321,8 +325,8 @@ public class UserControllerTest {
 
         verify(userService).findUser(eq(otherIdentification));
         verify(userService, never()).findUser(eq(USER_IDENTIFICATION));
-        verify(userService).save(any());
-        verify(userService, never()).saveAtCommonGroup(any(), any());
+        verify(userService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(userService, never()).saveAtCommonGroup(any(), any(), any());
     }
 
     @DisplayName("Add user to privilege group")
@@ -1338,50 +1342,50 @@ public class UserControllerTest {
     @DisplayName("Set users password")
     @Test
     public void testSetUserPassword() {
-        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE))).thenReturn(Boolean.TRUE);
+        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE), eq(PRINCIPAL_IDENTIFICATION))).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.setUserPassword(USER_IDENTIFICATION, USER_PASSWORD);
+        ResponseWrapper<Boolean> response = cut.setUserPassword(principal, USER_IDENTIFICATION, USER_PASSWORD);
 
         checkOk(response);
 
         assertTrue(response.getResponse(), "The result should be successful");
-        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE));
+        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Set users password, but failed")
     @Test
     public void testSetUserPasswordFailed() {
-        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE))).thenReturn(Boolean.FALSE);
+        when(userService.setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE), eq(PRINCIPAL_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.setUserPassword(USER_IDENTIFICATION, USER_PASSWORD);
+        ResponseWrapper<Boolean> response = cut.setUserPassword(principal, USER_IDENTIFICATION, USER_PASSWORD);
 
         checkError(response);
 
-        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE));
+        verify(userService).setPassword(eq(USER_IDENTIFICATION), eq(USER_PASSWORD), eq(Boolean.FALSE), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Set users role")
     @Test
     public void testSetUserRole() {
-        when(userService.setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN))).thenReturn(Boolean.TRUE);
+        when(userService.setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN), eq(PRINCIPAL_IDENTIFICATION))).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.setUserRole(USER_IDENTIFICATION, Role.ADMIN);
+        ResponseWrapper<Boolean> response = cut.setUserRole(principal, USER_IDENTIFICATION, Role.ADMIN);
 
         checkOk(response);
 
         assertTrue(response.getResponse(), "The result should be successful");
-        verify(userService).setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN));
+        verify(userService).setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Set users role, but failed")
     @Test
     public void testSetUserRoleFailed() {
-        when(userService.setPassword(eq(USER_IDENTIFICATION), any(), eq(Boolean.FALSE))).thenReturn(Boolean.FALSE);
+        when(userService.setPassword(eq(USER_IDENTIFICATION), any(), eq(Boolean.FALSE), eq(PRINCIPAL_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.setUserRole(USER_IDENTIFICATION, Role.ADMIN);
+        ResponseWrapper<Boolean> response = cut.setUserRole(principal, USER_IDENTIFICATION, Role.ADMIN);
 
         checkError(response);
 
-        verify(userService).setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN));
+        verify(userService).setRole(eq(USER_IDENTIFICATION), eq(Role.ADMIN), eq(PRINCIPAL_IDENTIFICATION));
     }
 }

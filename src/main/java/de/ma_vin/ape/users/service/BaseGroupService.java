@@ -11,6 +11,8 @@ import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
+import de.ma_vin.ape.users.service.history.AbstractChangeService;
+import de.ma_vin.ape.users.service.history.BaseGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -26,7 +28,7 @@ import java.util.Optional;
 @Component
 @Data
 @Log4j2
-public class BaseGroupService extends AbstractRepositoryService {
+public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
     public static final String GROUP_LOG_PARAM = "base group";
     public static final String GROUPS_LOG_PARAM = "base groups";
     public static final String AVAILABLE_GROUPS_LOG_PARAM = " available users";
@@ -43,22 +45,31 @@ public class BaseGroupService extends AbstractRepositoryService {
     private PrivilegeToBaseGroupRepository privilegeToBaseGroupRepository;
     @Autowired
     private PrivilegeGroupRepository privilegeGroupRepository;
+    @Autowired
+    private BaseGroupChangeService baseGroupChangeService;
+
+    @Override
+    protected AbstractChangeService<BaseGroupDao> getChangeService() {
+        return baseGroupChangeService;
+    }
 
     /**
      * Deletes an base group from repository
      *
-     * @param baseGroup base group to delete
+     * @param baseGroup             base group to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    public void delete(BaseGroup baseGroup) {
-        delete(GroupAccessMapper.convertToBaseGroupDao(baseGroup, false));
+    public void delete(BaseGroup baseGroup, String deleterIdentification) {
+        delete(GroupAccessMapper.convertToBaseGroupDao(baseGroup, false), deleterIdentification);
     }
 
     /**
      * Deletes an baseGroupDao from repository
      *
-     * @param baseGroupDao base group to delete
+     * @param baseGroupDao          base group to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    private void delete(BaseGroupDao baseGroupDao) {
+    private void delete(BaseGroupDao baseGroupDao, String deleterIdentification) {
         log.debug(DELETE_BEGIN_LOG_MESSAGE, GROUP_LOG_PARAM, baseGroupDao.getIdentification(), baseGroupDao.getId());
 
         long numToUserDeleted = baseGroupToUserRepository.deleteByBaseGroup(baseGroupDao);
@@ -77,6 +88,7 @@ public class BaseGroupService extends AbstractRepositoryService {
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, numFromPrivilegeGroup, "connections from privilege group", GROUP_LOG_PARAM
                 , baseGroupDao.getIdentification(), baseGroupDao.getId());
 
+        baseGroupChangeService.delete(baseGroupDao, deleterIdentification);
         baseGroupRepository.delete(baseGroupDao);
 
         log.debug(DELETE_END_LOG_MESSAGE, GROUP_LOG_PARAM, baseGroupDao.getIdentification(), baseGroupDao.getId());
@@ -566,19 +578,20 @@ public class BaseGroupService extends AbstractRepositoryService {
     /**
      * Stores a base group
      *
-     * @param baseGroup base group which should be stored
+     * @param baseGroup            base group which should be stored
+     * @param editorIdentification The identification of the user who is saving
      * @return Stored base group with additional generated ids, if missing before.
      * <br>
      * In case of not existing baseGroup for given identification, the result will be {@link Optional#empty()}
      */
-    public Optional<BaseGroup> save(BaseGroup baseGroup) {
+    public Optional<BaseGroup> save(BaseGroup baseGroup, String editorIdentification) {
         if (baseGroup.getIdentification() == null) {
             log.error(GET_PARENT_ID_MISSING_CHILD_ID_LOG_ERROR, COMMON_GROUP_LOG_PARAM, GROUP_LOG_PARAM);
             return Optional.empty();
         }
         Optional<Long> commonGroupId = baseGroupRepository.getIdOfParentCommonGroup(IdGenerator.generateId(baseGroup.getIdentification(), BaseGroup.ID_PREFIX));
         if (commonGroupId.isPresent()) {
-            return save(baseGroup, IdGenerator.generateIdentification(commonGroupId.get(), CommonGroup.ID_PREFIX));
+            return save(baseGroup, IdGenerator.generateIdentification(commonGroupId.get(), CommonGroup.ID_PREFIX), editorIdentification);
         }
         log.error(GET_PARENT_ID_NOT_FOUND_LOG_ERROR, COMMON_GROUP_LOG_PARAM);
         return Optional.empty();
@@ -587,14 +600,15 @@ public class BaseGroupService extends AbstractRepositoryService {
     /**
      * Stores a base group at a common group
      *
-     * @param baseGroup           base group which should be stored
-     * @param groupIdentification identification of the parent common group
+     * @param baseGroup            base group which should be stored
+     * @param groupIdentification  identification of the parent common group
+     * @param editorIdentification The identification of the user who is saving
      * @return Stored base group with additional generated ids, if missing before.
      * <br>
      * In case of not existing baseGroup for given identification, the result will be {@link Optional#empty()}
      */
-    public Optional<BaseGroup> save(BaseGroup baseGroup, String groupIdentification) {
-        return save(baseGroup, groupIdentification
+    public Optional<BaseGroup> save(BaseGroup baseGroup, String groupIdentification, String editorIdentification) {
+        return save(baseGroup, groupIdentification, editorIdentification
                 , BaseGroup::getGroupName
                 , () -> {
                     CommonGroupDao res = new CommonGroupDao();

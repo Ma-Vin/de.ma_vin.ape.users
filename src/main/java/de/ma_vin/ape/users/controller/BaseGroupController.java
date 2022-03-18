@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -35,8 +36,8 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isManager(#commonGroupIdentification, 'COMMON')")
     @PostMapping("/createBaseGroup")
     public @ResponseBody
-    ResponseWrapper<BaseGroupDto> createBaseGroup(@RequestParam String groupName, @RequestParam String commonGroupIdentification) {
-        Optional<BaseGroup> result = baseGroupService.save(new BaseGroupExt(groupName), commonGroupIdentification);
+    ResponseWrapper<BaseGroupDto> createBaseGroup(Principal principal, @RequestParam String groupName, @RequestParam String commonGroupIdentification) {
+        Optional<BaseGroup> result = baseGroupService.save(new BaseGroupExt(groupName), commonGroupIdentification, principal.getName());
         if (result.isEmpty()) {
             return createEmptyResponseWithError(String.format("The group with name \"%s\" was not created", groupName));
         }
@@ -46,10 +47,10 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isManager(#baseGroupIdentification, 'BASE')")
     @DeleteMapping("/deleteBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> deleteBaseGroup(@PathVariable String baseGroupIdentification) {
+    ResponseWrapper<Boolean> deleteBaseGroup(Principal principal, @PathVariable String baseGroupIdentification) {
         return delete(baseGroupIdentification, BaseGroup.class
                 , identificationToDelete -> baseGroupService.findBaseGroup(identificationToDelete)
-                , objectToDelete -> baseGroupService.delete(objectToDelete)
+                , objectToDelete -> baseGroupService.delete(objectToDelete, principal.getName())
                 , identificationToCheck -> baseGroupService.baseGroupExits(identificationToCheck));
     }
 
@@ -66,10 +67,10 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isManager(#baseGroupIdentification, 'BASE')")
     @PutMapping("/updateBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<BaseGroupDto> updateBaseGroup(@RequestBody BaseGroupDto baseGroup, @PathVariable String baseGroupIdentification) {
+    ResponseWrapper<BaseGroupDto> updateBaseGroup(Principal principal, @RequestBody BaseGroupDto baseGroup, @PathVariable String baseGroupIdentification) {
         return update(baseGroup, baseGroupIdentification, BaseGroup.class
                 , identificationToUpdate -> baseGroupService.findBaseGroup(identificationToUpdate)
-                , objectToUpdate -> baseGroupService.save(objectToUpdate)
+                , objectToUpdate -> baseGroupService.save(objectToUpdate, principal.getName())
                 , GroupTransportMapper::convertToBaseGroupDto
                 , GroupTransportMapper::convertToBaseGroup
         );

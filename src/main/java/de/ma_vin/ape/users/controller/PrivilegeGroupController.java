@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -35,8 +36,8 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
     @PreAuthorize("isManager(#commonGroupIdentification, 'COMMON')")
     @PostMapping("/createPrivilegeGroup")
     public @ResponseBody
-    ResponseWrapper<PrivilegeGroupDto> createPrivilegeGroup(@RequestParam String groupName, @RequestParam String commonGroupIdentification) {
-        Optional<PrivilegeGroup> result = privilegeGroupService.save(new PrivilegeGroupExt(groupName), commonGroupIdentification);
+    ResponseWrapper<PrivilegeGroupDto> createPrivilegeGroup(Principal principal, @RequestParam String groupName, @RequestParam String commonGroupIdentification) {
+        Optional<PrivilegeGroup> result = privilegeGroupService.save(new PrivilegeGroupExt(groupName), commonGroupIdentification, principal.getName());
         if (result.isEmpty()) {
             return ResponseUtil.createEmptyResponseWithError(String.format("The group with name \"%s\" was not created", groupName));
         }
@@ -66,10 +67,10 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PutMapping("/updatePrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<PrivilegeGroupDto> updatePrivilegeGroup(@RequestBody PrivilegeGroupDto privilegeGroup, @PathVariable String privilegeGroupIdentification) {
+    ResponseWrapper<PrivilegeGroupDto> updatePrivilegeGroup(Principal principal, @RequestBody PrivilegeGroupDto privilegeGroup, @PathVariable String privilegeGroupIdentification) {
         return update(privilegeGroup, privilegeGroupIdentification, PrivilegeGroup.class
                 , identificationToUpdate -> privilegeGroupService.findPrivilegeGroup(identificationToUpdate)
-                , objectToUpdate -> privilegeGroupService.save(objectToUpdate)
+                , objectToUpdate -> privilegeGroupService.save(objectToUpdate, principal.getName())
                 , GroupTransportMapper::convertToPrivilegeGroupDto
                 , GroupTransportMapper::convertToPrivilegeGroup
         );

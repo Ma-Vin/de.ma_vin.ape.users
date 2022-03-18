@@ -23,7 +23,7 @@ import java.util.Optional;
 @Component
 @Data
 @Log4j2
-public class PrivilegeGroupService extends AbstractRepositoryService {
+public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGroupDao> {
     public static final String GROUP_LOG_PARAM = "privilege group";
     public static final String GROUPS_LOG_PARAM = "privilege groups";
     public static final String COMMON_GROUP_LOG_PARAM = "common group";
@@ -212,19 +212,20 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
     /**
      * Stores a privilege group
      *
-     * @param privilegeGroup privilege group which should be stored
+     * @param privilegeGroup       privilege group which should be stored
+     * @param editorIdentification The identification of the user who is saving
      * @return Stored privilege group with additional generated ids, if missing before.
      * <br>
      * In case of not existing privilegeGroup for given identification, the result will be {@link Optional#empty()}
      */
-    public Optional<PrivilegeGroup> save(PrivilegeGroup privilegeGroup) {
+    public Optional<PrivilegeGroup> save(PrivilegeGroup privilegeGroup, String editorIdentification) {
         if (privilegeGroup.getIdentification() == null) {
             log.error(GET_PARENT_ID_MISSING_CHILD_ID_LOG_ERROR, COMMON_GROUP_LOG_PARAM, GROUP_LOG_PARAM);
             return Optional.empty();
         }
         Optional<Long> commonGroupId = privilegeGroupRepository.getIdOfParentCommonGroup(IdGenerator.generateId(privilegeGroup.getIdentification(), PrivilegeGroup.ID_PREFIX));
         if (commonGroupId.isPresent()) {
-            return save(privilegeGroup, IdGenerator.generateIdentification(commonGroupId.get(), CommonGroup.ID_PREFIX));
+            return save(privilegeGroup, IdGenerator.generateIdentification(commonGroupId.get(), CommonGroup.ID_PREFIX), editorIdentification);
         }
         log.error(GET_PARENT_ID_NOT_FOUND_LOG_ERROR, COMMON_GROUP_LOG_PARAM);
         return Optional.empty();
@@ -233,14 +234,15 @@ public class PrivilegeGroupService extends AbstractRepositoryService {
     /**
      * Stores a privilege group at a common group
      *
-     * @param privilegeGroup      privilege group which should be stored
-     * @param groupIdentification identification of the parent common group
+     * @param privilegeGroup       privilege group which should be stored
+     * @param groupIdentification  identification of the parent common group
+     * @param editorIdentification The identification of the user who is saving
      * @return Stored privilege group with additional generated ids, if missing before.
      * <br>
      * In case of not existing privilegeGroup for given identification, the result will be {@link Optional#empty()}
      */
-    public Optional<PrivilegeGroup> save(PrivilegeGroup privilegeGroup, String groupIdentification) {
-        return save(privilegeGroup, groupIdentification
+    public Optional<PrivilegeGroup> save(PrivilegeGroup privilegeGroup, String groupIdentification, String editorIdentification) {
+        return save(privilegeGroup, groupIdentification, editorIdentification
                 , PrivilegeGroup::getGroupName
                 , () -> {
                     CommonGroupDao res = new CommonGroupDao();

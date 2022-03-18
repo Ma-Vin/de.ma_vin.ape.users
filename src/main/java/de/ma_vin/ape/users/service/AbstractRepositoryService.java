@@ -2,6 +2,7 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.model.gen.dao.IIdentifiableDao;
 import de.ma_vin.ape.users.model.gen.domain.IIdentifiable;
+import de.ma_vin.ape.users.service.history.AbstractChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +11,7 @@ import java.io.Serializable;
 import java.util.Optional;
 
 @Log4j2
-public abstract class AbstractRepositoryService {
+public abstract class AbstractRepositoryService<S extends IIdentifiableDao> {
 
     public static final String GET_PARENT_ID_MISSING_CHILD_ID_LOG_ERROR = "The identification of the parent {} could not be determined without identification of the {}";
     public static final String GET_PARENT_ID_NOT_FOUND_LOG_ERROR = "The identification of the parent {} could not be determined";
@@ -35,6 +36,29 @@ public abstract class AbstractRepositoryService {
 
 
     /**
+     * @return the change service for the class <code>S</code>
+     */
+    protected AbstractChangeService<S> getChangeService() {
+        return new AbstractChangeService<>() {
+
+            @SuppressWarnings("java:S1186")
+            @Override
+            public void saveCreation(S createdObject, String editorIdentification) {
+            }
+
+            @SuppressWarnings("java:S1186")
+            @Override
+            public void saveChange(S updatedObject, S storedObject, String editorIdentification) {
+            }
+
+            @SuppressWarnings("java:S1186")
+            @Override
+            public void delete(S deletedObject, String editorIdentification) {
+            }
+        };
+    }
+
+    /**
      * Adds a child to a parent if its not a direct connection
      *
      * @param parentIdentification    identification of the parent
@@ -48,12 +72,11 @@ public abstract class AbstractRepositoryService {
      * @param parentToChildRepository repository of the connection between parent and child
      * @param connectionCreator       Functional to create the connection. Setting values included
      * @param <P>                     The parent
-     * @param <S>                     The child
      * @param <T>                     The connection
      * @param <I>                     The Id of the connection at repository
      * @return {@code true} if the child was added to the parent. Otherwise {@code false}
      */
-    protected <P extends IIdentifiableDao, S extends IIdentifiableDao, T, I extends Serializable>
+    protected <P extends IIdentifiableDao, T, I extends Serializable>
     boolean add(String parentIdentification, String childIdentification, String parentClassName, String childClassName
             , String parentPrefix, String childPrefix
             , JpaRepository<P, Long> parentRepository, JpaRepository<S, Long> childRepository, JpaRepository<T, I> parentToChildRepository
@@ -93,10 +116,9 @@ public abstract class AbstractRepositoryService {
      * @param domainConverter Functional to create the domain from the dao object
      * @param repository      repository where to search at
      * @param <T>             Domain class of the object which should be searched for
-     * @param <S>             Corresponding dao of the domain class
      * @return search result
      */
-    protected <T extends IIdentifiable, S extends IIdentifiableDao> Optional<T> find(String identification, String idPrefix
+    protected <T extends IIdentifiable> Optional<T> find(String identification, String idPrefix
             , String domainClassName, DomainConverter<T, S> domainConverter, JpaRepository<S, Long> repository) {
 
         Optional<S> resultDao = find(identification, idPrefix, domainClassName, repository);
@@ -113,10 +135,9 @@ public abstract class AbstractRepositoryService {
      * @param idPrefix       prefix to generate ID
      * @param className      Simple name of the domain class
      * @param repository     repository where to search at
-     * @param <S>            Corresponding dao of the domain class
      * @return search result
      */
-    protected <S extends IIdentifiableDao> Optional<S> find(String identification, String idPrefix, String className
+    protected Optional<S> find(String identification, String idPrefix, String className
             , JpaRepository<S, Long> repository) {
 
         Long id = IdGenerator.generateId(identification, idPrefix);
@@ -143,10 +164,9 @@ public abstract class AbstractRepositoryService {
      * @param childCreator         Functional to create an empty child dao
      * @param deleter              Function to delete the connection with parent and child dao
      * @param <P>                  The parent
-     * @param <S>                  The child
      * @return {@code true} if the child was removed from the parent. Otherwise {@code false}
      */
-    protected <P extends IIdentifiableDao, S extends IIdentifiableDao>
+    protected <P extends IIdentifiableDao>
     boolean remove(String parentIdentification, String childIdentification, String parentClassName, String childClassName
             , String parentPrefix, String childPrefix, DaoCreator<P> parentCreator, DaoCreator<S> childCreator
             , ConnectionDeleter<P, S> deleter) {
@@ -181,25 +201,27 @@ public abstract class AbstractRepositoryService {
     /**
      * @param domainObject         Domain object which should be stored
      * @param parentIdentification identification of the parent domain object
+     * @param editorIdentification identification of the user who is saving
      * @param parentDaoCreator     Functional to create an empty parent Dao
      * @param daoConverter         Functional to to convert the domain object to a dao one
      * @param domainConverter      Functional to convert the dao object to a domain one
      * @param repository           Repository where to store the object
      * @param <T>                  Domain class of the object which should be stored
-     * @param <S>                  Corresponding dao of the domain class
      * @param <P>                  Dao class of the parent
      * @return Stored domain object with additional generated ids, if missing before.
      * <br>
      * In case of not existing domain object for given identification, the result will be {@link Optional#empty()}
      */
-    protected <T extends IIdentifiable, S extends IIdentifiableDao, P extends IIdentifiableDao> Optional<T> save(T domainObject
+    protected <T extends IIdentifiable, P extends IIdentifiableDao> Optional<T> save(T domainObject
             , String parentIdentification
+            , String editorIdentification
             , DaoCreator<P> parentDaoCreator
             , DaoConverter<T, S, P> daoConverter
             , DomainConverter<T, S> domainConverter
             , JpaRepository<S, Long> repository) {
         return save(domainObject
                 , parentIdentification
+                , editorIdentification
                 , d -> ""
                 , parentDaoCreator
                 , daoConverter
@@ -211,20 +233,21 @@ public abstract class AbstractRepositoryService {
     /**
      * @param domainObject         Domain object which should be stored
      * @param parentIdentification identification of the parent domain object
+     * @param editorIdentification identification of the user who is saving
      * @param parentDaoCreator     Functional to create an empty parent Dao
      * @param daoConverter         Functional to to convert the domain object to a dao one
      * @param domainConverter      Functional to convert the dao object to a domain one
      * @param repository           Repository where to store the object
      * @param adoption             Functional to take over values from persisted dao before saving
      * @param <T>                  Domain class of the object which should be stored
-     * @param <S>                  Corresponding dao of the domain class
      * @param <P>                  Dao class of the parent
      * @return Stored domain object with additional generated ids, if missing before.
      * <br>
      * In case of not existing domain object for given identification, the result will be {@link Optional#empty()}
      */
-    protected <T extends IIdentifiable, S extends IIdentifiableDao, P extends IIdentifiableDao> Optional<T> save(T domainObject
+    protected <T extends IIdentifiable, P extends IIdentifiableDao> Optional<T> save(T domainObject
             , String parentIdentification
+            , String editorIdentification
             , DaoCreator<P> parentDaoCreator
             , DaoConverter<T, S, P> daoConverter
             , DomainConverter<T, S> domainConverter
@@ -232,6 +255,7 @@ public abstract class AbstractRepositoryService {
             , Adoption<S> adoption) {
         return save(domainObject
                 , parentIdentification
+                , editorIdentification
                 , d -> ""
                 , parentDaoCreator
                 , daoConverter
@@ -243,20 +267,21 @@ public abstract class AbstractRepositoryService {
     /**
      * @param domainObject         Domain object which should be stored
      * @param parentIdentification identification of the parent domain object
+     * @param editorIdentification identification of the user who is saving
      * @param nameable             Functional to access the name of t
      * @param parentDaoCreator     Functional to create an empty parent Dao
      * @param daoConverter         Functional to to convert the domain object to a dao one
      * @param domainConverter      Functional to convert the dao object to a domain one
      * @param repository           Repository where to store the object
      * @param <T>                  Domain class of the object which should be stored
-     * @param <S>                  Corresponding dao of the domain class
      * @param <P>                  Dao class of the parent
      * @return Stored domain object with additional generated ids, if missing before.
      * <br>
      * In case of not existing domain object for given identification, the result will be {@link Optional#empty()}
      */
-    protected <T extends IIdentifiable, S extends IIdentifiableDao, P extends IIdentifiableDao> Optional<T> save(T domainObject
+    protected <T extends IIdentifiable, P extends IIdentifiableDao> Optional<T> save(T domainObject
             , String parentIdentification
+            , String editorIdentification
             , Nameable<T> nameable
             , DaoCreator<P> parentDaoCreator
             , DaoConverter<T, S, P> daoConverter
@@ -264,6 +289,7 @@ public abstract class AbstractRepositoryService {
             , JpaRepository<S, Long> repository) {
         return save(domainObject
                 , parentIdentification
+                , editorIdentification
                 , nameable
                 , parentDaoCreator
                 , daoConverter
@@ -275,6 +301,7 @@ public abstract class AbstractRepositoryService {
     /**
      * @param domainObject         Domain object which should be stored
      * @param parentIdentification identification of the parent domain object
+     * @param editorIdentification identification of the user who is saving
      * @param nameable             Functional to access the name of t
      * @param parentDaoCreator     Functional to create an empty parent Dao
      * @param daoConverter         Functional to to convert the domain object to a dao one
@@ -282,14 +309,14 @@ public abstract class AbstractRepositoryService {
      * @param repository           Repository where to store the object
      * @param adoption             Functional to take over values from persisted dao before saving
      * @param <T>                  Domain class of the object which should be stored
-     * @param <S>                  Corresponding dao of the domain class
      * @param <P>                  Dao class of the parent
      * @return Stored domain object with additional generated ids, if missing before.
      * <br>
      * In case of not existing domain object for given identification, the result will be {@link Optional#empty()}
      */
-    protected <T extends IIdentifiable, S extends IIdentifiableDao, P extends IIdentifiableDao> Optional<T> save(T domainObject
+    protected <T extends IIdentifiable, P extends IIdentifiableDao> Optional<T> save(T domainObject
             , String parentIdentification
+            , String editorIdentification
             , Nameable<T> nameable
             , DaoCreator<P> parentDaoCreator
             , DaoConverter<T, S, P> daoConverter
@@ -316,6 +343,8 @@ public abstract class AbstractRepositoryService {
             log.debug("The {} with name {} was stored with id {} and corresponding identification {}"
                     , simpleClassName, nameable.getName(domainObject), daoObject.getId(), result.getIdentification());
 
+            getChangeService().saveCreation(daoObject, editorIdentification != null ? editorIdentification : daoObject.getIdentification());
+
             return Optional.of(result);
         }
 
@@ -328,6 +357,8 @@ public abstract class AbstractRepositoryService {
         daoObject = adoption.takeOver(daoObject, storedDao.get());
 
         daoObject = repository.save(daoObject);
+        getChangeService().saveChange(daoObject, storedDao.get(), editorIdentification);
+
         result = domainConverter.convert(daoObject);
         log.debug("The {} with identification {} was saved", simpleClassName, result.getIdentification());
 

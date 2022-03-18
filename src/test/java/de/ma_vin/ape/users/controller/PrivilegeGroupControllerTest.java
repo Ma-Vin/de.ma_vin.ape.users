@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +32,7 @@ public class PrivilegeGroupControllerTest {
     public static final Long PRIVILEGE_GROUP_ID = 2L;
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private AutoCloseable openMocks;
     private PrivilegeGroupController cut;
@@ -41,7 +43,8 @@ public class PrivilegeGroupControllerTest {
     private PrivilegeGroup privilegeGroup;
     @Mock
     private PrivilegeGroupDto privilegeGroupDto;
-
+    @Mock
+    private Principal principal;
 
     @BeforeEach
     public void setUp() {
@@ -49,6 +52,8 @@ public class PrivilegeGroupControllerTest {
 
         cut = new PrivilegeGroupController();
         cut.setPrivilegeGroupService(privilegeGroupService);
+
+        when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
     }
 
     @AfterEach
@@ -59,28 +64,28 @@ public class PrivilegeGroupControllerTest {
     @DisplayName("Create a privilege group")
     @Test
     public void testCreatePrivilegeGroup() {
-        when(privilegeGroupService.save(any(), any())).thenAnswer(a -> {
+        when(privilegeGroupService.save(any(), any(), eq(PRINCIPAL_IDENTIFICATION))).thenAnswer(a -> {
             ((PrivilegeGroup) a.getArgument(0)).setIdentification(PRIVILEGE_GROUP_IDENTIFICATION);
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<PrivilegeGroupDto> response = cut.createPrivilegeGroup("SomeName", COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<PrivilegeGroupDto> response = cut.createPrivilegeGroup(principal, "SomeName", COMMON_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(privilegeGroupService).save(any(), eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService).save(any(), eq(COMMON_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Create a privilege group but without save result")
     @Test
     public void testCreatePrivilegeGroupWithoutResult() {
-        when(privilegeGroupService.save(any(), any())).thenAnswer(a -> Optional.empty());
+        when(privilegeGroupService.save(any(), any(), eq(PRINCIPAL_IDENTIFICATION))).thenAnswer(a -> Optional.empty());
 
-        ResponseWrapper<PrivilegeGroupDto> response = cut.createPrivilegeGroup("SomeName", COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<PrivilegeGroupDto> response = cut.createPrivilegeGroup(principal, "SomeName", COMMON_GROUP_IDENTIFICATION);
 
         checkError(response);
 
-        verify(privilegeGroupService).save(any(), eq(COMMON_GROUP_IDENTIFICATION));
+        verify(privilegeGroupService).save(any(), eq(COMMON_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Delete a privilege group")
@@ -171,15 +176,15 @@ public class PrivilegeGroupControllerTest {
         when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupDto.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
-        when(privilegeGroupService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(privilegeGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
 
-        ResponseWrapper<PrivilegeGroupDto> response = cut.updatePrivilegeGroup(privilegeGroupDto, PRIVILEGE_GROUP_IDENTIFICATION);
+        ResponseWrapper<PrivilegeGroupDto> response = cut.updatePrivilegeGroup(principal, privilegeGroupDto, PRIVILEGE_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
         verify(privilegeGroupService).findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService).save(any());
-        verify(privilegeGroupService, never()).save(any(), any());
+        verify(privilegeGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(privilegeGroupService, never()).save(any(), any(), any());
     }
 
     @DisplayName("Update a non existing privilege group")
@@ -187,14 +192,14 @@ public class PrivilegeGroupControllerTest {
     public void testUpdatePrivilegeGroupNonExisting() {
         when(privilegeGroupDto.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
-        when(privilegeGroupService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(privilegeGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
 
-        ResponseWrapper<PrivilegeGroupDto> response = cut.updatePrivilegeGroup(privilegeGroupDto, PRIVILEGE_GROUP_IDENTIFICATION);
+        ResponseWrapper<PrivilegeGroupDto> response = cut.updatePrivilegeGroup(principal, privilegeGroupDto, PRIVILEGE_GROUP_IDENTIFICATION);
 
         checkError(response);
 
         verify(privilegeGroupService).findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService, never()).save(any());
+        verify(privilegeGroupService, never()).save(any(), any());
         verify(privilegeGroupService, never()).save(any(), any());
     }
 
@@ -204,15 +209,15 @@ public class PrivilegeGroupControllerTest {
         when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupDto.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
-        when(privilegeGroupService.save(any())).then(a -> Optional.empty());
+        when(privilegeGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.empty());
 
-        ResponseWrapper<PrivilegeGroupDto> response = cut.updatePrivilegeGroup(privilegeGroupDto, PRIVILEGE_GROUP_IDENTIFICATION);
+        ResponseWrapper<PrivilegeGroupDto> response = cut.updatePrivilegeGroup(principal, privilegeGroupDto, PRIVILEGE_GROUP_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(privilegeGroupService).findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService).save(any());
-        verify(privilegeGroupService, never()).save(any(), any());
+        verify(privilegeGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(privilegeGroupService, never()).save(any(), any(), any());
     }
 
     @DisplayName("Update a privilege group with different identification as parameter")
@@ -223,12 +228,12 @@ public class PrivilegeGroupControllerTest {
         when(privilegeGroup.getIdentification()).thenReturn(otherIdentification);
         when(privilegeGroupDto.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(otherIdentification))).thenReturn(Optional.of(privilegeGroup));
-        when(privilegeGroupService.save(any())).then(a -> {
+        when(privilegeGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> {
             storedIdentification.add(((PrivilegeGroup) a.getArgument(0)).getIdentification());
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<PrivilegeGroupDto> response = cut.updatePrivilegeGroup(privilegeGroupDto, otherIdentification);
+        ResponseWrapper<PrivilegeGroupDto> response = cut.updatePrivilegeGroup(principal, privilegeGroupDto, otherIdentification);
 
         checkWarn(response, 1);
 
@@ -237,8 +242,8 @@ public class PrivilegeGroupControllerTest {
 
         verify(privilegeGroupService).findPrivilegeGroup(eq(otherIdentification));
         verify(privilegeGroupService, never()).findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService).save(any());
-        verify(privilegeGroupService, never()).save(any(), any());
+        verify(privilegeGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(privilegeGroupService, never()).save(any(), any(), any());
     }
 
     @DisplayName("Count privilege groups")

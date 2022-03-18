@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +39,7 @@ public class BaseGroupControllerTest {
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String PARENT_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PARENT_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private AutoCloseable openMocks;
     private BaseGroupController cut;
@@ -50,6 +52,8 @@ public class BaseGroupControllerTest {
     private BaseGroupDto baseGroupDto;
     @Mock
     private BaseGroupIdRoleDto baseGroupIdRoleDto;
+    @Mock
+    private Principal principal;
 
 
     @BeforeEach
@@ -58,6 +62,8 @@ public class BaseGroupControllerTest {
 
         cut = new BaseGroupController();
         cut.setBaseGroupService(baseGroupService);
+
+        when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
     }
 
     @AfterEach
@@ -68,28 +74,28 @@ public class BaseGroupControllerTest {
     @DisplayName("Create a base group")
     @Test
     public void testCreateBaseGroup() {
-        when(baseGroupService.save(any(), any())).thenAnswer(a -> {
+        when(baseGroupService.save(any(), any(), eq(PRINCIPAL_IDENTIFICATION))).thenAnswer(a -> {
             ((BaseGroup) a.getArgument(0)).setIdentification(BASE_GROUP_IDENTIFICATION);
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<BaseGroupDto> response = cut.createBaseGroup("SomeName", COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<BaseGroupDto> response = cut.createBaseGroup(principal, "SomeName", COMMON_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(baseGroupService).save(any(), eq(COMMON_GROUP_IDENTIFICATION));
+        verify(baseGroupService).save(any(), eq(COMMON_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Create a base group but without save result")
     @Test
     public void testCreateBaseGroupWithoutResult() {
-        when(baseGroupService.save(any(), any())).thenAnswer(a -> Optional.empty());
+        when(baseGroupService.save(any(), any(), eq(PRINCIPAL_IDENTIFICATION))).thenAnswer(a -> Optional.empty());
 
-        ResponseWrapper<BaseGroupDto> response = cut.createBaseGroup("SomeName", COMMON_GROUP_IDENTIFICATION);
+        ResponseWrapper<BaseGroupDto> response = cut.createBaseGroup(principal, "SomeName", COMMON_GROUP_IDENTIFICATION);
 
         checkError(response);
 
-        verify(baseGroupService).save(any(), eq(COMMON_GROUP_IDENTIFICATION));
+        verify(baseGroupService).save(any(), eq(COMMON_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Delete a base group")
@@ -102,14 +108,14 @@ public class BaseGroupControllerTest {
             when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
             when(baseGroupService.baseGroupExits(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
             return null;
-        }).when(baseGroupService).delete(eq(baseGroup));
+        }).when(baseGroupService).delete(eq(baseGroup), any());
 
-        ResponseWrapper<Boolean> response = cut.deleteBaseGroup(BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteBaseGroup(principal, BASE_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
         verify(baseGroupService).findBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
-        verify(baseGroupService).delete(any());
+        verify(baseGroupService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(baseGroupService).baseGroupExits(eq(BASE_GROUP_IDENTIFICATION));
     }
 
@@ -120,12 +126,12 @@ public class BaseGroupControllerTest {
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
         when(baseGroupService.baseGroupExits(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.deleteBaseGroup(BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteBaseGroup(principal, BASE_GROUP_IDENTIFICATION);
 
         checkWarn(response);
 
         verify(baseGroupService).findBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
-        verify(baseGroupService, never()).delete(any());
+        verify(baseGroupService, never()).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(baseGroupService, never()).baseGroupExits(eq(BASE_GROUP_IDENTIFICATION));
     }
 
@@ -138,14 +144,14 @@ public class BaseGroupControllerTest {
         doAnswer(a -> {
             when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
             return null;
-        }).when(baseGroupService).delete(eq(baseGroup));
+        }).when(baseGroupService).delete(eq(baseGroup), any());
 
-        ResponseWrapper<Boolean> response = cut.deleteBaseGroup(BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteBaseGroup(principal, BASE_GROUP_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(baseGroupService).findBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
-        verify(baseGroupService).delete(any());
+        verify(baseGroupService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(baseGroupService).baseGroupExits(eq(BASE_GROUP_IDENTIFICATION));
     }
 
@@ -180,15 +186,15 @@ public class BaseGroupControllerTest {
         when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupDto.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
-        when(baseGroupService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(baseGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
 
-        ResponseWrapper<BaseGroupDto> response = cut.updateBaseGroup(baseGroupDto, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<BaseGroupDto> response = cut.updateBaseGroup(principal, baseGroupDto, BASE_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
         verify(baseGroupService).findBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
-        verify(baseGroupService).save(any());
-        verify(baseGroupService, never()).save(any(), any());
+        verify(baseGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(baseGroupService, never()).save(any(), any(), any());
     }
 
     @DisplayName("Update a non existing base group")
@@ -196,15 +202,15 @@ public class BaseGroupControllerTest {
     public void testUpdateBaseGroupNonExisting() {
         when(baseGroupDto.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
-        when(baseGroupService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(baseGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
 
-        ResponseWrapper<BaseGroupDto> response = cut.updateBaseGroup(baseGroupDto, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<BaseGroupDto> response = cut.updateBaseGroup(principal, baseGroupDto, BASE_GROUP_IDENTIFICATION);
 
         checkError(response);
 
         verify(baseGroupService).findBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
-        verify(baseGroupService, never()).save(any());
         verify(baseGroupService, never()).save(any(), any());
+        verify(baseGroupService, never()).save(any(), any(), any());
     }
 
     @DisplayName("Update a base group without save return")
@@ -213,15 +219,15 @@ public class BaseGroupControllerTest {
         when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupDto.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
-        when(baseGroupService.save(any())).then(a -> Optional.empty());
+        when(baseGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.empty());
 
-        ResponseWrapper<BaseGroupDto> response = cut.updateBaseGroup(baseGroupDto, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<BaseGroupDto> response = cut.updateBaseGroup(principal, baseGroupDto, BASE_GROUP_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(baseGroupService).findBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
-        verify(baseGroupService).save(any());
-        verify(baseGroupService, never()).save(any(), any());
+        verify(baseGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(baseGroupService, never()).save(any(), any(), any());
     }
 
     @DisplayName("Update a base group with different identification as parameter")
@@ -232,12 +238,12 @@ public class BaseGroupControllerTest {
         when(baseGroup.getIdentification()).thenReturn(otherIdentification);
         when(baseGroupDto.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(otherIdentification))).thenReturn(Optional.of(baseGroup));
-        when(baseGroupService.save(any())).then(a -> {
+        when(baseGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> {
             storedIdentification.add(((BaseGroup) a.getArgument(0)).getIdentification());
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<BaseGroupDto> response = cut.updateBaseGroup(baseGroupDto, otherIdentification);
+        ResponseWrapper<BaseGroupDto> response = cut.updateBaseGroup(principal, baseGroupDto, otherIdentification);
 
         checkWarn(response, 1);
 
@@ -246,8 +252,8 @@ public class BaseGroupControllerTest {
 
         verify(baseGroupService).findBaseGroup(eq(otherIdentification));
         verify(baseGroupService, never()).findBaseGroup(eq(BASE_GROUP_IDENTIFICATION));
-        verify(baseGroupService).save(any());
-        verify(baseGroupService, never()).save(any(), any());
+        verify(baseGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(baseGroupService, never()).save(any(), any(), any());
     }
 
     @DisplayName("Add base to privilege group")
@@ -675,13 +681,13 @@ public class BaseGroupControllerTest {
         verify(baseGroupService, never()).findAllAvailableBasesForBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION));
         verify(baseGroupService).findAllAvailableBasesForBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
     }
-    
+
     private void mockDefaultGetAvailableBasesForBaseGroup() {
         when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findAllAvailableBasesForBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroup));
         when(baseGroupService.findAllAvailableBasesForBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(baseGroup));
     }
-    
+
     @DisplayName("Find all base groups at privilege group")
     @Test
     public void testFindAllBaseAtPrivilegeGroup() {

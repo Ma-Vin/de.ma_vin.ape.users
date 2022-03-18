@@ -63,7 +63,7 @@ public class InitUserEventListenerTest {
         when(event.getApplicationContext()).thenReturn(applicationContext);
         when(applicationContext.getDisplayName()).thenReturn(APPLICATION_DISPLAY_NAME);
         when(userRepository.count()).thenReturn(0L);
-        when(userService.saveAtAdminGroup(any(), any())).then(a -> {
+        when(userService.saveAtAdminGroup(any(), any(), any())).then(a -> {
             ((User) a.getArgument(0)).setIdentification(USER_IDENTIFICATION);
             return Optional.of(a.getArgument(0));
         });
@@ -92,7 +92,7 @@ public class InitUserEventListenerTest {
 
         verify(adminGroupService, never()).save(any());
         verify(commonGroupService, never()).save(any(), any());
-        verify(userService, never()).saveAtAdminGroup(any(), anyString());
+        verify(userService, never()).saveAtAdminGroup(any(), anyString(), any());
     }
 
     @DisplayName("Do not initialize")
@@ -103,7 +103,7 @@ public class InitUserEventListenerTest {
 
         verify(adminGroupService, never()).save(any());
         verify(commonGroupService, never()).save(any(), any());
-        verify(userService, never()).saveAtAdminGroup(any(), anyString());
+        verify(userService, never()).saveAtAdminGroup(any(), anyString(), any());
     }
 
     @DisplayName("Existing users")
@@ -114,7 +114,7 @@ public class InitUserEventListenerTest {
 
         verify(adminGroupService, never()).save(any());
         verify(commonGroupService, never()).save(any(), any());
-        verify(userService, never()).saveAtAdminGroup(any(), anyString());
+        verify(userService, never()).saveAtAdminGroup(any(), anyString(), any());
     }
 
     @DisplayName("Initialize admin and common group")
@@ -124,7 +124,7 @@ public class InitUserEventListenerTest {
 
         verify(adminGroupService).save(any());
         verify(commonGroupService).save(any(), any());
-        verify(userService).saveAtAdminGroup(any(), anyString());
+        verify(userService).saveAtAdminGroup(any(), anyString(), any());
     }
 
     @DisplayName("Do not initialize common group")
@@ -135,7 +135,7 @@ public class InitUserEventListenerTest {
 
         verify(adminGroupService).save(any());
         verify(commonGroupService, never()).save(any(), any());
-        verify(userService).saveAtAdminGroup(any(), anyString());
+        verify(userService).saveAtAdminGroup(any(), anyString(), any());
     }
 
 
@@ -148,19 +148,19 @@ public class InitUserEventListenerTest {
 
         verify(adminGroupService).save(any());
         verify(commonGroupService, never()).save(any(), any());
-        verify(userService, never()).saveAtAdminGroup(any(), anyString());
+        verify(userService, never()).saveAtAdminGroup(any(), anyString(), any());
     }
 
     @DisplayName("Fail to initialize user")
     @Test
     public void testOnApplicationEventFailUser() {
         reset(userService);
-        when(userService.saveAtAdminGroup(any(), any())).then(a -> Optional.empty());
+        when(userService.saveAtAdminGroup(any(), any(), any())).then(a -> Optional.empty());
         cut.onApplicationEvent(event);
 
         verify(adminGroupService).save(any());
         verify(commonGroupService, never()).save(any(), any());
-        verify(userService).saveAtAdminGroup(any(), anyString());
+        verify(userService).saveAtAdminGroup(any(), anyString(), any());
     }
 
     @DisplayName("Fail to initialize common group")
@@ -172,6 +172,6 @@ public class InitUserEventListenerTest {
 
         verify(adminGroupService).save(any());
         verify(commonGroupService).save(any(), any());
-        verify(userService).saveAtAdminGroup(any(), anyString());
+        verify(userService).saveAtAdminGroup(any(), anyString(), any());
     }
 }

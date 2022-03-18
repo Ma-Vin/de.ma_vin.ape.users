@@ -34,7 +34,7 @@ public class SecurityConfig {
     }
 
     @Configuration
-    @Order(3)
+    @Order(4)
     public static class OAuthAuthorizeConfig extends WebSecurityConfigurerAdapter {
 
         @Autowired
@@ -51,6 +51,18 @@ public class SecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http.authorizeRequests().antMatchers("/oauth/authorize").authenticated().and().formLogin();
+        }
+    }
+
+    /*
+    @Configuration
+    @Order(3)*/
+    public static class H2ConsoleConfig extends WebSecurityConfigurerAdapter {
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http.authorizeRequests().antMatchers("/console/**").permitAll()
+                    .and().csrf().disable()
+                    .headers().frameOptions().disable();
         }
     }
 

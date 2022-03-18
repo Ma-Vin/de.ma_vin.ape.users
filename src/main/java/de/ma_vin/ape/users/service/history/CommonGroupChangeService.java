@@ -17,48 +17,32 @@ public class CommonGroupChangeService extends AbstractChangeService<CommonGroupD
     @Autowired
     private CommonGroupChangeRepository commonGroupChangeRepository;
 
-    /**
-     * Store a creation event of a common group
-     *
-     * @param commonGroupDao       the common group which was created
-     * @param editorIdentification the identification of the creator
-     */
-    public void saveCreation(CommonGroupDao commonGroupDao, String editorIdentification) {
-        CommonGroupChangeDaoExt change = new CommonGroupChangeDaoExt(commonGroupDao, editorIdentification);
+    @Override
+    public void saveCreation(CommonGroupDao createdObject, String editorIdentification) {
+        CommonGroupChangeDaoExt change = new CommonGroupChangeDaoExt(createdObject, editorIdentification);
         change.setChangeType(ChangeType.CREATE);
         commonGroupChangeRepository.save(change);
     }
 
-    /**
-     * Stores a modification of an existing common group
-     *
-     * @param updatedCommonGroupDao the common group after changes
-     * @param storedCommonGroupDao  the common group before changes
-     * @param editorIdentification  the identification of the modifier
-     */
-    public void saveChange(CommonGroupDao updatedCommonGroupDao, CommonGroupDao storedCommonGroupDao, String editorIdentification) {
-        CommonGroupChangeDaoExt change = new CommonGroupChangeDaoExt(updatedCommonGroupDao, editorIdentification);
+    @Override
+    public void saveChange(CommonGroupDao updatedObject, CommonGroupDao storedObject, String editorIdentification) {
+        CommonGroupChangeDaoExt change = new CommonGroupChangeDaoExt(updatedObject, editorIdentification);
         change.setChangeType(ChangeType.MODIFY);
-        change.setAction(determineDiffAsText(updatedCommonGroupDao, storedCommonGroupDao));
+        change.setAction(determineDiffAsText(updatedObject, storedObject));
         if (change.getAction().isEmpty()) {
-            log.warn("There was tried to store a common group {} where no diff could be determined", updatedCommonGroupDao.getIdentification());
+            log.warn("There was tried to store a common group {} where no diff could be determined", updatedObject.getIdentification());
             change.setChangeType(ChangeType.UNKNOWN);
             change.setAction(null);
         }
         commonGroupChangeRepository.save(change);
     }
 
-    /**
-     * Stores a deletion of an existing common group and removes references to it
-     *
-     * @param deletedCommonGroupDao the common group to delete
-     * @param editorIdentification  the identification of the deleter
-     */
-    public void delete(CommonGroupDao deletedCommonGroupDao, String editorIdentification) {
+    @Override
+    public void delete(CommonGroupDao deletedObject, String editorIdentification) {
         CommonGroupChangeDaoExt deletion = new CommonGroupChangeDaoExt(null, editorIdentification);
-        deletion.setDeletionInformation(deletedCommonGroupDao.getIdentification());
+        deletion.setDeletionInformation(deletedObject.getIdentification());
         deletion.setChangeType(ChangeType.DELETE);
-        commonGroupChangeRepository.markedAsDeleted(deletedCommonGroupDao, deletedCommonGroupDao.getIdentification());
+        commonGroupChangeRepository.markedAsDeleted(deletedObject, deletedObject.getIdentification());
         commonGroupChangeRepository.save(deletion);
     }
 }

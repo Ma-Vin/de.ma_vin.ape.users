@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.*;
 import java.util.function.Function;
 
@@ -40,8 +41,8 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isContributor(#commonGroupIdentification, 'COMMON')")
     @PostMapping("/createUser")
     public @ResponseBody
-    ResponseWrapper<UserDto> createUser(@RequestParam String firstName, @RequestParam String lastName, @RequestParam String commonGroupIdentification) {
-        Optional<User> result = userService.saveAtCommonGroup(new UserExt(firstName, lastName, Role.VISITOR), commonGroupIdentification);
+    ResponseWrapper<UserDto> createUser(Principal principal, @RequestParam String firstName, @RequestParam String lastName, @RequestParam String commonGroupIdentification) {
+        Optional<User> result = userService.saveAtCommonGroup(new UserExt(firstName, lastName, Role.VISITOR), commonGroupIdentification, principal.getName());
         if (result.isEmpty()) {
             return ResponseUtil.createEmptyResponseWithError(String.format("The user with name \"%s, %s\" was not created", lastName, firstName));
         }
@@ -71,14 +72,14 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isPrincipalItself(#userIdentification) or isAdmin(#userIdentification, 'USER') or (isManager(#userIdentification, 'USER') and hasPrincipalHigherPrivilege(#userIdentification))")
     @PutMapping("/updateUser/{userIdentification}")
     public @ResponseBody
-    ResponseWrapper<UserDto> updateUser(@RequestBody UserDto user, @PathVariable String userIdentification) {
+    ResponseWrapper<UserDto> updateUser(Principal principal, @RequestBody UserDto user, @PathVariable String userIdentification) {
         return update(user, userIdentification, User.class
                 , getNonGlobalAdminSearcher()
                 , (stored, modified) -> {
                     modified.setRole(stored.getRole());
                     return modified;
                 }
-                , objectToUpdate -> userService.save(objectToUpdate)
+                , objectToUpdate -> userService.save(objectToUpdate, principal.getName())
                 , UserTransportMapper::convertToUserDto
                 , UserTransportMapper::convertToUser
         );
@@ -86,8 +87,8 @@ public class UserController extends AbstractDefaultOperationController {
 
     @PreAuthorize("isPrincipalItself(#userIdentification) or isAdmin(#userIdentification, 'USER')")
     @PatchMapping("/setUserPassword/{userIdentification}")
-    public ResponseWrapper<Boolean> setUserPassword(@PathVariable String userIdentification, @RequestBody String rawPassword) {
-        if (userService.setPassword(userIdentification, rawPassword, false)) {
+    public ResponseWrapper<Boolean> setUserPassword(Principal principal, @PathVariable String userIdentification, @RequestBody String rawPassword) {
+        if (userService.setPassword(userIdentification, rawPassword, false, principal.getName())) {
             return createSuccessResponse(Boolean.TRUE);
         }
         return createEmptyResponseWithError(String.format("The password could not be set at user with identification %s", userIdentification));
@@ -95,8 +96,8 @@ public class UserController extends AbstractDefaultOperationController {
 
     @PreAuthorize("isAdmin(#userIdentification, 'USER')")
     @PatchMapping("/setUserRole/{userIdentification}")
-    public ResponseWrapper<Boolean> setUserRole(@PathVariable String userIdentification, @RequestBody Role role) {
-        if (userService.setRole(userIdentification, role)) {
+    public ResponseWrapper<Boolean> setUserRole(Principal principal, @PathVariable String userIdentification, @RequestBody Role role) {
+        if (userService.setRole(userIdentification, role, principal.getName())) {
             return createSuccessResponse(Boolean.TRUE);
         }
         return createEmptyResponseWithError(String.format("The role could not be set at user with identification %s", userIdentification));

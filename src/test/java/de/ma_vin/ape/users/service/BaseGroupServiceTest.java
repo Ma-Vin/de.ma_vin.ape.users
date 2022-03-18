@@ -8,6 +8,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.*;
+import de.ma_vin.ape.users.service.history.BaseGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ public class BaseGroupServiceTest {
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String PARENT_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PARENT_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private BaseGroupService cut;
     private AutoCloseable openMocks;
@@ -63,6 +65,8 @@ public class BaseGroupServiceTest {
     private CommonGroupDao commonGroupDao;
     @Mock
     private UserDao userDao;
+    @Mock
+    private BaseGroupChangeService baseGroupChangeService;
 
     @BeforeEach
     public void setUp() {
@@ -74,6 +78,7 @@ public class BaseGroupServiceTest {
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
         cut.setPrivilegeToBaseGroupRepository(privilegeToBaseGroupRepository);
         cut.setPrivilegeGroupRepository(privilegeGroupRepository);
+        cut.setBaseGroupChangeService(baseGroupChangeService);
     }
 
     @AfterEach
@@ -90,13 +95,14 @@ public class BaseGroupServiceTest {
         when(baseToBaseGroupRepository.deleteBySubBaseGroup(any())).thenReturn(3L);
         when(privilegeToBaseGroupRepository.deleteByBaseGroup(any())).thenReturn(4L);
 
-        cut.delete(baseGroup);
+        cut.delete(baseGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(baseGroupToUserRepository).deleteByBaseGroup(any());
         verify(baseToBaseGroupRepository).deleteByBaseGroup(any());
         verify(baseToBaseGroupRepository).deleteBySubBaseGroup(any());
         verify(privilegeToBaseGroupRepository).deleteByBaseGroup(any());
         verify(baseGroupRepository).delete(any());
+        verify(baseGroupChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Check existence of base group")
@@ -790,13 +796,15 @@ public class BaseGroupServiceTest {
         when(baseGroupRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(baseGroupRepository.getIdOfParentCommonGroup(eq(BASE_GROUP_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
 
-        Optional<BaseGroup> result = cut.save(baseGroup);
+        Optional<BaseGroup> result = cut.save(baseGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
 
         verify(baseGroupRepository).getIdOfParentCommonGroup(eq(BASE_GROUP_ID));
         verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
         verify(baseGroupRepository).save(any());
+        verify(baseGroupChangeService).saveChange(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(baseGroupChangeService, never()).saveCreation(any(), any());
     }
 
     @DisplayName("Save base group with non existing parent")
@@ -809,13 +817,15 @@ public class BaseGroupServiceTest {
         when(baseGroupRepository.save(any())).then(a -> a.getArgument(0));
         when(baseGroupRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
 
-        Optional<BaseGroup> result = cut.save(baseGroup);
+        Optional<BaseGroup> result = cut.save(baseGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
         verify(baseGroupRepository).getIdOfParentCommonGroup(eq(BASE_GROUP_ID));
         verify(baseGroupRepository, never()).findById(any());
         verify(baseGroupRepository, never()).save(any());
+        verify(baseGroupChangeService, never()).saveChange(any(), any(), any());
+        verify(baseGroupChangeService, never()).saveCreation(any(), any());
     }
 
     @DisplayName("Save base group without identification")
@@ -829,13 +839,15 @@ public class BaseGroupServiceTest {
         when(baseGroupRepository.getIdOfParentCommonGroup(any())).thenReturn(Optional.empty());
         when(baseGroupRepository.getIdOfParentCommonGroup(eq(BASE_GROUP_ID))).thenReturn(Optional.of(COMMON_GROUP_ID));
 
-        Optional<BaseGroup> result = cut.save(baseGroup);
+        Optional<BaseGroup> result = cut.save(baseGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
         verify(baseGroupRepository, never()).getIdOfParentCommonGroup(any());
         verify(baseGroupRepository, never()).findById(any());
         verify(baseGroupRepository, never()).save(any());
+        verify(baseGroupChangeService, never()).saveChange(any(), any(), any());
+        verify(baseGroupChangeService, never()).saveCreation(any(), any());
     }
 
     @DisplayName("Save new base group at common group")
@@ -852,13 +864,15 @@ public class BaseGroupServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<BaseGroup> result = cut.save(baseGroup, COMMON_GROUP_IDENTIFICATION);
+        Optional<BaseGroup> result = cut.save(baseGroup, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
 
         verify(baseGroupRepository, never()).findById(any());
         verify(baseGroupRepository).save(any());
+        verify(baseGroupChangeService, never()).saveChange(any(), any(), any());
+        verify(baseGroupChangeService).saveCreation(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Save existing base group at common group")
@@ -874,13 +888,15 @@ public class BaseGroupServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<BaseGroup> result = cut.save(baseGroup, COMMON_GROUP_IDENTIFICATION);
+        Optional<BaseGroup> result = cut.save(baseGroup, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
 
         verify(baseGroupRepository).findById(any());
         verify(baseGroupRepository).save(any());
+        verify(baseGroupChangeService).saveChange(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(baseGroupChangeService, never()).saveCreation(any(), any());
     }
 
     @DisplayName("Save non existing base group at common group")
@@ -896,12 +912,14 @@ public class BaseGroupServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<BaseGroup> result = cut.save(baseGroup, COMMON_GROUP_IDENTIFICATION);
+        Optional<BaseGroup> result = cut.save(baseGroup, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be empty");
 
         verify(baseGroupRepository).findById(any());
         verify(baseGroupRepository, never()).save(any());
+        verify(baseGroupChangeService, never()).saveChange(any(), any(), any());
+        verify(baseGroupChangeService, never()).saveCreation(any(), any());
     }
 
     @DisplayName("Add a base to privilege group")
