@@ -14,6 +14,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.resource.UserResource;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.*;
+import de.ma_vin.ape.users.persistence.history.AdminGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
@@ -73,6 +74,8 @@ public class UserServiceTest {
     @Mock
     private PrivilegeGroupService privilegeGroupService;
     @Mock
+    private AdminGroupChangeRepository adminGroupChangeRepository;
+    @Mock
     private CommonGroupChangeRepository commonGroupChangeRepository;
     @Mock
     private BaseGroupChangeRepository baseGroupChangeRepository;
@@ -116,6 +119,7 @@ public class UserServiceTest {
         cut.setBaseGroupRepository(baseGroupRepository);
         cut.setBaseToBaseGroupRepository(baseToBaseGroupRepository);
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
+        cut.setAdminGroupChangeRepository(adminGroupChangeRepository);
         cut.setCommonGroupChangeRepository(commonGroupChangeRepository);
         cut.setBaseGroupChangeRepository(baseGroupChangeRepository);
         cut.setPrivilegeGroupChangeRepository(privilegeGroupChangeRepository);
@@ -158,8 +162,10 @@ public class UserServiceTest {
 
         verify(userRepository).delete(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(adminGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
         verify(commonGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
         verify(baseGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
+        verify(privilegeGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
     }
 
     @DisplayName("Delete user with references")
@@ -171,6 +177,7 @@ public class UserServiceTest {
 
         verify(userRepository).delete(any());
         verify(userResourceService, times(2)).delete(any(UserResource.class));
+        verify(adminGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
         verify(commonGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
         verify(baseGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
         verify(privilegeGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));

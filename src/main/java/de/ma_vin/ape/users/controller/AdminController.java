@@ -52,10 +52,10 @@ public class AdminController extends AbstractDefaultOperationController {
     @PreAuthorize("isGlobalAdmin()")
     @PutMapping("/updateAdminGroup/{adminGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<AdminGroupDto> updateAdminGroup(@RequestBody AdminGroupDto adminGroup, @PathVariable String adminGroupIdentification) {
+    ResponseWrapper<AdminGroupDto> updateAdminGroup(Principal principal, @RequestBody AdminGroupDto adminGroup, @PathVariable String adminGroupIdentification) {
         return update(adminGroup, adminGroupIdentification, AdminGroup.class
                 , identificationToUpdate -> adminGroupService.findAdminGroup(identificationToUpdate)
-                , objectToUpdate -> adminGroupService.save(objectToUpdate)
+                , objectToUpdate -> adminGroupService.save(objectToUpdate, principal.getName())
                 , GroupTransportMapper::convertToAdminGroupDto
                 , GroupTransportMapper::convertToAdminGroup
         );

@@ -67,7 +67,7 @@ public class InitUserEventListener {
         }
 
         AdminGroupExt adminGroup = new AdminGroupExt("admins");
-        Optional<AdminGroup> storedAdminGroup = adminGroupService.save(adminGroup);
+        Optional<AdminGroup> storedAdminGroup = adminGroupService.save(adminGroup, null);
 
         if (storedAdminGroup.isEmpty()) {
             log.error("could not initialize database with default admin group");

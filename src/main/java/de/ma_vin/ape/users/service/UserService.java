@@ -18,6 +18,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
+import de.ma_vin.ape.users.persistence.history.AdminGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
@@ -60,6 +61,8 @@ public class UserService extends AbstractRepositoryService<UserDao> {
     private BaseToBaseGroupRepository baseToBaseGroupRepository;
     @Autowired
     private BaseGroupToUserRepository baseGroupToUserRepository;
+    @Autowired
+    private AdminGroupChangeRepository adminGroupChangeRepository;
     @Autowired
     private CommonGroupChangeRepository commonGroupChangeRepository;
     @Autowired
@@ -104,6 +107,7 @@ public class UserService extends AbstractRepositoryService<UserDao> {
             }
         });
 
+        adminGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
         commonGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
         baseGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
         privilegeGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());

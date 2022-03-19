@@ -1,14 +1,10 @@
 package de.ma_vin.ape.users.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.openMocks;
-
 import de.ma_vin.ape.users.model.gen.dao.group.AdminGroupDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.AdminGroupRepository;
+import de.ma_vin.ape.users.service.history.AdminGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,9 +16,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.openMocks;
+
 public class AdminGroupServiceTest {
     public static final Long ADMIN_GROUP_ID = 1L;
     public static final String ADMIN_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ADMIN_GROUP_ID, AdminGroup.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     private AdminGroupService cut;
     private AutoCloseable openMocks;
@@ -37,6 +39,8 @@ public class AdminGroupServiceTest {
     private AdminGroupDao adminGroupDao;
     @Mock
     private User user;
+    @Mock
+    private AdminGroupChangeService adminGroupChangeService;
 
     @BeforeEach
     public void setUp() {
@@ -45,6 +49,7 @@ public class AdminGroupServiceTest {
         cut = new AdminGroupService();
         cut.setUserService(userService);
         cut.setAdminGroupRepository(adminGroupRepository);
+        cut.setAdminGroupChangeService(adminGroupChangeService);
     }
 
     @AfterEach
@@ -58,11 +63,12 @@ public class AdminGroupServiceTest {
         when(userService.findAllUsersAtAdminGroup(anyString())).thenReturn(Collections.emptyList());
         when(adminGroup.getIdentification()).thenReturn(ADMIN_GROUP_IDENTIFICATION);
 
-        cut.delete(adminGroup);
+        cut.delete(adminGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(userService).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
         verify(userService, never()).delete(any());
         verify(adminGroupRepository).delete(any());
+        verify(adminGroupChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Delete admin group with sub entities")
@@ -71,11 +77,12 @@ public class AdminGroupServiceTest {
         when(userService.findAllUsersAtAdminGroup(anyString())).thenReturn(Collections.singletonList(user));
         when(adminGroup.getIdentification()).thenReturn(ADMIN_GROUP_IDENTIFICATION);
 
-        cut.delete(adminGroup);
+        cut.delete(adminGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(userService).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
         verify(userService).delete(eq(user));
         verify(adminGroupRepository).delete(any());
+        verify(adminGroupChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Check existence of admin group")
@@ -138,12 +145,14 @@ public class AdminGroupServiceTest {
             return a.getArgument(0);
         });
 
-        Optional<AdminGroup> result = cut.save(adminGroup);
+        Optional<AdminGroup> result = cut.save(adminGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(ADMIN_GROUP_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
 
         verify(adminGroupRepository).save(any());
+        verify(adminGroupChangeService).saveCreation(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(adminGroupChangeService, never()).saveChange(any(), any(), any());
     }
 
     @DisplayName("Save existing admin group")
@@ -155,12 +164,14 @@ public class AdminGroupServiceTest {
         when(adminGroupRepository.findById(eq(ADMIN_GROUP_ID))).thenReturn(Optional.of(adminGroupDao));
         when(adminGroupRepository.save(any())).then(a -> a.getArgument(0));
 
-        Optional<AdminGroup> result = cut.save(adminGroup);
+        Optional<AdminGroup> result = cut.save(adminGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
 
         verify(adminGroupRepository).findById(eq(ADMIN_GROUP_ID));
         verify(adminGroupRepository).save(any());
+        verify(adminGroupChangeService, never()).saveCreation(any(), any());
+        verify(adminGroupChangeService).saveChange(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Save non existing admin group")
@@ -172,11 +183,13 @@ public class AdminGroupServiceTest {
         when(adminGroupRepository.findById(eq(ADMIN_GROUP_ID))).thenReturn(Optional.empty());
         when(adminGroupRepository.save(any())).then(a -> a.getArgument(0));
 
-        Optional<AdminGroup> result = cut.save(adminGroup);
+        Optional<AdminGroup> result = cut.save(adminGroup, PRINCIPAL_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isEmpty(), "The result should be present");
 
         verify(adminGroupRepository).findById(eq(ADMIN_GROUP_ID));
         verify(adminGroupRepository, never()).save(any());
+        verify(adminGroupChangeService, never()).saveCreation(any(), any());
+        verify(adminGroupChangeService, never()).saveChange(any(), any(), any());
     }
 }

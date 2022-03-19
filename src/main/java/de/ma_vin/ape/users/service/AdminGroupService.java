@@ -6,6 +6,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.AdminGroupRepository;
+import de.ma_vin.ape.users.service.history.AdminGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -26,22 +27,26 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
     private AdminGroupRepository adminGroupRepository;
     @Autowired
     private UserService userService;
+    @Autowired
+    private AdminGroupChangeService adminGroupChangeService;
 
     /**
      * Deletes an admin group from repository
      *
-     * @param adminGroup admin group to delete
+     * @param adminGroup            admin group to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    public void delete(AdminGroup adminGroup) {
-        delete(GroupAccessMapper.convertToAdminGroupDao(adminGroup, false));
+    public void delete(AdminGroup adminGroup, String deleterIdentification) {
+        delete(GroupAccessMapper.convertToAdminGroupDao(adminGroup, false), deleterIdentification);
     }
 
     /**
      * Deletes an adminGroupDao from repository
      *
-     * @param adminGroupDao admin group to delete
+     * @param adminGroupDao         admin group to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    private void delete(AdminGroupDao adminGroupDao) {
+    private void delete(AdminGroupDao adminGroupDao, String deleterIdentification) {
         log.debug(DELETE_BEGIN_LOG_MESSAGE, GROUP_LOG_PARAM, adminGroupDao.getIdentification(), adminGroupDao.getId());
 
         List<User> users = userService.findAllUsersAtAdminGroup(adminGroupDao.getIdentification());
@@ -49,6 +54,7 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
                 , adminGroupDao.getIdentification(), adminGroupDao.getId());
         users.forEach(userService::delete);
 
+        adminGroupChangeService.delete(adminGroupDao, deleterIdentification);
         adminGroupRepository.delete(adminGroupDao);
 
         log.debug(DELETE_END_LOG_MESSAGE, GROUP_LOG_PARAM, adminGroupDao.getIdentification(), adminGroupDao.getId());
@@ -102,12 +108,13 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
     /**
      * Stores an admin group
      *
-     * @param adminGroup admin group which should be stored
+     * @param adminGroup           admin group which should be stored
+     * @param editorIdentification The identification of the user who is saving
      * @return Stored admin group with additional generated ids, if missing before.
      * <br>
      * In case of not existing adminGroup for given identification, the result will be {@link Optional#empty()}
      */
-    public Optional<AdminGroup> save(AdminGroup adminGroup) {
+    public Optional<AdminGroup> save(AdminGroup adminGroup, String editorIdentification) {
         AdminGroupDao adminGroupDao = GroupAccessMapper.convertToAdminGroupDao(adminGroup, false);
 
         if (adminGroupDao.getIdentification() == null) {
@@ -116,6 +123,8 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
             AdminGroup result = GroupAccessMapper.convertToAdminGroup(adminGroupDao, false);
             log.debug("The admin group with name {} was stored with id {} and corresponding identification {}"
                     , adminGroupDao.getGroupName(), adminGroupDao.getId(), result.getIdentification());
+
+            adminGroupChangeService.saveCreation(adminGroupDao, editorIdentification);
 
             return Optional.of(result);
         }
@@ -129,6 +138,8 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
         adminGroupDao = adminGroupRepository.save(adminGroupDao);
         AdminGroup result = GroupAccessMapper.convertToAdminGroup(adminGroupDao, false);
         log.debug("The admin group with identification {} was saved", result.getIdentification());
+
+        adminGroupChangeService.saveChange(adminGroupDao, storedAdminGroupDao.get(), editorIdentification);
 
         return Optional.of(result);
     }

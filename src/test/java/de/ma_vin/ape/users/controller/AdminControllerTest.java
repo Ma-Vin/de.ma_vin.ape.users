@@ -21,13 +21,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
-import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.checkWarn;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.never;
 import static org.mockito.MockitoAnnotations.openMocks;
 
 /**
@@ -542,12 +540,12 @@ public class AdminControllerTest {
     public void testUpdateAdminGroup() {
         mockDefaultUpdateAdminGroup();
 
-        ResponseWrapper<AdminGroupDto> response = cut.updateAdminGroup(adminGroupDto, ADMIN_GROUP_IDENTIFICATION);
+        ResponseWrapper<AdminGroupDto> response = cut.updateAdminGroup(principal, adminGroupDto, ADMIN_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
         verify(adminGroupService).findAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
-        verify(adminGroupService).save(any());
+        verify(adminGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Update a non existing admin group")
@@ -556,26 +554,26 @@ public class AdminControllerTest {
         mockDefaultUpdateAdminGroup();
         when(adminGroupService.findAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
 
-        ResponseWrapper<AdminGroupDto> response = cut.updateAdminGroup(adminGroupDto, ADMIN_GROUP_IDENTIFICATION);
+        ResponseWrapper<AdminGroupDto> response = cut.updateAdminGroup(principal, adminGroupDto, ADMIN_GROUP_IDENTIFICATION);
 
         checkError(response);
 
         verify(adminGroupService).findAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
-        verify(adminGroupService, never()).save(any());
+        verify(adminGroupService, never()).save(any(), any());
     }
 
     @DisplayName("Update a admin group without save return")
     @Test
     public void testUpdateAdminGroupNoSaveReturn() {
         mockDefaultUpdateAdminGroupWithoutSaving();
-        when(adminGroupService.save(any())).then(a -> Optional.empty());
+        when(adminGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.empty());
 
-        ResponseWrapper<AdminGroupDto> response = cut.updateAdminGroup(adminGroupDto, ADMIN_GROUP_IDENTIFICATION);
+        ResponseWrapper<AdminGroupDto> response = cut.updateAdminGroup(principal, adminGroupDto, ADMIN_GROUP_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(adminGroupService).findAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
-        verify(adminGroupService).save(any());
+        verify(adminGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Update a admin group with different identification as parameter")
@@ -586,12 +584,12 @@ public class AdminControllerTest {
         when(adminGroup.getIdentification()).thenReturn(otherIdentification);
         when(adminGroupDto.getIdentification()).thenReturn(ADMIN_GROUP_IDENTIFICATION);
         when(adminGroupService.findAdminGroup(eq(otherIdentification))).thenReturn(Optional.of(adminGroup));
-        when(adminGroupService.save(any())).then(a -> {
+        when(adminGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> {
             storedIdentification.add(((AdminGroup) a.getArgument(0)).getIdentification());
             return Optional.of(a.getArgument(0));
         });
 
-        ResponseWrapper<AdminGroupDto> response = cut.updateAdminGroup(adminGroupDto, otherIdentification);
+        ResponseWrapper<AdminGroupDto> response = cut.updateAdminGroup(principal, adminGroupDto, otherIdentification);
 
 
         checkWarn(response, 1);
@@ -601,7 +599,7 @@ public class AdminControllerTest {
 
         verify(adminGroupService).findAdminGroup(eq(otherIdentification));
         verify(adminGroupService, never()).findAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
-        verify(adminGroupService).save(any());
+        verify(adminGroupService).save(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     private void mockDefaultUpdateAdminGroupWithoutSaving() {
@@ -612,7 +610,7 @@ public class AdminControllerTest {
 
     private void mockDefaultUpdateAdminGroup() {
         mockDefaultUpdateAdminGroupWithoutSaving();
-        when(adminGroupService.save(any())).then(a -> Optional.of(a.getArgument(0)));
+        when(adminGroupService.save(any(), any())).then(a -> Optional.of(a.getArgument(0)));
     }
 
 }
