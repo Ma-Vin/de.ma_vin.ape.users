@@ -1,11 +1,11 @@
 package de.ma_vin.ape.users.service.history;
 
 import de.ma_vin.ape.users.enums.ChangeType;
-import de.ma_vin.ape.users.model.dao.group.history.BaseGroupChangeDaoExt;
 import de.ma_vin.ape.users.model.dao.group.history.CommonGroupChangeDaoExt;
-import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
-import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
+import de.ma_vin.ape.users.model.dao.group.history.PrivilegeGroupChangeDaoExt;
+import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
+import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,40 +14,40 @@ import org.springframework.stereotype.Component;
 @Component
 @Data
 @Log4j2
-public class BaseGroupChangeService extends AbstractChangeService<BaseGroupDao> {
+public class PrivilegeGroupChangeService extends AbstractChangeService<PrivilegeGroupDao> {
 
     @Autowired
-    private BaseGroupChangeRepository baseGroupChangeRepository;
+    private PrivilegeGroupChangeRepository privilegeGroupChangeRepository;
     @Autowired
     private CommonGroupChangeRepository commonGroupChangeRepository;
 
     @Override
-    public void saveCreation(BaseGroupDao createdObject, String editorIdentification) {
-        BaseGroupChangeDaoExt change = new BaseGroupChangeDaoExt(createdObject, editorIdentification);
+    public void saveCreation(PrivilegeGroupDao createdObject, String editorIdentification) {
+        PrivilegeGroupChangeDaoExt change = new PrivilegeGroupChangeDaoExt(createdObject, editorIdentification);
         change.setChangeType(ChangeType.CREATE);
-        baseGroupChangeRepository.save(change);
+        privilegeGroupChangeRepository.save(change);
 
         CommonGroupChangeDaoExt parentChange = new CommonGroupChangeDaoExt(createdObject.getParentCommonGroup(), editorIdentification);
         parentChange.setChangeTime(change.getChangeTime());
         parentChange.setChangeType(ChangeType.ADD);
-        parentChange.setBaseGroup(createdObject);
+        parentChange.setPrivilegeGroup(createdObject);
         commonGroupChangeRepository.save(parentChange);
     }
 
     @Override
-    public void saveChange(BaseGroupDao updatedObject, BaseGroupDao storedObject, String editorIdentification) {
-        BaseGroupChangeDaoExt change = new BaseGroupChangeDaoExt(updatedObject, editorIdentification);
+    public void saveChange(PrivilegeGroupDao updatedObject, PrivilegeGroupDao storedObject, String editorIdentification) {
+        PrivilegeGroupChangeDaoExt change = new PrivilegeGroupChangeDaoExt(updatedObject, editorIdentification);
         determineChanges(updatedObject, storedObject, change);
-        baseGroupChangeRepository.save(change);
+        privilegeGroupChangeRepository.save(change);
     }
 
     @Override
-    public void delete(BaseGroupDao deletedObject, String editorIdentification) {
-        BaseGroupChangeDaoExt deletion = new BaseGroupChangeDaoExt(null, editorIdentification);
+    public void delete(PrivilegeGroupDao deletedObject, String editorIdentification) {
+        PrivilegeGroupChangeDaoExt deletion = new PrivilegeGroupChangeDaoExt(null, editorIdentification);
         deletion.setDeletionInformation(deletedObject.getIdentification());
         deletion.setChangeType(ChangeType.DELETE);
-        baseGroupChangeRepository.markedAsDeleted(deletedObject, deletedObject.getIdentification());
-        baseGroupChangeRepository.save(deletion);
+        privilegeGroupChangeRepository.markedAsDeleted(deletedObject, deletedObject.getIdentification());
+        privilegeGroupChangeRepository.save(deletion);
 
         CommonGroupChangeDaoExt parentChange = new CommonGroupChangeDaoExt(deletedObject.getParentCommonGroup(), editorIdentification);
         parentChange.setChangeTime(deletion.getChangeTime());

@@ -16,6 +16,7 @@ import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
+import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,6 +77,8 @@ public class UserServiceTest {
     @Mock
     private BaseGroupChangeRepository baseGroupChangeRepository;
     @Mock
+    private PrivilegeGroupChangeRepository privilegeGroupChangeRepository;
+    @Mock
     private UserExt user;
     @Mock
     private UserResource image;
@@ -115,6 +118,7 @@ public class UserServiceTest {
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
         cut.setCommonGroupChangeRepository(commonGroupChangeRepository);
         cut.setBaseGroupChangeRepository(baseGroupChangeRepository);
+        cut.setPrivilegeGroupChangeRepository(privilegeGroupChangeRepository);
         cut.setUserResourceService(userResourceService);
         cut.setBaseGroupService(baseGroupService);
         cut.setPrivilegeGroupService(privilegeGroupService);
@@ -169,6 +173,7 @@ public class UserServiceTest {
         verify(userResourceService, times(2)).delete(any(UserResource.class));
         verify(commonGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
         verify(baseGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
+        verify(privilegeGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
     }
 
     @DisplayName("Check existence of user")

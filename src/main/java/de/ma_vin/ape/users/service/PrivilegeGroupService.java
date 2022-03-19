@@ -9,6 +9,8 @@ import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
 import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
 import de.ma_vin.ape.users.persistence.PrivilegeToBaseGroupRepository;
+import de.ma_vin.ape.users.service.history.AbstractChangeService;
+import de.ma_vin.ape.users.service.history.PrivilegeGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -36,22 +38,31 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
     private PrivilegeToBaseGroupRepository privilegeToBaseGroupRepository;
     @Autowired
     private BaseGroupService baseGroupService;
+    @Autowired
+    private PrivilegeGroupChangeService privilegeGroupChangeService;
+
+    @Override
+    protected AbstractChangeService<PrivilegeGroupDao> getChangeService() {
+        return privilegeGroupChangeService;
+    }
 
     /**
      * Deletes an privilege group from repository
      *
-     * @param privilegeGroup privilege group to delete
+     * @param privilegeGroup        privilege group to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    public void delete(PrivilegeGroup privilegeGroup) {
-        delete(GroupAccessMapper.convertToPrivilegeGroupDao(privilegeGroup, false));
+    public void delete(PrivilegeGroup privilegeGroup, String deleterIdentification) {
+        delete(GroupAccessMapper.convertToPrivilegeGroupDao(privilegeGroup, false), deleterIdentification);
     }
 
     /**
      * Deletes an privilegeGroupDao from repository
      *
-     * @param privilegeGroupDao privilege group to delete
+     * @param privilegeGroupDao     privilege group to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    private void delete(PrivilegeGroupDao privilegeGroupDao) {
+    private void delete(PrivilegeGroupDao privilegeGroupDao, String deleterIdentification) {
         log.debug(DELETE_BEGIN_LOG_MESSAGE, GROUP_LOG_PARAM, privilegeGroupDao.getIdentification(), privilegeGroupDao.getId());
 
         long numToUserDeleted = privilegeGroupToUserRepository.deleteByPrivilegeGroup(privilegeGroupDao);
@@ -62,6 +73,7 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, numToBaseGroupDeleted, "connections to base group", GROUP_LOG_PARAM
                 , privilegeGroupDao.getIdentification(), privilegeGroupDao.getId());
 
+        privilegeGroupChangeService.delete(privilegeGroupDao, deleterIdentification);
         privilegeGroupRepository.delete(privilegeGroupDao);
 
         log.debug(DELETE_END_LOG_MESSAGE, GROUP_LOG_PARAM, privilegeGroupDao.getIdentification(), privilegeGroupDao.getId());

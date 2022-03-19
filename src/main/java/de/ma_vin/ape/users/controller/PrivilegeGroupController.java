@@ -47,10 +47,10 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @DeleteMapping("/deletePrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> deletePrivilegeGroup(@PathVariable String privilegeGroupIdentification) {
+    ResponseWrapper<Boolean> deletePrivilegeGroup(Principal principal, @PathVariable String privilegeGroupIdentification) {
         return delete(privilegeGroupIdentification, PrivilegeGroup.class
                 , identificationToDelete -> privilegeGroupService.findPrivilegeGroup(identificationToDelete)
-                , objectToDelete -> privilegeGroupService.delete(objectToDelete)
+                , objectToDelete -> privilegeGroupService.delete(objectToDelete, principal.getName())
                 , identificationToCheck -> privilegeGroupService.privilegeGroupExits(identificationToCheck));
     }
 

@@ -1,7 +1,8 @@
 package de.ma_vin.ape.users.service.history;
 
+import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.model.gen.dao.IIdentifiableDao;
-import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.history.AbstractChangeDao;
 import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.InvocationTargetException;
@@ -35,6 +36,23 @@ public abstract class AbstractChangeService<T extends IIdentifiableDao> {
      * @param editorIdentification the identification of the deleter
      */
     public abstract void delete(T deletedObject, String editorIdentification);
+
+    /**
+     * Sets the action and {@link ChangeType} of an existing object at an {@link AbstractChangeDao}
+     *
+     * @param updatedObject the object after changes
+     * @param storedObject  the object before changes
+     * @param change        the change object where to set differences and change type
+     */
+    protected void determineChanges(T updatedObject, T storedObject, AbstractChangeDao change) {
+        change.setChangeType(ChangeType.MODIFY);
+        change.setAction(determineDiffAsText(updatedObject, storedObject));
+        if (change.getAction().isEmpty()) {
+            log.warn("There was tried to store a base group {} where no diff could be determined", updatedObject.getIdentification());
+            change.setChangeType(ChangeType.UNKNOWN);
+            change.setAction(null);
+        }
+    }
 
     /**
      * Determines the differences between the actual and the stored object as text

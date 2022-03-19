@@ -92,7 +92,7 @@ public class CommonGroupServiceTest {
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
         verify(userService, never()).delete(any());
         verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService, never()).delete(any());
+        verify(privilegeGroupService, never()).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
         verify(baseGroupService, never()).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(commonGroupRepository).delete(any());
@@ -112,7 +112,7 @@ public class CommonGroupServiceTest {
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
         verify(userService).delete(eq(user));
         verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService).delete(eq(privilegeGroup));
+        verify(privilegeGroupService).delete(eq(privilegeGroup), eq(PRINCIPAL_IDENTIFICATION));
         verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
         verify(baseGroupService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(commonGroupRepository).delete(any());

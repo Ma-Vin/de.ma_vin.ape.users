@@ -20,6 +20,7 @@ import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
+import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -64,6 +65,8 @@ public class UserService extends AbstractRepositoryService<UserDao> {
     @Autowired
     private BaseGroupChangeRepository baseGroupChangeRepository;
     @Autowired
+    private PrivilegeGroupChangeRepository privilegeGroupChangeRepository;
+    @Autowired
     private BaseGroupService baseGroupService;
     @Autowired
     private PrivilegeGroupService privilegeGroupService;
@@ -103,6 +106,7 @@ public class UserService extends AbstractRepositoryService<UserDao> {
 
         commonGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
         baseGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
+        privilegeGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
         userRepository.delete(userDao);
 
         log.debug(DELETE_END_LOG_MESSAGE, USER_LOG_PARAM, userDao.getIdentification(), userDao.getId());

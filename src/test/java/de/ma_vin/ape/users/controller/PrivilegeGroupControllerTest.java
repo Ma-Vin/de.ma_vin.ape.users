@@ -98,14 +98,14 @@ public class PrivilegeGroupControllerTest {
             when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
             when(privilegeGroupService.privilegeGroupExits(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
             return null;
-        }).when(privilegeGroupService).delete(eq(privilegeGroup));
+        }).when(privilegeGroupService).delete(eq(privilegeGroup), eq(PRINCIPAL_IDENTIFICATION));
 
-        ResponseWrapper<Boolean> response = cut.deletePrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deletePrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
         verify(privilegeGroupService).findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService).delete(any());
+        verify(privilegeGroupService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(privilegeGroupService).privilegeGroupExits(eq(PRIVILEGE_GROUP_IDENTIFICATION));
     }
 
@@ -116,12 +116,12 @@ public class PrivilegeGroupControllerTest {
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
         when(privilegeGroupService.privilegeGroupExits(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.deletePrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deletePrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION);
 
         checkWarn(response);
 
         verify(privilegeGroupService).findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService, never()).delete(any());
+        verify(privilegeGroupService, never()).delete(any(), any());
         verify(privilegeGroupService, never()).privilegeGroupExits(eq(PRIVILEGE_GROUP_IDENTIFICATION));
     }
 
@@ -134,14 +134,14 @@ public class PrivilegeGroupControllerTest {
         doAnswer(a -> {
             when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
             return null;
-        }).when(privilegeGroupService).delete(eq(privilegeGroup));
+        }).when(privilegeGroupService).delete(eq(privilegeGroup), eq(PRINCIPAL_IDENTIFICATION));
 
-        ResponseWrapper<Boolean> response = cut.deletePrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deletePrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(privilegeGroupService).findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION));
-        verify(privilegeGroupService).delete(any());
+        verify(privilegeGroupService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(privilegeGroupService).privilegeGroupExits(eq(PRIVILEGE_GROUP_IDENTIFICATION));
     }
 

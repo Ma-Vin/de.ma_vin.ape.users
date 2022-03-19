@@ -10,6 +10,7 @@ import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
 import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
 import de.ma_vin.ape.users.persistence.PrivilegeToBaseGroupRepository;
+import de.ma_vin.ape.users.service.history.PrivilegeGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +60,8 @@ public class PrivilegeGroupServiceTest {
     private BaseGroupDao baseGroupDao;
     @Mock
     private UserDao userDao;
+    @Mock
+    private PrivilegeGroupChangeService privilegeGroupChangeService;
 
     @BeforeEach
     public void setUp() {
@@ -69,6 +72,7 @@ public class PrivilegeGroupServiceTest {
         cut.setPrivilegeGroupRepository(privilegeGroupRepository);
         cut.setPrivilegeGroupToUserRepository(privilegeGroupToUserRepository);
         cut.setPrivilegeToBaseGroupRepository(privilegeToBaseGroupRepository);
+        cut.setPrivilegeGroupChangeService(privilegeGroupChangeService);
     }
 
     @AfterEach
@@ -83,11 +87,12 @@ public class PrivilegeGroupServiceTest {
         when(privilegeGroupToUserRepository.deleteByPrivilegeGroup(any())).thenReturn(1L);
         when(privilegeToBaseGroupRepository.deleteByPrivilegeGroup(any())).thenReturn(2L);
 
-        cut.delete(privilegeGroup);
+        cut.delete(privilegeGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(privilegeGroupToUserRepository).deleteByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository).deleteByPrivilegeGroup(any());
         verify(privilegeGroupRepository).delete(any());
+        verify(privilegeGroupChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Check existence of privilege group")
@@ -315,6 +320,7 @@ public class PrivilegeGroupServiceTest {
         verify(privilegeGroupRepository).getIdOfParentCommonGroup(eq(PRIVILEGE_GROUP_ID));
         verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
         verify(privilegeGroupRepository).save(any());
+        verify(privilegeGroupChangeService).saveChange(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Save privilege group with non existing parent")
@@ -334,6 +340,7 @@ public class PrivilegeGroupServiceTest {
         verify(privilegeGroupRepository).getIdOfParentCommonGroup(eq(PRIVILEGE_GROUP_ID));
         verify(privilegeGroupRepository, never()).findById(any());
         verify(privilegeGroupRepository, never()).save(any());
+        verify(privilegeGroupChangeService, never()).saveChange(any(), any(), any());
     }
 
     @DisplayName("Save privilege group without identification")
@@ -354,6 +361,7 @@ public class PrivilegeGroupServiceTest {
         verify(privilegeGroupRepository, never()).getIdOfParentCommonGroup(any());
         verify(privilegeGroupRepository, never()).findById(any());
         verify(privilegeGroupRepository, never()).save(any());
+        verify(privilegeGroupChangeService, never()).saveChange(any(), any(), any());
     }
 
     @DisplayName("Save new privilege group at common group")
@@ -377,6 +385,7 @@ public class PrivilegeGroupServiceTest {
 
         verify(privilegeGroupRepository, never()).findById(any());
         verify(privilegeGroupRepository).save(any());
+        verify(privilegeGroupChangeService).saveCreation(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Save existing privilege group at common group")
@@ -399,6 +408,7 @@ public class PrivilegeGroupServiceTest {
 
         verify(privilegeGroupRepository).findById(any());
         verify(privilegeGroupRepository).save(any());
+        verify(privilegeGroupChangeService).saveChange(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Save non existing privilege group at common group")
@@ -420,5 +430,6 @@ public class PrivilegeGroupServiceTest {
 
         verify(privilegeGroupRepository).findById(any());
         verify(privilegeGroupRepository, never()).save(any());
+        verify(privilegeGroupChangeService, never()).saveChange(any(), any(), any());
     }
 }

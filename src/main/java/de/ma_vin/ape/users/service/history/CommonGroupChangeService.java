@@ -27,13 +27,7 @@ public class CommonGroupChangeService extends AbstractChangeService<CommonGroupD
     @Override
     public void saveChange(CommonGroupDao updatedObject, CommonGroupDao storedObject, String editorIdentification) {
         CommonGroupChangeDaoExt change = new CommonGroupChangeDaoExt(updatedObject, editorIdentification);
-        change.setChangeType(ChangeType.MODIFY);
-        change.setAction(determineDiffAsText(updatedObject, storedObject));
-        if (change.getAction().isEmpty()) {
-            log.warn("There was tried to store a common group {} where no diff could be determined", updatedObject.getIdentification());
-            change.setChangeType(ChangeType.UNKNOWN);
-            change.setAction(null);
-        }
+        determineChanges(updatedObject, storedObject, change);
         commonGroupChangeRepository.save(change);
     }
 

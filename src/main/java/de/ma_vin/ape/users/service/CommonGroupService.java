@@ -62,7 +62,7 @@ public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao
         List<PrivilegeGroup> privilegeGroups = privilegeGroupService.findAllPrivilegeGroups(commonGroupDao.getIdentification());
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, privilegeGroups.size(), PrivilegeGroupService.GROUP_LOG_PARAM, GROUP_LOG_PARAM
                 , commonGroupDao.getIdentification(), commonGroupDao.getId());
-        privilegeGroups.forEach(privilegeGroupService::delete);
+        privilegeGroups.forEach(pg -> privilegeGroupService.delete(pg, deleterIdentification));
 
         List<BaseGroup> baseGroups = baseGroupService.findAllBaseGroups(commonGroupDao.getIdentification());
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, baseGroups.size(), BaseGroupService.GROUP_LOG_PARAM, GROUP_LOG_PARAM
