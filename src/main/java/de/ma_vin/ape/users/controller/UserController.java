@@ -23,7 +23,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
@@ -52,10 +54,10 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isAdmin(#userIdentification, 'USER') or (isManager(#userIdentification, 'USER') and hasPrincipalHigherPrivilege(#userIdentification))")
     @DeleteMapping("/deleteUser/{userIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> deleteUser(@PathVariable String userIdentification) {
+    ResponseWrapper<Boolean> deleteUser(Principal principal, @PathVariable String userIdentification) {
         return delete(userIdentification, User.class
                 , getNonGlobalAdminSearcher()
-                , objectToDelete -> userService.delete(objectToDelete)
+                , objectToDelete -> userService.delete(objectToDelete, principal.getName())
                 , identificationToCheck -> userService.userExits(identificationToCheck));
     }
 

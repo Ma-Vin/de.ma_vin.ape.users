@@ -23,9 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 
@@ -90,7 +88,7 @@ public class CommonGroupServiceTest {
         cut.delete(commonGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(userService, never()).delete(any());
+        verify(userService, never()).delete(any(), any());
         verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
         verify(privilegeGroupService, never()).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));
@@ -110,7 +108,7 @@ public class CommonGroupServiceTest {
         cut.delete(commonGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(userService).findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION));
-        verify(userService).delete(eq(user));
+        verify(userService).delete(eq(user), eq(PRINCIPAL_IDENTIFICATION));
         verify(privilegeGroupService).findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION));
         verify(privilegeGroupService).delete(eq(privilegeGroup), eq(PRINCIPAL_IDENTIFICATION));
         verify(baseGroupService).findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION));

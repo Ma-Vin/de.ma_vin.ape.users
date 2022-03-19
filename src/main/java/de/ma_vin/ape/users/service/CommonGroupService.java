@@ -9,6 +9,7 @@ import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.CommonGroupRepository;
 import de.ma_vin.ape.users.persistence.UserRepository;
+import de.ma_vin.ape.users.service.history.AbstractChangeService;
 import de.ma_vin.ape.users.service.history.CommonGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
@@ -39,6 +40,11 @@ public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao
     private BaseGroupService baseGroupService;
     @Autowired
     private CommonGroupChangeService commonGroupChangeService;
+
+    @Override
+    protected AbstractChangeService<CommonGroupDao> getChangeService() {
+        return commonGroupChangeService;
+    }
 
     /**
      * Deletes an common group from repository
@@ -72,7 +78,7 @@ public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao
         List<User> users = userService.findAllUsersAtCommonGroup(commonGroupDao.getIdentification());
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, users.size(), UserService.USERS_LOG_PARAM, GROUP_LOG_PARAM
                 , commonGroupDao.getIdentification(), commonGroupDao.getId());
-        users.forEach(userService::delete);
+        users.forEach(u -> userService.delete(u, deleterIdentification));
 
         commonGroupChangeService.delete(commonGroupDao, deleterIdentification);
         commonGroupRepository.delete(commonGroupDao);

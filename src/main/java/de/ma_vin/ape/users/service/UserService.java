@@ -18,10 +18,9 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
-import de.ma_vin.ape.users.persistence.history.AdminGroupChangeRepository;
-import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
-import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
-import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
+import de.ma_vin.ape.users.persistence.history.*;
+import de.ma_vin.ape.users.service.history.AbstractChangeService;
+import de.ma_vin.ape.users.service.history.UserChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -62,13 +61,9 @@ public class UserService extends AbstractRepositoryService<UserDao> {
     @Autowired
     private BaseGroupToUserRepository baseGroupToUserRepository;
     @Autowired
-    private AdminGroupChangeRepository adminGroupChangeRepository;
+    private UserChangeRepository userChangeRepository;
     @Autowired
-    private CommonGroupChangeRepository commonGroupChangeRepository;
-    @Autowired
-    private BaseGroupChangeRepository baseGroupChangeRepository;
-    @Autowired
-    private PrivilegeGroupChangeRepository privilegeGroupChangeRepository;
+    private UserChangeService userChangeService;
     @Autowired
     private BaseGroupService baseGroupService;
     @Autowired
@@ -79,21 +74,29 @@ public class UserService extends AbstractRepositoryService<UserDao> {
     @Value("${db.user.initUserWithDefaultPwd}")
     private boolean initUserWithDefaultPwd;
 
+
+    @Override
+    protected AbstractChangeService<UserDao> getChangeService() {
+        return userChangeService;
+    }
+
     /**
      * Deletes a user from repository
      *
-     * @param user User to delete
+     * @param user                  User to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    public void delete(User user) {
-        delete(UserAccessMapper.convertToUserDao(user));
+    public void delete(User user, String deleterIdentification) {
+        delete(UserAccessMapper.convertToUserDao(user), deleterIdentification);
     }
 
     /**
      * Deletes a userDao from repository
      *
-     * @param userDao User to delete
+     * @param userDao               User to delete
+     * @param deleterIdentification The identification of the user who is deleting
      */
-    private void delete(UserDao userDao) {
+    private void delete(UserDao userDao, String deleterIdentification) {
         log.debug(DELETE_BEGIN_LOG_MESSAGE, USER_LOG_PARAM, userDao.getIdentification(), userDao.getId());
 
         findUser(userDao.getIdentification()).ifPresent(u -> {
@@ -107,10 +110,7 @@ public class UserService extends AbstractRepositoryService<UserDao> {
             }
         });
 
-        adminGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
-        commonGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
-        baseGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
-        privilegeGroupChangeRepository.markedEditorAsDeleted(userDao, userDao.getIdentification());
+        userChangeService.delete(userDao, deleterIdentification);
         userRepository.delete(userDao);
 
         log.debug(DELETE_END_LOG_MESSAGE, USER_LOG_PARAM, userDao.getIdentification(), userDao.getId());

@@ -66,7 +66,7 @@ public class AdminGroupServiceTest {
         cut.delete(adminGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(userService).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
-        verify(userService, never()).delete(any());
+        verify(userService, never()).delete(any(), any());
         verify(adminGroupRepository).delete(any());
         verify(adminGroupChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
@@ -80,7 +80,7 @@ public class AdminGroupServiceTest {
         cut.delete(adminGroup, PRINCIPAL_IDENTIFICATION);
 
         verify(userService).findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION));
-        verify(userService).delete(eq(user));
+        verify(userService).delete(eq(user), eq(PRINCIPAL_IDENTIFICATION));
         verify(adminGroupRepository).delete(any());
         verify(adminGroupChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }

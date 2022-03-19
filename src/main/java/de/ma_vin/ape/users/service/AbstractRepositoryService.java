@@ -38,25 +38,7 @@ public abstract class AbstractRepositoryService<S extends IIdentifiableDao> {
     /**
      * @return the change service for the class <code>S</code>
      */
-    protected AbstractChangeService<S> getChangeService() {
-        return new AbstractChangeService<>() {
-
-            @SuppressWarnings("java:S1186")
-            @Override
-            public void saveCreation(S createdObject, String editorIdentification) {
-            }
-
-            @SuppressWarnings("java:S1186")
-            @Override
-            public void saveChange(S updatedObject, S storedObject, String editorIdentification) {
-            }
-
-            @SuppressWarnings("java:S1186")
-            @Override
-            public void delete(S deletedObject, String editorIdentification) {
-            }
-        };
-    }
+    protected abstract AbstractChangeService<S> getChangeService();
 
     /**
      * Adds a child to a parent if its not a direct connection

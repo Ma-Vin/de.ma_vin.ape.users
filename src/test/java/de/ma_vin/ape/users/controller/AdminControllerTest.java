@@ -273,14 +273,14 @@ public class AdminControllerTest {
             when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
             when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.FALSE);
             return null;
-        }).when(userService).delete(eq(user));
+        }).when(userService).delete(eq(user), eq(PRINCIPAL_IDENTIFICATION));
 
-        ResponseWrapper<Boolean> response = cut.deleteAdmin(USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteAdmin(principal, USER_IDENTIFICATION);
 
         checkOk(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService).delete(any());
+        verify(userService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(userService).userExits(eq(USER_IDENTIFICATION));
     }
 
@@ -292,12 +292,12 @@ public class AdminControllerTest {
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.deleteAdmin(USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteAdmin(principal, USER_IDENTIFICATION);
 
         checkWarn(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService, never()).delete(any());
+        verify(userService, never()).delete(any(), any());
         verify(userService, never()).userExits(eq(USER_IDENTIFICATION));
     }
 
@@ -312,14 +312,14 @@ public class AdminControllerTest {
             when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
             when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.FALSE);
             return null;
-        }).when(userService).delete(eq(user));
+        }).when(userService).delete(eq(user), eq(PRINCIPAL_IDENTIFICATION));
 
-        ResponseWrapper<Boolean> response = cut.deleteAdmin(USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteAdmin(principal, USER_IDENTIFICATION);
 
         checkWarn(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService, never()).delete(any());
+        verify(userService, never()).delete(any(), any());
         verify(userService, never()).userExits(eq(USER_IDENTIFICATION));
     }
 
@@ -333,14 +333,14 @@ public class AdminControllerTest {
         doAnswer(a -> {
             when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
             return null;
-        }).when(userService).delete(eq(user));
+        }).when(userService).delete(eq(user), eq(PRINCIPAL_IDENTIFICATION));
 
-        ResponseWrapper<Boolean> response = cut.deleteAdmin(USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.deleteAdmin(principal, USER_IDENTIFICATION);
 
         checkFatal(response);
 
         verify(userService).findUser(eq(USER_IDENTIFICATION));
-        verify(userService).delete(any());
+        verify(userService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
         verify(userService).userExits(eq(USER_IDENTIFICATION));
     }
 

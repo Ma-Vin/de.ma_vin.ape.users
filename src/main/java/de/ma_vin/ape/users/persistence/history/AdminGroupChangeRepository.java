@@ -18,6 +18,11 @@ public interface AdminGroupChangeRepository extends JpaRepository<AdminGroupChan
 
     @Transactional
     @Modifying
+    @Query(value = "update AdminGroupChangeDao c set c.admin=null, c.deletionInformation = (CASE WHEN c.deletionInformation=null THEN :adminId ELSE CONCAT(c.deletionInformation, ' ', :adminId) END) where c.admin=:admin")
+    void markedAsDeleted(@Param("admin") UserDao admin, @Param("adminId") String adminIdentification);
+
+    @Transactional
+    @Modifying
     @Query(value = "update AdminGroupChangeDao c set c.editor=null, c.deletionInformation = (CASE WHEN c.deletionInformation=null THEN :editorId ELSE CONCAT(c.deletionInformation, ' ', :editorId) END) where c.editor=:editor")
     void markedEditorAsDeleted(@Param("editor") UserDao editor, @Param("editorId") String editorIdentification);
 }

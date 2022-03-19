@@ -6,6 +6,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.AdminGroupRepository;
+import de.ma_vin.ape.users.service.history.AbstractChangeService;
 import de.ma_vin.ape.users.service.history.AdminGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
@@ -30,6 +31,11 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
     @Autowired
     private AdminGroupChangeService adminGroupChangeService;
 
+    @Override
+    protected AbstractChangeService<AdminGroupDao> getChangeService() {
+        return adminGroupChangeService;
+    }
+
     /**
      * Deletes an admin group from repository
      *
@@ -52,7 +58,7 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
         List<User> users = userService.findAllUsersAtAdminGroup(adminGroupDao.getIdentification());
         log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, users.size(), UserService.USERS_LOG_PARAM, GROUP_LOG_PARAM
                 , adminGroupDao.getIdentification(), adminGroupDao.getId());
-        users.forEach(userService::delete);
+        users.forEach(u -> userService.delete(u, deleterIdentification));
 
         adminGroupChangeService.delete(adminGroupDao, deleterIdentification);
         adminGroupRepository.delete(adminGroupDao);

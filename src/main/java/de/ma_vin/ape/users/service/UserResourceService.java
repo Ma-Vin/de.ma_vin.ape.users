@@ -4,6 +4,7 @@ import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
 import de.ma_vin.ape.users.model.gen.domain.resource.UserResource;
 import de.ma_vin.ape.users.model.gen.mapper.ResourceAccessMapper;
 import de.ma_vin.ape.users.persistence.UserResourceRepository;
+import de.ma_vin.ape.users.service.history.AbstractChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -20,6 +21,26 @@ public class UserResourceService extends AbstractRepositoryService<UserResourceD
 
     @Autowired
     private UserResourceRepository userResourceRepository;
+
+    protected AbstractChangeService<UserResourceDao> getChangeService() {
+        return new AbstractChangeService<>() {
+
+            @SuppressWarnings("java:S1186")
+            @Override
+            public void saveCreation(UserResourceDao createdObject, String editorIdentification) {
+            }
+
+            @SuppressWarnings("java:S1186")
+            @Override
+            public void saveChange(UserResourceDao updatedObject, UserResourceDao storedObject, String editorIdentification) {
+            }
+
+            @SuppressWarnings("java:S1186")
+            @Override
+            public void delete(UserResourceDao deletedObject, String editorIdentification) {
+            }
+        };
+    }
 
     /**
      * Deletes a users resource from repository

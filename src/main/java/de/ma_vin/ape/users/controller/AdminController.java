@@ -75,10 +75,10 @@ public class AdminController extends AbstractDefaultOperationController {
     @PreAuthorize("isGlobalAdmin()")
     @DeleteMapping("/deleteAdmin/{userIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> deleteAdmin(@PathVariable String userIdentification) {
+    ResponseWrapper<Boolean> deleteAdmin(Principal principal, @PathVariable String userIdentification) {
         return delete(userIdentification, User.class
                 , getGlobalAdminSearcher()
-                , objectToDelete -> userService.delete(objectToDelete)
+                , objectToDelete -> userService.delete(objectToDelete, principal.getName())
                 , identificationToCheck -> userService.userExits(identificationToCheck));
     }
 

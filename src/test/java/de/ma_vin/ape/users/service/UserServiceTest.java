@@ -14,10 +14,8 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.resource.UserResource;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.*;
-import de.ma_vin.ape.users.persistence.history.AdminGroupChangeRepository;
-import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
-import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
-import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
+import de.ma_vin.ape.users.persistence.history.UserChangeRepository;
+import de.ma_vin.ape.users.service.history.UserChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,13 +72,9 @@ public class UserServiceTest {
     @Mock
     private PrivilegeGroupService privilegeGroupService;
     @Mock
-    private AdminGroupChangeRepository adminGroupChangeRepository;
+    private UserChangeRepository userChangeRepository;
     @Mock
-    private CommonGroupChangeRepository commonGroupChangeRepository;
-    @Mock
-    private BaseGroupChangeRepository baseGroupChangeRepository;
-    @Mock
-    private PrivilegeGroupChangeRepository privilegeGroupChangeRepository;
+    private UserChangeService userChangeService;
     @Mock
     private UserExt user;
     @Mock
@@ -119,10 +113,8 @@ public class UserServiceTest {
         cut.setBaseGroupRepository(baseGroupRepository);
         cut.setBaseToBaseGroupRepository(baseToBaseGroupRepository);
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
-        cut.setAdminGroupChangeRepository(adminGroupChangeRepository);
-        cut.setCommonGroupChangeRepository(commonGroupChangeRepository);
-        cut.setBaseGroupChangeRepository(baseGroupChangeRepository);
-        cut.setPrivilegeGroupChangeRepository(privilegeGroupChangeRepository);
+        cut.setUserChangeRepository(userChangeRepository);
+        cut.setUserChangeService(userChangeService);
         cut.setUserResourceService(userResourceService);
         cut.setBaseGroupService(baseGroupService);
         cut.setPrivilegeGroupService(privilegeGroupService);
@@ -158,14 +150,11 @@ public class UserServiceTest {
     @DisplayName("Delete user")
     @Test
     public void testDeleteUser() {
-        cut.delete(user);
+        cut.delete(user, PRINCIPAL_IDENTIFICATION);
 
         verify(userRepository).delete(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
-        verify(adminGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
-        verify(commonGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
-        verify(baseGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
-        verify(privilegeGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
+        verify(userChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Delete user with references")
@@ -173,14 +162,11 @@ public class UserServiceTest {
     public void testDeleteUserWithReferences() {
         when(userDao.getImage()).thenReturn(imageDao);
         when(userDao.getSmallImage()).thenReturn(smallImageDao);
-        cut.delete(user);
+        cut.delete(user, PRINCIPAL_IDENTIFICATION);
 
         verify(userRepository).delete(any());
         verify(userResourceService, times(2)).delete(any(UserResource.class));
-        verify(adminGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
-        verify(commonGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
-        verify(baseGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
-        verify(privilegeGroupChangeRepository).markedEditorAsDeleted(any(), eq(USER_IDENTIFICATION));
+        verify(userChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Check existence of user")

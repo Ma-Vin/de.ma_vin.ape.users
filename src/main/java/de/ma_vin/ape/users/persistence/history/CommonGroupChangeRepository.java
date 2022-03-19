@@ -30,6 +30,11 @@ public interface CommonGroupChangeRepository extends JpaRepository<CommonGroupCh
 
     @Transactional
     @Modifying
+    @Query(value = "update CommonGroupChangeDao c set c.user=null, c.deletionInformation = (CASE WHEN c.deletionInformation=null THEN :userId ELSE CONCAT(c.deletionInformation, ' ', :userId) END) where c.user=:user")
+    void markedAsDeleted(@Param("user") UserDao user, @Param("userId") String userIdentification);
+
+    @Transactional
+    @Modifying
     @Query(value = "update CommonGroupChangeDao c set c.editor=null, c.deletionInformation = (CASE WHEN c.deletionInformation=null THEN :editorId ELSE CONCAT(c.deletionInformation, ' ', :editorId) END) where c.editor=:editor")
     void markedEditorAsDeleted(@Param("editor") UserDao editor, @Param("editorId") String editorIdentification);
 }
