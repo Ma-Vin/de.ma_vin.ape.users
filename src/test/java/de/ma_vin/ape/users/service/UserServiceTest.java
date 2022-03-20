@@ -1417,7 +1417,7 @@ public class UserServiceTest {
         when(privilegeGroupRepository.findById(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.of(privilegeGroupDao));
         when(privilegeGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
 
-        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR);
+        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR, PRINCIPAL_IDENTIFICATION);
 
         assertTrue(added, "The user should be added to the privilege group");
 
@@ -1426,6 +1426,7 @@ public class UserServiceTest {
         verify(privilegeGroupToUserRepository).save(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
         verify(userResourceService, never()).save(any(UserResourceDao.class));
+        verify(userChangeService).addToParentFirstType(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add user to non existing privilege group")
@@ -1434,13 +1435,14 @@ public class UserServiceTest {
         when(privilegeGroupRepository.findById(eq(PRIVILEGE_GROUP_ID))).thenReturn(Optional.empty());
         when(privilegeGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
 
-        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR);
+        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR, PRINCIPAL_IDENTIFICATION);
 
         assertFalse(added, "The user should not be added to the privilege group");
 
         verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
         verify(userRepository, never()).findById(eq(USER_ID));
         verify(privilegeGroupToUserRepository, never()).save(any());
+        verify(userChangeService, never()).addToParentFirstType(any(), any(), any());
     }
 
     @DisplayName("Add non existing user to privilege group")
@@ -1453,13 +1455,14 @@ public class UserServiceTest {
         when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.empty());
         when(privilegeGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
 
-        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR);
+        boolean added = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, Role.CONTRIBUTOR, PRINCIPAL_IDENTIFICATION);
 
         assertFalse(added, "The user should not be added to the privilege group");
 
         verify(privilegeGroupRepository).findById(eq(PRIVILEGE_GROUP_ID));
         verify(userRepository).findById(eq(USER_ID));
         verify(privilegeGroupToUserRepository, never()).save(any());
+        verify(userChangeService, never()).addToParentFirstType(any(), any(), any());
     }
 
     @DisplayName("Add user to base group")
@@ -1471,13 +1474,14 @@ public class UserServiceTest {
         when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.of(baseGroupDao));
         when(baseGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
 
-        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertTrue(added, "The user should be added to the base group");
 
         verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
         verify(userRepository).findById(eq(USER_ID));
         verify(baseGroupToUserRepository).save(any());
+        verify(userChangeService).addToParentSecondType(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add user to non existing base group")
@@ -1486,13 +1490,14 @@ public class UserServiceTest {
         when(baseGroupRepository.findById(eq(BASE_GROUP_ID))).thenReturn(Optional.empty());
         when(baseGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
 
-        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertFalse(added, "The user should not be added to the base group");
 
         verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
         verify(userRepository, never()).findById(eq(USER_ID));
         verify(baseGroupToUserRepository, never()).save(any());
+        verify(userChangeService, never()).addToParentSecondType(any(), any(), any());
     }
 
     @DisplayName("Add non existing user to base group")
@@ -1505,13 +1510,14 @@ public class UserServiceTest {
         when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.empty());
         when(baseGroupToUserRepository.save(any())).then(a -> a.getArgument(0));
 
-        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean added = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertFalse(added, "The user should not be added to the base group");
 
         verify(baseGroupRepository).findById(eq(BASE_GROUP_ID));
         verify(userRepository).findById(eq(USER_ID));
         verify(baseGroupToUserRepository, never()).save(any());
+        verify(userChangeService, never()).addToParentSecondType(any(), any(), any());
     }
 
     @DisplayName("Remove user from privilege group")
@@ -1519,11 +1525,12 @@ public class UserServiceTest {
     public void testRemoveUserFromPrivilegeGroup() {
         when(privilegeGroupToUserRepository.deleteByPrivilegeGroupAndUser(any(), any())).thenReturn(1L);
 
-        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertTrue(removed, "The user should be removed from the privilege group");
 
         verify(privilegeGroupToUserRepository).deleteByPrivilegeGroupAndUser(any(), any());
+        verify(userChangeService).removeFromParentFirstType(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove user from privilege group, but not connection exists")
@@ -1531,11 +1538,12 @@ public class UserServiceTest {
     public void testRemoveUserFromPrivilegeGroupNonExisting() {
         when(privilegeGroupToUserRepository.deleteByPrivilegeGroupAndUser(any(), any())).thenReturn(0L);
 
-        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertFalse(removed, "The user should not be removed from the privilege group");
 
         verify(privilegeGroupToUserRepository).deleteByPrivilegeGroupAndUser(any(), any());
+        verify(userChangeService, never()).removeFromParentFirstType(any(), any(), any());
     }
 
     @DisplayName("Remove user from privilege group, but non more than one connection exists")
@@ -1543,11 +1551,12 @@ public class UserServiceTest {
     public void testRemoveUserFromPrivilegeGroupNotUnique() {
         when(privilegeGroupToUserRepository.deleteByPrivilegeGroupAndUser(any(), any())).thenReturn(2L);
 
-        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean removed = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertFalse(removed, "The user should not be removed from the privilege group");
 
         verify(privilegeGroupToUserRepository).deleteByPrivilegeGroupAndUser(any(), any());
+        verify(userChangeService, never()).removeFromParentFirstType(any(), any(), any());
     }
 
     @DisplayName("Remove user from base group")
@@ -1555,11 +1564,12 @@ public class UserServiceTest {
     public void testRemoveUserFromBaseGroup() {
         when(baseGroupToUserRepository.deleteByBaseGroupAndUser(any(), any())).thenReturn(1L);
 
-        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertTrue(removed, "The user should be removed from the base group");
 
         verify(baseGroupToUserRepository).deleteByBaseGroupAndUser(any(), any());
+        verify(userChangeService).removeFromParentSecondType(any(), any(), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove user from base group, but not connection exists")
@@ -1567,11 +1577,12 @@ public class UserServiceTest {
     public void testRemoveUserFromBaseGroupNonExisting() {
         when(baseGroupToUserRepository.deleteByBaseGroupAndUser(any(), any())).thenReturn(0L);
 
-        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertFalse(removed, "The user should not be removed from the base group");
 
         verify(baseGroupToUserRepository).deleteByBaseGroupAndUser(any(), any());
+        verify(userChangeService, never()).removeFromParentSecondType(any(), any(), any());
     }
 
     @DisplayName("Remove user from base group, but non more than one connection exists")
@@ -1579,11 +1590,12 @@ public class UserServiceTest {
     public void testRemoveUserFromBaseGroupNotUnique() {
         when(baseGroupToUserRepository.deleteByBaseGroupAndUser(any(), any())).thenReturn(2L);
 
-        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        boolean removed = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
 
         assertFalse(removed, "The user should not be removed from the base group");
 
         verify(baseGroupToUserRepository).deleteByBaseGroupAndUser(any(), any());
+        verify(userChangeService, never()).removeFromParentSecondType(any(), any(), any());
     }
 
     @DisplayName("Set a password for an user")

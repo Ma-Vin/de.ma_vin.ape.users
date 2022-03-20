@@ -51,7 +51,7 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
     private BaseGroupChangeService baseGroupChangeService;
 
     @Override
-    protected AbstractChildChangeService<BaseGroupDao> getChangeService() {
+    protected AbstractChildChangeService<BaseGroupDao, PrivilegeGroupDao, BaseGroupDao> getChangeService() {
         return baseGroupChangeService;
     }
 
@@ -649,9 +649,10 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
      * @param privilegeGroupIdentification identification of the privilege group
      * @param baseGroupIdentification      identification of the base group to add
      * @param role                         role of the user at privilege group
+     * @param editorIdentification         The identification of the user who is adding
      * @return {@code true} if the base group was added to the privilege group, otherwise {@code false}
      */
-    public boolean addBaseToPrivilegeGroup(String privilegeGroupIdentification, String baseGroupIdentification, Role role) {
+    public boolean addBaseToPrivilegeGroup(String privilegeGroupIdentification, String baseGroupIdentification, Role role, String editorIdentification) {
         return add(privilegeGroupIdentification, baseGroupIdentification, privilegeToBaseGroupRepository
                 , (privilegeGroup, baseGroup) -> {
                     PrivilegeGroupToBaseGroupDao connection = new PrivilegeGroupToBaseGroupDao();
@@ -659,47 +660,58 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
                     connection.setBaseGroup(baseGroup);
                     connection.setFilterRole(role);
                     return connection;
-                });
+                }
+                , baseGroupChangeService::addToParentFirstType
+                , editorIdentification);
     }
 
     /**
-     * Removes an base from a privilege group
+     * Removes a base from a privilege group
      *
      * @param privilegeGroupIdentification Identification of the privilege group
      * @param baseGroupIdentification      Identification of the base group to remove
+     * @param editorIdentification         The identification of the user who is removing
      * @return {@code true} if the base group was removed from the privilege group. Otherwise {@code false}
      */
-    public boolean removeBaseFromPrivilegeGroup(String privilegeGroupIdentification, String baseGroupIdentification) {
-        return remove(privilegeGroupIdentification, baseGroupIdentification, privilegeToBaseGroupRepository::deleteByPrivilegeGroupAndBaseGroup);
+    public boolean removeBaseFromPrivilegeGroup(String privilegeGroupIdentification, String baseGroupIdentification, String editorIdentification) {
+        return remove(privilegeGroupIdentification, baseGroupIdentification, privilegeToBaseGroupRepository::deleteByPrivilegeGroupAndBaseGroup
+                , baseGroupChangeService::removeFromParentFirstType
+                , editorIdentification);
     }
 
 
     /**
-     * Adds a base to an other base group
+     * Adds a base to another base group
      *
      * @param parentGroupIdentification identification of the parent base group
      * @param baseGroupIdentification   identification of the base group to add
+     * @param editorIdentification      The identification of the user who is adding
      * @return {@code true} if the base group was added to the other base group, otherwise {@code false}
      */
-    public boolean addBaseToBaseGroup(String parentGroupIdentification, String baseGroupIdentification) {
+    public boolean addBaseToBaseGroup(String parentGroupIdentification, String baseGroupIdentification, String editorIdentification) {
         return add(createParentSecondTypeContext(parentGroupIdentification), createContext(baseGroupIdentification), baseToBaseGroupRepository
                 , (baseGroup, subBaseGroup) -> {
                     BaseGroupToBaseGroupDao connection = new BaseGroupToBaseGroupDao();
                     connection.setBaseGroup(baseGroup);
                     connection.setSubBaseGroup(subBaseGroup);
                     return connection;
-                });
+                }
+                , baseGroupChangeService::addToParentSecondType
+                , editorIdentification);
     }
 
     /**
-     * Removes an base from an other base group
+     * Removes a base from another base group
      *
      * @param parentGroupIdentification Identification of the parent base group
      * @param baseGroupIdentification   Identification of the base group to remove
+     * @param editorIdentification      The identification of the user who is removing
      * @return {@code true} if the base group was removed from the other base group. Otherwise {@code false}
      */
-    public boolean removeBaseFromBaseGroup(String parentGroupIdentification, String baseGroupIdentification) {
+    public boolean removeBaseFromBaseGroup(String parentGroupIdentification, String baseGroupIdentification, String editorIdentification) {
         return remove(createParentSecondTypeContext(parentGroupIdentification), createContext(baseGroupIdentification)
-                , baseToBaseGroupRepository::deleteByBaseGroupAndSubBaseGroup);
+                , baseToBaseGroupRepository::deleteByBaseGroupAndSubBaseGroup
+                , baseGroupChangeService::removeFromParentSecondType
+                , editorIdentification);
     }
 }

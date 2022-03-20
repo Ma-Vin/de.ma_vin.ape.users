@@ -3,12 +3,17 @@ package de.ma_vin.ape.users.service.history;
 import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.history.BaseGroupChangeDao;
 import de.ma_vin.ape.users.model.gen.dao.group.history.CommonGroupChangeDao;
+import de.ma_vin.ape.users.model.gen.dao.group.history.PrivilegeGroupChangeDao;
+import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
+import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,8 +29,12 @@ import static org.mockito.MockitoAnnotations.openMocks;
 public class BaseGroupChangeServiceTest {
     public static final Long BASE_GROUP_ID = 1L;
     public static final Long COMMON_GROUP_ID = 2L;
+    public static final Long PRIVILEGE_GROUP_ID = 3L;
+    public static final Long ANOTHER_BASE_GROUP_ID = 4L;
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
+    public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
+    public static final String ANOTHER_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ANOTHER_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     @Mock
@@ -33,11 +42,17 @@ public class BaseGroupChangeServiceTest {
     @Mock
     private BaseGroupChangeRepository baseGroupChangeRepository;
     @Mock
+    private PrivilegeGroupChangeRepository privilegeGroupChangeRepository;
+    @Mock
     private BaseGroupDao baseGroupDao;
     @Mock
     private BaseGroupDao storedBaseGroupDao;
     @Mock
+    private BaseGroupDao anotherBaseGroupDao;
+    @Mock
     private CommonGroupDao commonGroupDao;
+    @Mock
+    private PrivilegeGroupDao privilegeGroupDao;
 
 
     private BaseGroupChangeService cut;
@@ -51,11 +66,14 @@ public class BaseGroupChangeServiceTest {
 
         cut.setBaseGroupChangeRepository(baseGroupChangeRepository);
         cut.setCommonGroupChangeRepository(commonGroupChangeRepository);
+        cut.setPrivilegeGroupChangeRepository(privilegeGroupChangeRepository);
 
         when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(anotherBaseGroupDao.getIdentification()).thenReturn(ANOTHER_BASE_GROUP_IDENTIFICATION);
         when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
         when(storedBaseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
     }
 
     @AfterEach
@@ -175,5 +193,84 @@ public class BaseGroupChangeServiceTest {
         verify(commonGroupChangeRepository).save(any());
         verify(baseGroupChangeRepository).markedAsDeleted(any(BaseGroupDao.class), eq(BASE_GROUP_IDENTIFICATION));
         verify(commonGroupChangeRepository).markedAsDeleted(any(BaseGroupDao.class), eq(BASE_GROUP_IDENTIFICATION));
+
+        verify(privilegeGroupChangeRepository).markedAsDeleted(any(BaseGroupDao.class), any());
+        verify(baseGroupChangeRepository).markedSubAsDeleted(any(BaseGroupDao.class), any());
+    }
+
+    @DisplayName("Add to first type of parent")
+    @Test
+    public void testAddToParentFirstType() {
+        when(privilegeGroupChangeRepository.save(any())).then(a -> {
+            assertEquals(ChangeType.ADD, ((PrivilegeGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((PrivilegeGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
+            assertEquals(PRINCIPAL_IDENTIFICATION, ((PrivilegeGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
+            assertNotNull(((PrivilegeGroupChangeDao) a.getArgument(0)).getPrivilegeGroup(), "Missing privilege group");
+            assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, ((PrivilegeGroupChangeDao) a.getArgument(0)).getPrivilegeGroup().getIdentification(), "Wrong privilege group");
+            assertNotNull(((PrivilegeGroupChangeDao) a.getArgument(0)).getBaseGroup(), "Missing base group");
+            assertEquals(BASE_GROUP_IDENTIFICATION, ((PrivilegeGroupChangeDao) a.getArgument(0)).getBaseGroup().getIdentification(), "Wrong base group");
+            return null;
+        });
+
+        cut.addToParentFirstType(baseGroupDao, privilegeGroupDao, PRINCIPAL_IDENTIFICATION);
+
+        verify(privilegeGroupChangeRepository).save(any());
+    }
+
+    @DisplayName("Add to second type of parent")
+    @Test
+    public void testAddToParentSecondType() {
+        when(baseGroupChangeRepository.save(any())).then(a -> {
+            assertEquals(ChangeType.ADD, ((BaseGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((BaseGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
+            assertEquals(PRINCIPAL_IDENTIFICATION, ((BaseGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
+            assertNotNull(((BaseGroupChangeDao) a.getArgument(0)).getBaseGroup(), "Missing base group");
+            assertEquals(ANOTHER_BASE_GROUP_IDENTIFICATION, ((BaseGroupChangeDao) a.getArgument(0)).getBaseGroup().getIdentification(), "Wrong base group");
+            assertNotNull(((BaseGroupChangeDao) a.getArgument(0)).getSubBaseGroup(), "Missing sub base group");
+            assertEquals(BASE_GROUP_IDENTIFICATION, ((BaseGroupChangeDao) a.getArgument(0)).getSubBaseGroup().getIdentification(), "Wrong sub base group");
+            return null;
+        });
+
+        cut.addToParentSecondType(baseGroupDao, anotherBaseGroupDao, PRINCIPAL_IDENTIFICATION);
+
+        verify(baseGroupChangeRepository).save(any());
+    }
+
+    @DisplayName("Remove to first type of parent")
+    @Test
+    public void testRemoveFromParentFirstType() {
+        when(privilegeGroupChangeRepository.save(any())).then(a -> {
+            assertEquals(ChangeType.REMOVE, ((PrivilegeGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((PrivilegeGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
+            assertEquals(PRINCIPAL_IDENTIFICATION, ((PrivilegeGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
+            assertNotNull(((PrivilegeGroupChangeDao) a.getArgument(0)).getPrivilegeGroup(), "Missing privilege group");
+            assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, ((PrivilegeGroupChangeDao) a.getArgument(0)).getPrivilegeGroup().getIdentification(), "Wrong privilege group");
+            assertNotNull(((PrivilegeGroupChangeDao) a.getArgument(0)).getBaseGroup(), "Missing base group");
+            assertEquals(BASE_GROUP_IDENTIFICATION, ((PrivilegeGroupChangeDao) a.getArgument(0)).getBaseGroup().getIdentification(), "Wrong base group");
+            return null;
+        });
+
+        cut.removeFromParentFirstType(baseGroupDao, privilegeGroupDao, PRINCIPAL_IDENTIFICATION);
+
+        verify(privilegeGroupChangeRepository).save(any());
+    }
+
+    @DisplayName("Remove to second type of parent")
+    @Test
+    public void testRemoveFromParentSecondType() {
+        when(baseGroupChangeRepository.save(any())).then(a -> {
+            assertEquals(ChangeType.REMOVE, ((BaseGroupChangeDao) a.getArgument(0)).getChangeType(), "Wrong change type");
+            assertNotNull(((BaseGroupChangeDao) a.getArgument(0)).getEditor(), "Missing modifier");
+            assertEquals(PRINCIPAL_IDENTIFICATION, ((BaseGroupChangeDao) a.getArgument(0)).getEditor().getIdentification(), "Wrong modifier");
+            assertNotNull(((BaseGroupChangeDao) a.getArgument(0)).getBaseGroup(), "Missing base group");
+            assertEquals(ANOTHER_BASE_GROUP_IDENTIFICATION, ((BaseGroupChangeDao) a.getArgument(0)).getBaseGroup().getIdentification(), "Wrong base group");
+            assertNotNull(((BaseGroupChangeDao) a.getArgument(0)).getSubBaseGroup(), "Missing sub base group");
+            assertEquals(BASE_GROUP_IDENTIFICATION, ((BaseGroupChangeDao) a.getArgument(0)).getSubBaseGroup().getIdentification(), "Wrong sub base group");
+            return null;
+        });
+
+        cut.removeFromParentSecondType(baseGroupDao, anotherBaseGroupDao, PRINCIPAL_IDENTIFICATION);
+
+        verify(baseGroupChangeRepository).save(any());
     }
 }

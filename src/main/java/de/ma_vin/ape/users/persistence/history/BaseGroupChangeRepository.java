@@ -18,6 +18,16 @@ public interface BaseGroupChangeRepository extends JpaRepository<BaseGroupChange
 
     @Transactional
     @Modifying
+    @Query(value = "update BaseGroupChangeDao c set c.subBaseGroup=null, c.deletionInformation = (CASE WHEN c.deletionInformation=null THEN :baseGroupId ELSE CONCAT(c.deletionInformation, ' ', :baseGroupId) END)  where c.subBaseGroup=:baseGroup")
+    void markedSubAsDeleted(@Param("baseGroup") BaseGroupDao baseGroup, @Param("baseGroupId") String baseGroupIdentification);
+
+    @Transactional
+    @Modifying
+    @Query(value = "update BaseGroupChangeDao c set c.user=null, c.deletionInformation = (CASE WHEN c.deletionInformation=null THEN :userId ELSE CONCAT(c.deletionInformation, ' ', :userId) END)  where c.user=:user")
+    void markedAsDeleted(@Param("user") UserDao privilegeGroup, @Param("userId") String userIdentification);
+
+    @Transactional
+    @Modifying
     @Query(value = "update BaseGroupChangeDao c set c.editor=null, c.deletionInformation = (CASE WHEN c.deletionInformation=null THEN :editorId ELSE CONCAT(c.deletionInformation, ' ', :editorId) END) where c.editor=:editor")
     void markedEditorAsDeleted(@Param("editor") UserDao editor, @Param("editorId") String editorIdentification);
 }

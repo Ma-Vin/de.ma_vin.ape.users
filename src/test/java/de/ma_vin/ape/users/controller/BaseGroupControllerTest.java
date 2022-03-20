@@ -1,8 +1,8 @@
 package de.ma_vin.ape.users.controller;
 
 import de.ma_vin.ape.users.enums.Role;
-import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
@@ -261,13 +261,13 @@ public class BaseGroupControllerTest {
     public void testAddBaseToPrivilegeGroup() {
         when(baseGroupIdRoleDto.getBaseGroupIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
-        when(baseGroupService.addBaseToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
+        when(baseGroupService.addBaseToPrivilegeGroup(any(), any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addBaseToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, baseGroupIdRoleDto);
+        ResponseWrapper<Boolean> response = cut.addBaseToPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, baseGroupIdRoleDto);
 
         checkOk(response);
 
-        verify(baseGroupService).addBaseToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(Role.CONTRIBUTOR));
+        verify(baseGroupService).addBaseToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(Role.CONTRIBUTOR), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add base to privilege group, but not successful")
@@ -275,85 +275,85 @@ public class BaseGroupControllerTest {
     public void testAddBaseToPrivilegeGroupNotSuccessful() {
         when(baseGroupIdRoleDto.getBaseGroupIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
-        when(baseGroupService.addBaseToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
+        when(baseGroupService.addBaseToPrivilegeGroup(any(), any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addBaseToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, baseGroupIdRoleDto);
+        ResponseWrapper<Boolean> response = cut.addBaseToPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, baseGroupIdRoleDto);
 
         checkWarn(response, 1);
 
-        verify(baseGroupService).addBaseToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(Role.CONTRIBUTOR));
+        verify(baseGroupService).addBaseToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(Role.CONTRIBUTOR), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove base from privilege group")
     @Test
     public void testRemoveBaseFromPrivilegeGroup() {
-        when(baseGroupService.removeBaseFromPrivilegeGroup(any(), any())).thenReturn(Boolean.TRUE);
+        when(baseGroupService.removeBaseFromPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.removeBaseFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.removeBaseFromPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(baseGroupService).removeBaseFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).removeBaseFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove base from privilege group, but not successful")
     @Test
     public void testRemoveBaseFromPrivilegeGroupNotSuccessful() {
-        when(baseGroupService.removeBaseFromPrivilegeGroup(any(), any())).thenReturn(Boolean.FALSE);
+        when(baseGroupService.removeBaseFromPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.removeBaseFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.removeBaseFromPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
 
         checkWarn(response, 1);
 
-        verify(baseGroupService).removeBaseFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).removeBaseFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add base to base group")
     @Test
     public void testAddBaseToBaseGroup() {
-        when(baseGroupService.addBaseToBaseGroup(any(), any())).thenReturn(Boolean.TRUE);
+        when(baseGroupService.addBaseToBaseGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.addBaseToBaseGroup(principal, PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(baseGroupService).addBaseToBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).addBaseToBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add base to base group, but not successful")
     @Test
     public void testAddBaseToBaseGroupNotSuccessful() {
-        when(baseGroupService.addBaseToBaseGroup(any(), any())).thenReturn(Boolean.FALSE);
+        when(baseGroupService.addBaseToBaseGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addBaseToBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.addBaseToBaseGroup(principal, PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
 
         checkWarn(response, 1);
 
-        verify(baseGroupService).addBaseToBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).addBaseToBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove base from base group")
     @Test
     public void testRemoveBaseFromBaseGroup() {
-        when(baseGroupService.removeBaseFromBaseGroup(any(), any())).thenReturn(Boolean.TRUE);
+        when(baseGroupService.removeBaseFromBaseGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.removeBaseFromBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.removeBaseFromBaseGroup(principal, PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(baseGroupService).removeBaseFromBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).removeBaseFromBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove base from base group, but not successful")
     @Test
     public void testRemoveBaseFromBaseGroupNotSuccessful() {
-        when(baseGroupService.removeBaseFromBaseGroup(any(), any())).thenReturn(Boolean.FALSE);
+        when(baseGroupService.removeBaseFromBaseGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.removeBaseFromBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.removeBaseFromBaseGroup(principal, PARENT_BASE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
 
         checkWarn(response, 1);
 
-        verify(baseGroupService).removeBaseFromBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION));
+        verify(baseGroupService).removeBaseFromBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), eq(BASE_GROUP_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Count base groups")

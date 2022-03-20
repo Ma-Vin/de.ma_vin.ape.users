@@ -159,14 +159,14 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PatchMapping("/addUserToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> addUserToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody UserIdRoleDto userRole) {
+    ResponseWrapper<Boolean> addUserToPrivilegeGroup(Principal principal, @PathVariable String privilegeGroupIdentification, @RequestBody UserIdRoleDto userRole) {
         Optional<User> storedUser = userService.findUser(userRole.getUserIdentification());
         if (storedUser.isPresent() && storedUser.get().isGlobalAdmin()) {
             return createEmptyResponseWithError(String.format("The user \"%s\" is an global admin and could not be added to an privilege group"
                     , userRole.getUserIdentification()));
         }
 
-        boolean result = userService.addUserToPrivilegeGroup(privilegeGroupIdentification, userRole.getUserIdentification(), userRole.getRole());
+        boolean result = userService.addUserToPrivilegeGroup(privilegeGroupIdentification, userRole.getUserIdentification(), userRole.getRole(), principal.getName());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The user with identification \"%s\" was not added with role %s to privilege group with identification \"%s\""
                 , userRole.getUserIdentification(), userRole.getRole().getDescription(), privilegeGroupIdentification));
@@ -175,8 +175,8 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PatchMapping("/removeUserFromPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> removeUserFromPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody String userIdentification) {
-        boolean result = userService.removeUserFromPrivilegeGroup(privilegeGroupIdentification, userIdentification);
+    ResponseWrapper<Boolean> removeUserFromPrivilegeGroup(Principal principal, @PathVariable String privilegeGroupIdentification, @RequestBody String userIdentification) {
+        boolean result = userService.removeUserFromPrivilegeGroup(privilegeGroupIdentification, userIdentification, principal.getName());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The user with identification \"%s\" was not removed from privilege group with identification \"%s\""
                 , userIdentification, privilegeGroupIdentification));
@@ -185,13 +185,13 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isContributor(#baseGroupIdentification, 'BASE')")
     @PatchMapping("/addUserToBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> addUserToBaseGroup(@PathVariable String baseGroupIdentification, @RequestBody String userIdentification) {
+    ResponseWrapper<Boolean> addUserToBaseGroup(Principal principal, @PathVariable String baseGroupIdentification, @RequestBody String userIdentification) {
         Optional<User> storedUser = userService.findUser(userIdentification);
         if (storedUser.isPresent() && storedUser.get().isGlobalAdmin()) {
             return createEmptyResponseWithError(String.format("The user \"%s\" is an global admin and could not be added to an privilege group", userIdentification));
         }
 
-        boolean result = userService.addUserToBaseGroup(baseGroupIdentification, userIdentification);
+        boolean result = userService.addUserToBaseGroup(baseGroupIdentification, userIdentification, principal.getName());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The user with identification \"%s\" was not added to base group with identification \"%s\""
                 , userIdentification, baseGroupIdentification));
@@ -200,8 +200,8 @@ public class UserController extends AbstractDefaultOperationController {
     @PreAuthorize("isContributor(#baseGroupIdentification, 'BASE')")
     @PatchMapping("/removeUserFromBaseGroup/{baseGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> removeUserFromBaseGroup(@PathVariable String baseGroupIdentification, @RequestBody String userIdentification) {
-        boolean result = userService.removeUserFromBaseGroup(baseGroupIdentification, userIdentification);
+    ResponseWrapper<Boolean> removeUserFromBaseGroup(Principal principal, @PathVariable String baseGroupIdentification, @RequestBody String userIdentification) {
+        boolean result = userService.removeUserFromBaseGroup(baseGroupIdentification, userIdentification, principal.getName());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The user with identification \"%s\" was not removed from base group with identification \"%s\""
                 , userIdentification, baseGroupIdentification));

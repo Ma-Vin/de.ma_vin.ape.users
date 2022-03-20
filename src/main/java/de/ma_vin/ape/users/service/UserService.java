@@ -78,7 +78,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
 
 
     @Override
-    protected AbstractChildChangeService<UserDao> getChangeService() {
+    protected AbstractChildChangeService<UserDao, PrivilegeGroupDao, BaseGroupDao> getChangeService() {
         return userChangeService;
     }
 
@@ -879,9 +879,10 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * @param privilegeGroupIdentification identification of the privilege group
      * @param userIdentification           identification of the user to add
      * @param role                         role of the user at privilege group
+     * @param editorIdentification         The identification of the user who is adding
      * @return {@code true} if the user was added to the privilege group, otherwise {@code false}
      */
-    public boolean addUserToPrivilegeGroup(String privilegeGroupIdentification, String userIdentification, Role role) {
+    public boolean addUserToPrivilegeGroup(String privilegeGroupIdentification, String userIdentification, Role role, String editorIdentification) {
         return add(privilegeGroupIdentification, userIdentification, privilegeGroupToUserRepository
                 , (privilegeGroup, user) -> {
                     PrivilegeGroupToUserDao connection = new PrivilegeGroupToUserDao();
@@ -889,7 +890,9 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
                     connection.setUser(user);
                     connection.setFilterRole(role);
                     return connection;
-                });
+                }
+                , userChangeService::addToParentFirstType
+                , editorIdentification);
     }
 
     /**
@@ -897,16 +900,19 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      *
      * @param baseGroupIdentification identification of the base group
      * @param userIdentification      identification of the user to add
+     * @param editorIdentification    The identification of the user who is adding
      * @return {@code true} if the user was added to the base group, otherwise {@code false}
      */
-    public boolean addUserToBaseGroup(String baseGroupIdentification, String userIdentification) {
+    public boolean addUserToBaseGroup(String baseGroupIdentification, String userIdentification, String editorIdentification) {
         return add(createParentSecondTypeContext(baseGroupIdentification), createContext(userIdentification), baseGroupToUserRepository
                 , (baseGroup, user) -> {
                     BaseGroupToUserDao connection = new BaseGroupToUserDao();
                     connection.setBaseGroup(baseGroup);
                     connection.setUser(user);
                     return connection;
-                });
+                }
+                , userChangeService::addToParentSecondType
+                , editorIdentification);
     }
 
     /**
@@ -914,10 +920,15 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      *
      * @param privilegeGroupIdentification Identification of the privilege group
      * @param userIdentification           Identification of the user to remove
+     * @param editorIdentification         The identification of the user who is removing
      * @return {@code true} if the user was removed from the privilege group. Otherwise {@code false}
      */
-    public boolean removeUserFromPrivilegeGroup(String privilegeGroupIdentification, String userIdentification) {
-        return remove(privilegeGroupIdentification, userIdentification, privilegeGroupToUserRepository::deleteByPrivilegeGroupAndUser);
+    public boolean removeUserFromPrivilegeGroup(String privilegeGroupIdentification, String userIdentification, String editorIdentification) {
+        return remove(privilegeGroupIdentification, userIdentification
+                , privilegeGroupToUserRepository::deleteByPrivilegeGroupAndUser
+                , userChangeService::removeFromParentFirstType
+                , editorIdentification
+        );
     }
 
     /**
@@ -925,11 +936,14 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      *
      * @param baseGroupIdentification Identification of the base group
      * @param userIdentification      Identification of the user to remove
+     * @param editorIdentification    The identification of the user who is removing
      * @return {@code true} if the user was removed from the base group. Otherwise {@code false}
      */
-    public boolean removeUserFromBaseGroup(String baseGroupIdentification, String userIdentification) {
+    public boolean removeUserFromBaseGroup(String baseGroupIdentification, String userIdentification, String editorIdentification) {
         return remove(createParentSecondTypeContext(baseGroupIdentification), createContext(userIdentification)
-                , baseGroupToUserRepository::deleteByBaseGroupAndUser);
+                , baseGroupToUserRepository::deleteByBaseGroupAndUser
+                , userChangeService::removeFromParentSecondType
+                , editorIdentification);
     }
 
     /**

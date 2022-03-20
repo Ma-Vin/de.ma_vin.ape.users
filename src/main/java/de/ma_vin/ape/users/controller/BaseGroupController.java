@@ -1,7 +1,5 @@
 package de.ma_vin.ape.users.controller;
 
-import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
-
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
@@ -23,6 +21,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+
+import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 
 @RestController
 @RequestMapping(path = "group/base")
@@ -123,8 +123,8 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PatchMapping("/addBaseToPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> addBaseToPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody BaseGroupIdRoleDto baseGroupRole) {
-        boolean result = baseGroupService.addBaseToPrivilegeGroup(privilegeGroupIdentification, baseGroupRole.getBaseGroupIdentification(), baseGroupRole.getRole());
+    ResponseWrapper<Boolean> addBaseToPrivilegeGroup(Principal principal, @PathVariable String privilegeGroupIdentification, @RequestBody BaseGroupIdRoleDto baseGroupRole) {
+        boolean result = baseGroupService.addBaseToPrivilegeGroup(privilegeGroupIdentification, baseGroupRole.getBaseGroupIdentification(), baseGroupRole.getRole(), principal.getName());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not added with role %s to privilege group with identification \"%s\""
                 , baseGroupRole.getBaseGroupIdentification(), baseGroupRole.getRole().getDescription(), privilegeGroupIdentification));
@@ -133,8 +133,8 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")
     @PatchMapping("/removeBaseFromPrivilegeGroup/{privilegeGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> removeBaseFromPrivilegeGroup(@PathVariable String privilegeGroupIdentification, @RequestBody String baseGroupIdentification) {
-        boolean result = baseGroupService.removeBaseFromPrivilegeGroup(privilegeGroupIdentification, baseGroupIdentification);
+    ResponseWrapper<Boolean> removeBaseFromPrivilegeGroup(Principal principal, @PathVariable String privilegeGroupIdentification, @RequestBody String baseGroupIdentification) {
+        boolean result = baseGroupService.removeBaseFromPrivilegeGroup(privilegeGroupIdentification, baseGroupIdentification, principal.getName());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not removed from privilege group with identification \"%s\""
                 , baseGroupIdentification, privilegeGroupIdentification));
@@ -232,8 +232,8 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isContributor(#parentGroupIdentification, 'BASE')")
     @PatchMapping("/addBaseToBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> addBaseToBaseGroup(@PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {
-        boolean result = baseGroupService.addBaseToBaseGroup(parentGroupIdentification, baseGroupIdentification);
+    ResponseWrapper<Boolean> addBaseToBaseGroup(Principal principal, @PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {
+        boolean result = baseGroupService.addBaseToBaseGroup(parentGroupIdentification, baseGroupIdentification, principal.getName());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not added base group with identification \"%s\""
                 , baseGroupIdentification, parentGroupIdentification));
@@ -242,8 +242,8 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isContributor(#parentGroupIdentification, 'BASE')")
     @PatchMapping("/removeBaseFromBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<Boolean> removeBaseFromBaseGroup(@PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {
-        boolean result = baseGroupService.removeBaseFromBaseGroup(parentGroupIdentification, baseGroupIdentification);
+    ResponseWrapper<Boolean> removeBaseFromBaseGroup(Principal principal, @PathVariable String parentGroupIdentification, @RequestBody String baseGroupIdentification) {
+        boolean result = baseGroupService.removeBaseFromBaseGroup(parentGroupIdentification, baseGroupIdentification, principal.getName());
         return result ? createSuccessResponse(Boolean.TRUE)
                 : createResponseWithWarning(Boolean.FALSE, String.format("The base group with identification \"%s\" was not removed from base group with identification \"%s\""
                 , baseGroupIdentification, parentGroupIdentification));

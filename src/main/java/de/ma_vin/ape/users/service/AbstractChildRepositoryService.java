@@ -10,11 +10,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.io.Serializable;
 import java.util.Optional;
 
+/**
+ * @param <C> the class which is mainly handled by this class
+ * @param <P> the first type of parent
+ * @param <O> the second type of parent
+ */
 @Log4j2
 public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao, P extends IIdentifiableDao, O extends IIdentifiableDao> extends AbstractRepositoryService<C> {
 
     @Override
-    protected abstract AbstractChildChangeService<C> getChangeService();
+    protected abstract AbstractChildChangeService<C, P, O> getChangeService();
 
     /**
      * Creates the context for the parent object
@@ -40,14 +45,17 @@ public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao,
      * @param childIdentification     identification of the child
      * @param parentToChildRepository repository of the connection between parent and child
      * @param connectionCreator       Functional to create the connection. Setting values included
+     * @param connectionChangeHandler Functional which handles the change history
+     * @param editorIdentification    The identification of the user who is adding
      * @param <T>                     The connection
      * @param <I>                     The id of the connection at repository
      * @return {@code true} if the child was added to the parent. Otherwise {@code false}
      */
     protected <T, I extends Serializable>
     boolean add(String parentIdentification, String childIdentification, JpaRepository<T, I> parentToChildRepository
-            , ConnectionCreator<P, C, T> connectionCreator) {
-        return add(createParentFirstTypeContext(parentIdentification), createContext(childIdentification), parentToChildRepository, connectionCreator);
+            , ConnectionCreator<P, C, T> connectionCreator, ConnectionChangeHandler<P, C> connectionChangeHandler, String editorIdentification) {
+        return add(createParentFirstTypeContext(parentIdentification), createContext(childIdentification), parentToChildRepository
+                , connectionCreator, connectionChangeHandler, editorIdentification);
     }
 
     /**
@@ -57,6 +65,8 @@ public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao,
      * @param childContext            context of the child
      * @param parentToChildRepository repository of the connection between parent and child
      * @param connectionCreator       Functional to create the connection. Setting values included
+     * @param connectionChangeHandler Functional which handles the change history
+     * @param editorIdentification    The identification of the user who is adding
      * @param <S>                     The parent
      * @param <T>                     The connection
      * @param <I>                     The id of the connection at repository
@@ -64,7 +74,7 @@ public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao,
      */
     protected <S extends IIdentifiableDao, T, I extends Serializable>
     boolean add(RepositoryServiceContext<S> parentContext, RepositoryServiceContext<C> childContext, JpaRepository<T, I> parentToChildRepository
-            , ConnectionCreator<S, C, T> connectionCreator) {
+            , ConnectionCreator<S, C, T> connectionCreator, ConnectionChangeHandler<S, C> connectionChangeHandler, String editorIdentification) {
 
         log.debug("Add a {} with identification \"{}\" to {} with identification \"{}\""
                 , childContext.getClassName(), childContext.getIdentification(), parentContext.getClassName(), parentContext.getIdentification());
@@ -88,31 +98,40 @@ public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao,
         parentToChildRepository.save(connection);
         log.debug("{} with identification \"{}\" was added to {} with identification \"{}\""
                 , childContext.getClassName(), childContext.getIdentification(), parentContext.getClassName(), parentContext.getIdentification());
+
+        connectionChangeHandler.handleChange(childDao.get(), parentDao.get(), editorIdentification);
         return true;
     }
 
     /**
      * Removes a child from a parent if it is not a direct connection
      *
-     * @param parentIdentification identification of the parent
-     * @param childIdentification  identification of the child
-     * @param deleter              Function to delete the connection with parent and child dao
+     * @param parentIdentification    identification of the parent
+     * @param childIdentification     identification of the child
+     * @param deleter                 Function to delete the connection with parent and child dao
+     * @param connectionChangeHandler Functional which handles the change history
+     * @param editorIdentification    The identification of the user who is removing
      * @return {@code true} if the child was removed from the parent. Otherwise {@code false}
      */
-    protected boolean remove(String parentIdentification, String childIdentification, ConnectionDeleter<P, C> deleter) {
-        return remove(createParentFirstTypeContext(parentIdentification), createContext(childIdentification), deleter);
+    protected boolean remove(String parentIdentification, String childIdentification, ConnectionDeleter<P, C> deleter
+            , ConnectionChangeHandler<P, C> connectionChangeHandler, String editorIdentification) {
+        return remove(createParentFirstTypeContext(parentIdentification), createContext(childIdentification), deleter
+                , connectionChangeHandler, editorIdentification);
     }
 
     /**
      * Removes a child from a parent if it is not a direct connection
      *
-     * @param parentContext context of the parent
-     * @param childContext  context of the child
-     * @param deleter       Function to delete the connection with parent and child dao
+     * @param parentContext           context of the parent
+     * @param childContext            context of the child
+     * @param deleter                 Function to delete the connection with parent and child dao
+     * @param connectionChangeHandler Functional which handles the change history
+     * @param editorIdentification    The identification of the user who is removing
      * @return {@code true} if the child was removed from the parent. Otherwise {@code false}
      */
     protected <S extends IIdentifiableDao>
-    boolean remove(RepositoryServiceContext<S> parentContext, RepositoryServiceContext<C> childContext, ConnectionDeleter<S, C> deleter) {
+    boolean remove(RepositoryServiceContext<S> parentContext, RepositoryServiceContext<C> childContext, ConnectionDeleter<S, C> deleter
+            , ConnectionChangeHandler<S, C> connectionChangeHandler, String editorIdentification) {
 
         Long parentId = IdGenerator.generateId(parentContext.getIdentification(), parentContext.getPrefix());
         Long childId = IdGenerator.generateId(childContext.getIdentification(), childContext.getPrefix());
@@ -132,6 +151,7 @@ public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao,
                 return false;
             }
             case 1 -> {
+                connectionChangeHandler.handleChange(childDao, parentDao, editorIdentification);
                 log.debug("The {} with identification \"{}\" and id {} was removed from {} with identification \"{}\" and id {}"
                         , childContext.getClassName(), childContext.getIdentification(), childId, parentContext.getClassName(), parentContext.getIdentification(), parentId);
                 return true;
@@ -154,4 +174,8 @@ public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao,
         Long delete(P parent, S child);
     }
 
+    @FunctionalInterface
+    protected interface ConnectionChangeHandler<P extends IIdentifiableDao, S extends IIdentifiableDao> {
+        void handleChange(S child, P parent, String editorIdentification);
+    }
 }

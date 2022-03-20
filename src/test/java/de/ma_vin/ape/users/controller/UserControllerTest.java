@@ -334,13 +334,13 @@ public class UserControllerTest {
         when(userIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
+        when(userService.addUserToPrivilegeGroup(any(), any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
+        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
 
         checkOk(response);
 
-        verify(userService).addUserToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(Role.CONTRIBUTOR));
+        verify(userService).addUserToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(Role.CONTRIBUTOR), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add global admin to privilege group")
@@ -350,13 +350,13 @@ public class UserControllerTest {
         when(userIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
+        when(userService.addUserToPrivilegeGroup(any(), any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
+        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
 
         checkError(response);
 
-        verify(userService, never()).addUserToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(Role.CONTRIBUTOR));
+        verify(userService, never()).addUserToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(Role.CONTRIBUTOR), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add non existing user to privilege group")
@@ -365,13 +365,13 @@ public class UserControllerTest {
         when(userIdRoleDto.getUserIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
-        when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
+        when(userService.addUserToPrivilegeGroup(any(), any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
+        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
 
         checkWarn(response);
 
-        verify(userService).addUserToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(Role.CONTRIBUTOR));
+        verify(userService).addUserToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(Role.CONTRIBUTOR), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add user to privilege group, but not successful")
@@ -381,37 +381,37 @@ public class UserControllerTest {
         when(userIdRoleDto.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.addUserToPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
+        when(userService.addUserToPrivilegeGroup(any(), any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
+        ResponseWrapper<Boolean> response = cut.addUserToPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, userIdRoleDto);
 
         checkWarn(response, 1);
 
-        verify(userService).addUserToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(Role.CONTRIBUTOR));
+        verify(userService).addUserToPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(Role.CONTRIBUTOR), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove user from privilege group")
     @Test
     public void testRemoveUserFromPrivilegeGroup() {
-        when(userService.removeUserFromPrivilegeGroup(any(), any())).thenReturn(Boolean.TRUE);
+        when(userService.removeUserFromPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.removeUserFromPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(userService).removeUserFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+        verify(userService).removeUserFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove user from privilege group, but not successful")
     @Test
     public void testRemoveUserFromPrivilegeGroupNotSuccessful() {
-        when(userService.removeUserFromPrivilegeGroup(any(), any())).thenReturn(Boolean.FALSE);
+        when(userService.removeUserFromPrivilegeGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.removeUserFromPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.removeUserFromPrivilegeGroup(principal, PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
 
         checkWarn(response, 1);
 
-        verify(userService).removeUserFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+        verify(userService).removeUserFromPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add user to base group")
@@ -419,13 +419,13 @@ public class UserControllerTest {
     public void testAddUserToBaseGroup() {
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.addUserToBaseGroup(any(), any())).thenReturn(Boolean.TRUE);
+        when(userService.addUserToBaseGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.addUserToBaseGroup(principal, BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(userService).addUserToBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+        verify(userService).addUserToBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add global admin to base group")
@@ -433,26 +433,26 @@ public class UserControllerTest {
     public void testAddUserToBaseGroupGlobalAdmin() {
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.addUserToBaseGroup(any(), any())).thenReturn(Boolean.TRUE);
+        when(userService.addUserToBaseGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.addUserToBaseGroup(principal, BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
 
         checkError(response);
 
-        verify(userService, never()).addUserToBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+        verify(userService, never()).addUserToBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add non existing user to base group")
     @Test
     public void testAddUserToBaseGroupNonExisting() {
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
-        when(userService.addUserToBaseGroup(any(), any())).thenReturn(Boolean.FALSE);
+        when(userService.addUserToBaseGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.addUserToBaseGroup(principal, BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
 
         checkWarn(response);
 
-        verify(userService).addUserToBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+        verify(userService).addUserToBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Add user to base group, but not successful")
@@ -460,37 +460,37 @@ public class UserControllerTest {
     public void testAddUserToBaseGroupNotSuccessful() {
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
-        when(userService.addUserToBaseGroup(any(), any())).thenReturn(Boolean.FALSE);
+        when(userService.addUserToBaseGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.addUserToBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.addUserToBaseGroup(principal, BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
 
         checkWarn(response, 1);
 
-        verify(userService).addUserToBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+        verify(userService).addUserToBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove user from base group")
     @Test
     public void testRemoveUserFromBaseGroup() {
-        when(userService.removeUserFromBaseGroup(any(), any())).thenReturn(Boolean.TRUE);
+        when(userService.removeUserFromBaseGroup(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-        ResponseWrapper<Boolean> response = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.removeUserFromBaseGroup(principal, BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
 
         checkOk(response);
 
-        verify(userService).removeUserFromBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+        verify(userService).removeUserFromBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Remove user from base group, but not successful")
     @Test
     public void testRemoveUserFromBaseGroupNotSuccessful() {
-        when(userService.removeUserFromBaseGroup(any(), any())).thenReturn(Boolean.FALSE);
+        when(userService.removeUserFromBaseGroup(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-        ResponseWrapper<Boolean> response = cut.removeUserFromBaseGroup(BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        ResponseWrapper<Boolean> response = cut.removeUserFromBaseGroup(principal, BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
 
         checkWarn(response, 1);
 
-        verify(userService).removeUserFromBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION));
+        verify(userService).removeUserFromBaseGroup(eq(BASE_GROUP_IDENTIFICATION), eq(USER_IDENTIFICATION), eq(PRINCIPAL_IDENTIFICATION));
     }
 
     @DisplayName("Count users at common group")
