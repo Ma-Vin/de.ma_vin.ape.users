@@ -46,6 +46,12 @@ public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao
         return commonGroupChangeService;
     }
 
+    @Override
+    protected RepositoryServiceContext<CommonGroupDao> createContext(String identification) {
+        return new RepositoryServiceContext<>(identification, CommonGroup.class.getSimpleName(), CommonGroup.ID_PREFIX, commonGroupRepository, CommonGroupDao::new);
+    }
+
+
     /**
      * Deletes an common group from repository
      *
@@ -113,7 +119,7 @@ public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao
      * @return search result
      */
     public Optional<CommonGroup> findCommonGroup(String identification) {
-        return find(identification, CommonGroup.ID_PREFIX, CommonGroup.class.getSimpleName(), g -> GroupAccessMapper.convertToCommonGroup(g, false), commonGroupRepository);
+        return find(identification, g -> GroupAccessMapper.convertToCommonGroup(g, false));
     }
 
     /**

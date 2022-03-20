@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Data
 @Log4j2
-public class UserChangeService extends AbstractChangeService<UserDao> {
+public class UserChangeService extends AbstractChildChangeService<UserDao> {
 
     @Autowired
     private UserChangeRepository userChangeRepository;

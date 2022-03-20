@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Data
 @Log4j2
-public class BaseGroupChangeService extends AbstractChangeService<BaseGroupDao> {
+public class BaseGroupChangeService extends AbstractChildChangeService<BaseGroupDao> {
 
     @Autowired
     private BaseGroupChangeRepository baseGroupChangeRepository;

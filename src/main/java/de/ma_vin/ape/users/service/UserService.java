@@ -18,8 +18,8 @@ import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
-import de.ma_vin.ape.users.persistence.history.*;
-import de.ma_vin.ape.users.service.history.AbstractChangeService;
+import de.ma_vin.ape.users.persistence.history.UserChangeRepository;
+import de.ma_vin.ape.users.service.history.AbstractChildChangeService;
 import de.ma_vin.ape.users.service.history.UserChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
@@ -35,7 +35,7 @@ import java.util.*;
 @Component
 @Log4j2
 @Data
-public class UserService extends AbstractRepositoryService<UserDao> {
+public class UserService extends AbstractChildRepositoryService<UserDao, PrivilegeGroupDao, BaseGroupDao> {
 
     public static final String ADMIN_OR_COMMON_GROUP_LOG_PARAM = "admin or common group";
     public static final String ADMIN_GROUP_LOG_PARAM = "admin group";
@@ -76,8 +76,23 @@ public class UserService extends AbstractRepositoryService<UserDao> {
 
 
     @Override
-    protected AbstractChangeService<UserDao> getChangeService() {
+    protected AbstractChildChangeService<UserDao> getChangeService() {
         return userChangeService;
+    }
+
+    @Override
+    protected RepositoryServiceContext<UserDao> createContext(String identification) {
+        return new RepositoryServiceContext<>(identification, User.class.getSimpleName(), User.ID_PREFIX, userRepository, UserDao::new);
+    }
+
+    @Override
+    protected RepositoryServiceContext<PrivilegeGroupDao> createParentFirstTypeContext(String identification) {
+        return new RepositoryServiceContext<>(identification, PrivilegeGroup.class.getSimpleName(), PrivilegeGroup.ID_PREFIX, privilegeGroupRepository, PrivilegeGroupDao::new);
+    }
+
+    @Override
+    protected RepositoryServiceContext<BaseGroupDao> createParentSecondTypeContext(String identification) {
+        return new RepositoryServiceContext<>(identification, BaseGroup.class.getSimpleName(), BaseGroup.ID_PREFIX, baseGroupRepository, BaseGroupDao::new);
     }
 
     /**
@@ -143,7 +158,7 @@ public class UserService extends AbstractRepositoryService<UserDao> {
      * @return search result
      */
     public Optional<User> findUser(String identification) {
-        return find(identification, User.ID_PREFIX, User.class.getSimpleName(), UserAccessMapper::convertToUser, userRepository);
+        return find(identification, UserAccessMapper::convertToUser);
     }
 
     /**
@@ -853,9 +868,7 @@ public class UserService extends AbstractRepositoryService<UserDao> {
      * @return {@code true} if the user was added to the privilege group, otherwise {@code false}
      */
     public boolean addUserToPrivilegeGroup(String privilegeGroupIdentification, String userIdentification, Role role) {
-        return add(privilegeGroupIdentification, userIdentification, PrivilegeGroup.class.getSimpleName(), User.class.getSimpleName()
-                , PrivilegeGroup.ID_PREFIX, User.ID_PREFIX
-                , privilegeGroupRepository, userRepository, privilegeGroupToUserRepository
+        return add(privilegeGroupIdentification, userIdentification, privilegeGroupToUserRepository
                 , (privilegeGroup, user) -> {
                     PrivilegeGroupToUserDao connection = new PrivilegeGroupToUserDao();
                     connection.setPrivilegeGroup(privilegeGroup);
@@ -873,9 +886,7 @@ public class UserService extends AbstractRepositoryService<UserDao> {
      * @return {@code true} if the user was added to the base group, otherwise {@code false}
      */
     public boolean addUserToBaseGroup(String baseGroupIdentification, String userIdentification) {
-        return add(baseGroupIdentification, userIdentification, BaseGroup.class.getSimpleName(), User.class.getSimpleName()
-                , BaseGroup.ID_PREFIX, User.ID_PREFIX
-                , baseGroupRepository, userRepository, baseGroupToUserRepository
+        return add(createParentSecondTypeContext(baseGroupIdentification), createContext(userIdentification), baseGroupToUserRepository
                 , (baseGroup, user) -> {
                     BaseGroupToUserDao connection = new BaseGroupToUserDao();
                     connection.setBaseGroup(baseGroup);
@@ -892,9 +903,7 @@ public class UserService extends AbstractRepositoryService<UserDao> {
      * @return {@code true} if the user was removed from the privilege group. Otherwise {@code false}
      */
     public boolean removeUserFromPrivilegeGroup(String privilegeGroupIdentification, String userIdentification) {
-        return remove(privilegeGroupIdentification, userIdentification, PrivilegeGroup.class.getSimpleName(), User.class.getSimpleName()
-                , PrivilegeGroup.ID_PREFIX, User.ID_PREFIX, PrivilegeGroupDao::new, UserDao::new
-                , privilegeGroupToUserRepository::deleteByPrivilegeGroupAndUser);
+        return remove(privilegeGroupIdentification, userIdentification, privilegeGroupToUserRepository::deleteByPrivilegeGroupAndUser);
     }
 
     /**
@@ -905,8 +914,8 @@ public class UserService extends AbstractRepositoryService<UserDao> {
      * @return {@code true} if the user was removed from the base group. Otherwise {@code false}
      */
     public boolean removeUserFromBaseGroup(String baseGroupIdentification, String userIdentification) {
-        return remove(baseGroupIdentification, userIdentification, BaseGroup.class.getSimpleName(), User.class.getSimpleName()
-                , BaseGroup.ID_PREFIX, User.ID_PREFIX, BaseGroupDao::new, UserDao::new, baseGroupToUserRepository::deleteByBaseGroupAndUser);
+        return remove(createParentSecondTypeContext(baseGroupIdentification), createContext(userIdentification)
+                , baseGroupToUserRepository::deleteByBaseGroupAndUser);
     }
 
     /**

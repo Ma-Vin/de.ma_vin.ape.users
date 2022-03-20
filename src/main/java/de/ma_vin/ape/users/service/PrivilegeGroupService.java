@@ -46,6 +46,12 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
         return privilegeGroupChangeService;
     }
 
+    @Override
+    protected RepositoryServiceContext<PrivilegeGroupDao> createContext(String identification) {
+        return new RepositoryServiceContext<>(identification, PrivilegeGroup.class.getSimpleName(), PrivilegeGroup.ID_PREFIX, privilegeGroupRepository, PrivilegeGroupDao::new);
+    }
+
+
     /**
      * Deletes an privilege group from repository
      *
@@ -106,7 +112,7 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
      * @return search result
      */
     public Optional<PrivilegeGroup> findPrivilegeGroup(String identification) {
-        return find(identification, PrivilegeGroup.ID_PREFIX, PrivilegeGroup.class.getSimpleName(), g -> GroupAccessMapper.convertToPrivilegeGroup(g, false), privilegeGroupRepository);
+        return find(identification, g -> GroupAccessMapper.convertToPrivilegeGroup(g, false));
     }
 
     /**
@@ -116,7 +122,7 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
      * @return search result
      */
     public Optional<PrivilegeGroup> findPrivilegeGroupTree(String identification) {
-        Optional<PrivilegeGroupDao> root = find(identification, PrivilegeGroup.ID_PREFIX, PrivilegeGroup.class.getSimpleName(), privilegeGroupRepository);
+        Optional<PrivilegeGroupDao> root = find(identification);
         if (root.isEmpty()) {
             return Optional.empty();
         }

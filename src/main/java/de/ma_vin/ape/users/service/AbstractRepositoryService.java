@@ -7,7 +7,6 @@ import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.io.Serializable;
 import java.util.Optional;
 
 @Log4j2
@@ -41,69 +40,24 @@ public abstract class AbstractRepositoryService<S extends IIdentifiableDao> {
     protected abstract AbstractChangeService<S> getChangeService();
 
     /**
-     * Adds a child to a parent if its not a direct connection
+     * Creates the context for the child object
      *
-     * @param parentIdentification    identification of the parent
-     * @param childIdentification     identification of the child
-     * @param parentClassName         simple name of parent class
-     * @param childClassName          simple name of child class
-     * @param parentPrefix            id prefix of parent
-     * @param childPrefix             id prefix of child
-     * @param parentRepository        repository of the parent
-     * @param childRepository         repository of the child
-     * @param parentToChildRepository repository of the connection between parent and child
-     * @param connectionCreator       Functional to create the connection. Setting values included
-     * @param <P>                     The parent
-     * @param <T>                     The connection
-     * @param <I>                     The Id of the connection at repository
-     * @return {@code true} if the child was added to the parent. Otherwise {@code false}
+     * @param identification the identification of the child object
+     * @return the created context
      */
-    protected <P extends IIdentifiableDao, T, I extends Serializable>
-    boolean add(String parentIdentification, String childIdentification, String parentClassName, String childClassName
-            , String parentPrefix, String childPrefix
-            , JpaRepository<P, Long> parentRepository, JpaRepository<S, Long> childRepository, JpaRepository<T, I> parentToChildRepository
-            , ConnectionCreator<P, S, T> connectionCreator) {
-
-        log.debug("Add a {} with identification \"{}\" to {} with identification \"{}\""
-                , childClassName, childIdentification, parentClassName, parentIdentification);
-
-        Optional<P> parentDao = parentRepository.findById(IdGenerator.generateId(parentIdentification, parentPrefix));
-        if (parentDao.isEmpty()) {
-            log.error("There is not any {} with identification \"{}\" where to add {} with identification \"{}\""
-                    , parentClassName, parentIdentification, childClassName, childIdentification);
-            return false;
-        }
-
-        Optional<S> childDao = childRepository.findById(IdGenerator.generateId(childIdentification, childPrefix));
-        if (childDao.isEmpty()) {
-            log.error("There is not any {} with identification \"{}\" which could be add {} with identification \"{}\""
-                    , childClassName, childIdentification, parentClassName, parentIdentification);
-            return false;
-        }
-
-        T connection = connectionCreator.create(parentDao.get(), childDao.get());
-
-        parentToChildRepository.save(connection);
-        log.debug("{} with identification \"{}\" was added to {} with identification \"{}\""
-                , childClassName, childIdentification, parentClassName, parentIdentification);
-        return true;
-    }
+    protected abstract RepositoryServiceContext<S> createContext(String identification);
 
     /**
      * Searches for a domain object
      *
      * @param identification  Identification of the domain object which is searched for
-     * @param idPrefix        prefix to generate ID
-     * @param domainClassName Simple name of the domain class
      * @param domainConverter Functional to create the domain from the dao object
-     * @param repository      repository where to search at
      * @param <T>             Domain class of the object which should be searched for
      * @return search result
      */
-    protected <T extends IIdentifiable> Optional<T> find(String identification, String idPrefix
-            , String domainClassName, DomainConverter<T, S> domainConverter, JpaRepository<S, Long> repository) {
+    protected <T extends IIdentifiable> Optional<T> find(String identification, DomainConverter<T, S> domainConverter) {
 
-        Optional<S> resultDao = find(identification, idPrefix, domainClassName, repository);
+        Optional<S> resultDao = find(identification);
         if (resultDao.isPresent()) {
             return Optional.of(domainConverter.convert(resultDao.get()));
         }
@@ -113,71 +67,30 @@ public abstract class AbstractRepositoryService<S extends IIdentifiableDao> {
     /**
      * Searches for a dao object
      *
-     * @param identification Identification of the domain object which is searched for
-     * @param idPrefix       prefix to generate ID
-     * @param className      Simple name of the domain class
-     * @param repository     repository where to search at
+     * @param identification identification of the dao object
      * @return search result
      */
-    protected Optional<S> find(String identification, String idPrefix, String className
-            , JpaRepository<S, Long> repository) {
-
-        Long id = IdGenerator.generateId(identification, idPrefix);
-        log.debug("search for {} with identification {} and id {}", className, identification, id);
-        Optional<S> daoObject = repository.findById(id);
-        if (daoObject.isPresent()) {
-            log.debug("{} with identification {} and id {} was found", className, identification, id);
-            return Optional.of(daoObject.get());
-        }
-        log.debug("{} with identification {} and id {} was not found", className, identification, id);
-        return Optional.empty();
+    protected Optional<S> find(String identification) {
+        return find(createContext(identification));
     }
 
     /**
-     * Removes a child from a parent if its not a direct connection
+     * Searches for a dao object
      *
-     * @param parentIdentification Identification of the parent
-     * @param childIdentification  Identification of the state
-     * @param parentClassName      simple name of parent class
-     * @param childClassName       simple name of child class
-     * @param parentPrefix         id prefix of parent
-     * @param childPrefix          id prefix of child
-     * @param parentCreator        Functional to create an empty parent dao
-     * @param childCreator         Functional to create an empty child dao
-     * @param deleter              Function to delete the connection with parent and child dao
-     * @param <P>                  The parent
-     * @return {@code true} if the child was removed from the parent. Otherwise {@code false}
+     * @param context context of the dao object
+     * @return search result
      */
-    protected <P extends IIdentifiableDao>
-    boolean remove(String parentIdentification, String childIdentification, String parentClassName, String childClassName
-            , String parentPrefix, String childPrefix, DaoCreator<P> parentCreator, DaoCreator<S> childCreator
-            , ConnectionDeleter<P, S> deleter) {
+    protected Optional<S> find(RepositoryServiceContext<S> context) {
 
-        Long parentId = IdGenerator.generateId(parentIdentification, parentPrefix);
-        Long childId = IdGenerator.generateId(childIdentification, childPrefix);
-        log.debug("Remove {} with identification \"{}\" and id {} from {} with identification \"{}\" and id {}"
-                , childClassName, childIdentification, childId, parentClassName, parentIdentification, parentId);
-
-        P parentDao = parentCreator.create();
-        parentDao.setId(parentId);
-        S childDao = childCreator.create();
-        childDao.setId(childId);
-
-        Long numDeleted = deleter.delete(parentDao, childDao);
-        switch (numDeleted.intValue()) {
-            case 0:
-                log.warn("The {} with identification \"{}\" and id {} was not removed from {} with identification \"{}\" and id {}"
-                        , childClassName, childIdentification, childId, parentClassName, parentIdentification, parentId);
-                return false;
-            case 1:
-                log.debug("The {} with identification \"{}\" and id {} was removed from {} with identification \"{}\" and id {}"
-                        , childClassName, childIdentification, childId, parentClassName, parentIdentification, parentId);
-                return true;
-            default:
-                log.error("{} {} with identification \"{}\" and id {} were removed from {} with identification \"{}\" and id {}"
-                        , numDeleted, childClassName, childIdentification, childId, parentClassName, parentIdentification, parentId);
-                return false;
+        Long id = IdGenerator.generateId(context.getIdentification(), context.getPrefix());
+        log.debug("search for {} with identification {} and id {}", context.getClassName(), context.getIdentification(), id);
+        Optional<S> daoObject = context.getRepository().findById(id);
+        if (daoObject.isPresent()) {
+            log.debug("{} with identification {} and id {} was found", context.getClassName(), context.getIdentification(), id);
+            return Optional.of(daoObject.get());
         }
+        log.debug("{} with identification {} and id {} was not found", context.getClassName(), context.getIdentification(), id);
+        return Optional.empty();
     }
 
     /**
@@ -360,16 +273,6 @@ public abstract class AbstractRepositoryService<S extends IIdentifiableDao> {
     @FunctionalInterface
     protected interface DaoCreator<T extends IIdentifiableDao> {
         T create();
-    }
-
-    @FunctionalInterface
-    protected interface ConnectionCreator<P extends IIdentifiableDao, S extends IIdentifiableDao, T> {
-        T create(P parent, S child);
-    }
-
-    @FunctionalInterface
-    protected interface ConnectionDeleter<P extends IIdentifiableDao, S extends IIdentifiableDao> {
-        Long delete(P parent, S child);
     }
 
     @FunctionalInterface

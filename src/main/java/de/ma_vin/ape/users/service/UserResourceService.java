@@ -22,6 +22,11 @@ public class UserResourceService extends AbstractRepositoryService<UserResourceD
     @Autowired
     private UserResourceRepository userResourceRepository;
 
+    @Override
+    protected RepositoryServiceContext<UserResourceDao> createContext(String identification) {
+        return new RepositoryServiceContext<>(identification, UserResource.class.getSimpleName(), UserResource.ID_PREFIX, userResourceRepository, UserResourceDao::new);
+    }
+
     protected AbstractChangeService<UserResourceDao> getChangeService() {
         return new AbstractChangeService<>() {
 
@@ -91,7 +96,7 @@ public class UserResourceService extends AbstractRepositoryService<UserResourceD
      * @return search result
      */
     public Optional<UserResource> findUserResource(String identification) {
-        return find(identification, UserResource.ID_PREFIX, UserResource.class.getSimpleName(), ResourceAccessMapper::convertToUserResource, userResourceRepository);
+        return find(identification, ResourceAccessMapper::convertToUserResource);
     }
 
     /**

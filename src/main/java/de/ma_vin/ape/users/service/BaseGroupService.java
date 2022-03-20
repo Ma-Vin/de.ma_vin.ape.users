@@ -6,12 +6,12 @@ import de.ma_vin.ape.users.model.dao.group.BaseGroupDaoExt;
 import de.ma_vin.ape.users.model.dao.group.CommonGroupDaoExt;
 import de.ma_vin.ape.users.model.dao.group.PrivilegeGroupDaoExt;
 import de.ma_vin.ape.users.model.gen.dao.group.*;
-import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
-import de.ma_vin.ape.users.service.history.AbstractChangeService;
+import de.ma_vin.ape.users.service.history.AbstractChildChangeService;
 import de.ma_vin.ape.users.service.history.BaseGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;
@@ -28,7 +28,7 @@ import java.util.Optional;
 @Component
 @Data
 @Log4j2
-public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
+public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDao, PrivilegeGroupDao, BaseGroupDao> {
     public static final String GROUP_LOG_PARAM = "base group";
     public static final String GROUPS_LOG_PARAM = "base groups";
     public static final String AVAILABLE_GROUPS_LOG_PARAM = " available users";
@@ -49,8 +49,23 @@ public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
     private BaseGroupChangeService baseGroupChangeService;
 
     @Override
-    protected AbstractChangeService<BaseGroupDao> getChangeService() {
+    protected AbstractChildChangeService<BaseGroupDao> getChangeService() {
         return baseGroupChangeService;
+    }
+
+    @Override
+    protected RepositoryServiceContext<BaseGroupDao> createContext(String identification) {
+        return new RepositoryServiceContext<>(identification, BaseGroup.class.getSimpleName(), BaseGroup.ID_PREFIX, baseGroupRepository, BaseGroupDao::new);
+    }
+
+    @Override
+    protected RepositoryServiceContext<PrivilegeGroupDao> createParentFirstTypeContext(String identification) {
+        return new RepositoryServiceContext<>(identification, PrivilegeGroup.class.getSimpleName(), PrivilegeGroup.ID_PREFIX, privilegeGroupRepository, PrivilegeGroupDao::new);
+    }
+
+    @Override
+    protected RepositoryServiceContext<BaseGroupDao> createParentSecondTypeContext(String identification) {
+        return createContext(identification);
     }
 
     /**
@@ -121,7 +136,7 @@ public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
      * @return search result
      */
     public Optional<BaseGroup> findBaseGroup(String identification) {
-        return find(identification, BaseGroup.ID_PREFIX, BaseGroup.class.getSimpleName(), g -> GroupAccessMapper.convertToBaseGroup(g, false), baseGroupRepository);
+        return find(identification, g -> GroupAccessMapper.convertToBaseGroup(g, false));
     }
 
     /**
@@ -131,7 +146,7 @@ public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
      * @return search result
      */
     public Optional<BaseGroup> findBaseGroupTree(String identification) {
-        Optional<BaseGroupDao> root = find(identification, BaseGroup.ID_PREFIX, BaseGroup.class.getSimpleName(), baseGroupRepository);
+        Optional<BaseGroupDao> root = find(identification);
         if (root.isEmpty()) {
             return Optional.empty();
         }
@@ -629,9 +644,7 @@ public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
      * @return {@code true} if the base group was added to the privilege group, otherwise {@code false}
      */
     public boolean addBaseToPrivilegeGroup(String privilegeGroupIdentification, String baseGroupIdentification, Role role) {
-        return add(privilegeGroupIdentification, baseGroupIdentification, PrivilegeGroup.class.getSimpleName(), BaseGroup.class.getSimpleName()
-                , PrivilegeGroup.ID_PREFIX, BaseGroup.ID_PREFIX
-                , privilegeGroupRepository, baseGroupRepository, privilegeToBaseGroupRepository
+        return add(privilegeGroupIdentification, baseGroupIdentification, privilegeToBaseGroupRepository
                 , (privilegeGroup, baseGroup) -> {
                     PrivilegeGroupToBaseGroupDao connection = new PrivilegeGroupToBaseGroupDao();
                     connection.setPrivilegeGroup(privilegeGroup);
@@ -649,9 +662,7 @@ public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
      * @return {@code true} if the base group was removed from the privilege group. Otherwise {@code false}
      */
     public boolean removeBaseFromPrivilegeGroup(String privilegeGroupIdentification, String baseGroupIdentification) {
-        return remove(privilegeGroupIdentification, baseGroupIdentification, PrivilegeGroup.class.getSimpleName(), BaseGroup.class.getSimpleName()
-                , PrivilegeGroup.ID_PREFIX, BaseGroup.ID_PREFIX, PrivilegeGroupDao::new, BaseGroupDao::new
-                , privilegeToBaseGroupRepository::deleteByPrivilegeGroupAndBaseGroup);
+        return remove(privilegeGroupIdentification, baseGroupIdentification, privilegeToBaseGroupRepository::deleteByPrivilegeGroupAndBaseGroup);
     }
 
 
@@ -663,9 +674,7 @@ public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
      * @return {@code true} if the base group was added to the other base group, otherwise {@code false}
      */
     public boolean addBaseToBaseGroup(String parentGroupIdentification, String baseGroupIdentification) {
-        return add(parentGroupIdentification, baseGroupIdentification, BaseGroup.class.getSimpleName(), BaseGroup.class.getSimpleName()
-                , BaseGroup.ID_PREFIX, BaseGroup.ID_PREFIX
-                , baseGroupRepository, baseGroupRepository, baseToBaseGroupRepository
+        return add(createParentSecondTypeContext(parentGroupIdentification), createContext(baseGroupIdentification), baseToBaseGroupRepository
                 , (baseGroup, subBaseGroup) -> {
                     BaseGroupToBaseGroupDao connection = new BaseGroupToBaseGroupDao();
                     connection.setBaseGroup(baseGroup);
@@ -682,8 +691,7 @@ public class BaseGroupService extends AbstractRepositoryService<BaseGroupDao> {
      * @return {@code true} if the base group was removed from the other base group. Otherwise {@code false}
      */
     public boolean removeBaseFromBaseGroup(String parentGroupIdentification, String baseGroupIdentification) {
-        return remove(parentGroupIdentification, baseGroupIdentification, BaseGroup.class.getSimpleName(), BaseGroup.class.getSimpleName()
-                , BaseGroup.ID_PREFIX, BaseGroup.ID_PREFIX, BaseGroupDao::new, BaseGroupDao::new
+        return remove(createParentSecondTypeContext(parentGroupIdentification), createContext(baseGroupIdentification)
                 , baseToBaseGroupRepository::deleteByBaseGroupAndSubBaseGroup);
     }
 }

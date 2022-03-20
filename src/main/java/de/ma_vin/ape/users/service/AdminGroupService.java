@@ -36,6 +36,12 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
         return adminGroupChangeService;
     }
 
+    @Override
+    protected RepositoryServiceContext<AdminGroupDao> createContext(String identification) {
+        return new RepositoryServiceContext<>(identification, AdminGroup.class.getSimpleName(), AdminGroup.ID_PREFIX, adminGroupRepository, AdminGroupDao::new);
+    }
+
+
     /**
      * Deletes an admin group from repository
      *
@@ -93,7 +99,7 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
      * @return search result
      */
     public Optional<AdminGroup> findAdminGroup(String identification) {
-        return find(identification, AdminGroup.ID_PREFIX, AdminGroup.class.getSimpleName(), g -> GroupAccessMapper.convertToAdminGroup(g, false), adminGroupRepository);
+        return find(identification, g -> GroupAccessMapper.convertToAdminGroup(g, false));
     }
 
     /**
