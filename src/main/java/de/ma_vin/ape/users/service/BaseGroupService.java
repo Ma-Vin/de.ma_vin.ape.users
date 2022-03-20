@@ -11,6 +11,8 @@ import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
+import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
+import de.ma_vin.ape.users.service.context.SavingWithParentRepositoryServiceContext;
 import de.ma_vin.ape.users.service.history.AbstractChildChangeService;
 import de.ma_vin.ape.users.service.history.BaseGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -623,16 +625,22 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
      * In case of not existing baseGroup for given identification, the result will be {@link Optional#empty()}
      */
     public Optional<BaseGroup> save(BaseGroup baseGroup, String groupIdentification, String editorIdentification) {
-        return save(baseGroup, groupIdentification, editorIdentification
-                , BaseGroup::getGroupName
-                , () -> {
-                    CommonGroupDao res = new CommonGroupDao();
-                    res.setBasics(new ArrayList<>());
-                    return res;
-                }
-                , (baseGroupDomainObject, parentDao) -> GroupAccessMapper.convertToBaseGroupDao(baseGroupDomainObject, false, parentDao)
+        SavingWithParentRepositoryServiceContext<BaseGroup, BaseGroupDao, CommonGroupDao> context = new SavingWithParentRepositoryServiceContext<BaseGroup, BaseGroupDao, CommonGroupDao>(
+                baseGroup
+                , editorIdentification
+                , baseGroupDomainObject -> GroupAccessMapper.convertToBaseGroupDao(baseGroupDomainObject, false)
                 , baseGroupDao -> GroupAccessMapper.convertToBaseGroup(baseGroupDao, false)
-                , baseGroupRepository);
+                , baseGroupRepository)
+                .config(BaseGroup::getGroupName)
+                .config(groupIdentification
+                        , () -> {
+                            CommonGroupDao res = new CommonGroupDao();
+                            res.setBasics(new ArrayList<>());
+                            return res;
+                        }
+                        , (baseGroupDomainObject, parentDao) -> GroupAccessMapper.convertToBaseGroupDao(baseGroupDomainObject, false, parentDao));
+
+        return save(context);
     }
 
     /**

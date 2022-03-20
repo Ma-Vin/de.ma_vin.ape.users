@@ -9,6 +9,8 @@ import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
 import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
 import de.ma_vin.ape.users.persistence.PrivilegeToBaseGroupRepository;
+import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
+import de.ma_vin.ape.users.service.context.SavingWithParentRepositoryServiceContext;
 import de.ma_vin.ape.users.service.history.AbstractChangeService;
 import de.ma_vin.ape.users.service.history.PrivilegeGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -260,15 +262,21 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
      * In case of not existing privilegeGroup for given identification, the result will be {@link Optional#empty()}
      */
     public Optional<PrivilegeGroup> save(PrivilegeGroup privilegeGroup, String groupIdentification, String editorIdentification) {
-        return save(privilegeGroup, groupIdentification, editorIdentification
-                , PrivilegeGroup::getGroupName
-                , () -> {
-                    CommonGroupDao res = new CommonGroupDao();
-                    res.setPrivileges(new ArrayList<>());
-                    return res;
-                }
-                , (privilegeGroupDomainObject, parentDao) -> GroupAccessMapper.convertToPrivilegeGroupDao(privilegeGroupDomainObject, false, parentDao)
+        SavingWithParentRepositoryServiceContext<PrivilegeGroup, PrivilegeGroupDao, CommonGroupDao> context = new SavingWithParentRepositoryServiceContext<PrivilegeGroup, PrivilegeGroupDao, CommonGroupDao>(
+                privilegeGroup
+                , editorIdentification
+                , privilegeGroupDomainObject -> GroupAccessMapper.convertToPrivilegeGroupDao(privilegeGroupDomainObject, false)
                 , privilegeGroupDao -> GroupAccessMapper.convertToPrivilegeGroup(privilegeGroupDao, false)
-                , privilegeGroupRepository);
+                , privilegeGroupRepository)
+                .config(PrivilegeGroup::getGroupName)
+                .config(groupIdentification
+                        , () -> {
+                            CommonGroupDao res = new CommonGroupDao();
+                            res.setPrivileges(new ArrayList<>());
+                            return res;
+                        }
+                        , (privilegeGroupDomainObject, parentDao) -> GroupAccessMapper.convertToPrivilegeGroupDao(privilegeGroupDomainObject, false, parentDao));
+
+        return save(context);
     }
 }

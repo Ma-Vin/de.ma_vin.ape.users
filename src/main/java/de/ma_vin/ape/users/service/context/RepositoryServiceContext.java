@@ -1,6 +1,7 @@
-package de.ma_vin.ape.users.service;
+package de.ma_vin.ape.users.service.context;
 
 import de.ma_vin.ape.users.model.gen.dao.IIdentifiableDao;
+import de.ma_vin.ape.users.service.AbstractRepositoryService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.data.jpa.repository.JpaRepository;

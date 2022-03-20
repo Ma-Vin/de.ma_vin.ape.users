@@ -4,6 +4,7 @@ import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
 import de.ma_vin.ape.users.model.gen.domain.resource.UserResource;
 import de.ma_vin.ape.users.model.gen.mapper.ResourceAccessMapper;
 import de.ma_vin.ape.users.persistence.UserResourceRepository;
+import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
 import de.ma_vin.ape.users.service.history.AbstractChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import lombok.Data;

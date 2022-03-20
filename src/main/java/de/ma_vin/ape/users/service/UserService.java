@@ -19,6 +19,8 @@ import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.persistence.history.UserChangeRepository;
+import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
+import de.ma_vin.ape.users.service.context.SavingWithParentRepositoryServiceContext;
 import de.ma_vin.ape.users.service.history.AbstractChildChangeService;
 import de.ma_vin.ape.users.service.history.UserChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -784,17 +786,23 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * In case of not existing user for given identification, the result will be {@link Optional#empty()}
      */
     public Optional<User> saveAtAdminGroup(User user, String groupIdentification, String editorIdentification) {
-        return save(user, groupIdentification, editorIdentification
-                , userDomainObject -> String.format("(%s, %s)", userDomainObject.getFirstName(), userDomainObject.getLastName())
-                , () -> {
-                    AdminGroupDao res = new AdminGroupDao();
-                    res.setAdmins(new ArrayList<>());
-                    return res;
-                }
+        SavingWithParentRepositoryServiceContext<User, UserDao, AdminGroupDao> context = new SavingWithParentRepositoryServiceContext<User, UserDao, AdminGroupDao>(
+                user
+                , editorIdentification
                 , UserAccessMapper::convertToUserDao
                 , UserAccessMapper::convertToUser
-                , userRepository
-                , createUserAdoption());
+                , userRepository)
+                .config(userDomainObject -> String.format("(%s, %s)", userDomainObject.getFirstName(), userDomainObject.getLastName()))
+                .config(createUserAdoption())
+                .config(groupIdentification
+                        , () -> {
+                            AdminGroupDao res = new AdminGroupDao();
+                            res.setAdmins(new ArrayList<>());
+                            return res;
+                        }
+                        , UserAccessMapper::convertToUserDao);
+
+        return save(context);
     }
 
     /**
@@ -808,17 +816,23 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * In case of not existing user for given identification, the result will be {@link Optional#empty()}
      */
     public Optional<User> saveAtCommonGroup(User user, String groupIdentification, String editorIdentification) {
-        return save(user, groupIdentification, editorIdentification
-                , userDomainObject -> String.format("(%s, %s)", userDomainObject.getFirstName(), userDomainObject.getLastName())
-                , () -> {
-                    CommonGroupDao res = new CommonGroupDao();
-                    res.setAggUser(new ArrayList<>());
-                    return res;
-                }
+        SavingWithParentRepositoryServiceContext<User, UserDao, CommonGroupDao> context = new SavingWithParentRepositoryServiceContext<User, UserDao, CommonGroupDao>(
+                user
+                , editorIdentification
                 , UserAccessMapper::convertToUserDao
                 , UserAccessMapper::convertToUser
-                , userRepository
-                , createUserAdoption());
+                , userRepository)
+                .config(userDomainObject -> String.format("(%s, %s)", userDomainObject.getFirstName(), userDomainObject.getLastName()))
+                .config(createUserAdoption())
+                .config(groupIdentification
+                        , () -> {
+                            CommonGroupDao res = new CommonGroupDao();
+                            res.setAggUser(new ArrayList<>());
+                            return res;
+                        }
+                        , UserAccessMapper::convertToUserDao);
+
+        return save(context);
     }
 
     private Adoption<UserDao> createUserAdoption() {

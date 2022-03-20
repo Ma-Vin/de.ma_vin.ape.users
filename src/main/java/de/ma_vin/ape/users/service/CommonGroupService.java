@@ -9,6 +9,7 @@ import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.CommonGroupRepository;
 import de.ma_vin.ape.users.persistence.UserRepository;
+import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
 import de.ma_vin.ape.users.service.history.AbstractChangeService;
 import de.ma_vin.ape.users.service.history.CommonGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
