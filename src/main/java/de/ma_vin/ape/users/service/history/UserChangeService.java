@@ -5,20 +5,25 @@ import de.ma_vin.ape.users.model.dao.group.history.AdminGroupChangeDaoExt;
 import de.ma_vin.ape.users.model.dao.group.history.BaseGroupChangeDaoExt;
 import de.ma_vin.ape.users.model.dao.group.history.CommonGroupChangeDaoExt;
 import de.ma_vin.ape.users.model.dao.group.history.PrivilegeGroupChangeDaoExt;
+import de.ma_vin.ape.users.model.dao.user.UserDaoExt;
 import de.ma_vin.ape.users.model.dao.user.history.UserChangeDaoExt;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
+import de.ma_vin.ape.users.model.gen.domain.user.history.UserChange;
+import de.ma_vin.ape.users.model.gen.mapper.UserHistoryAccessMapper;
 import de.ma_vin.ape.users.persistence.history.*;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @Data
 @Log4j2
-public class UserChangeService extends AbstractChildChangeService<UserDao, PrivilegeGroupDao, BaseGroupDao> {
+public class UserChangeService extends AbstractChildChangeService<UserDao, PrivilegeGroupDao, BaseGroupDao, UserChange> {
 
     @Autowired
     private UserChangeRepository userChangeRepository;
@@ -95,6 +100,13 @@ public class UserChangeService extends AbstractChildChangeService<UserDao, Privi
         baseGroupChangeRepository.markedEditorAsDeleted(deletedObject, deletedObjectIdentification);
         privilegeGroupChangeRepository.markedEditorAsDeleted(deletedObject, deletedObjectIdentification);
         userChangeRepository.markedEditorAsDeleted(deletedObject, deletedObjectIdentification);
+    }
+
+    @Override
+    public List<UserChange> loadChanges(String identification) {
+        return userChangeRepository.findByUser(new UserDaoExt(identification)).stream()
+                .map(UserHistoryAccessMapper::convertToUserChange)
+                .toList();
     }
 
     @Override

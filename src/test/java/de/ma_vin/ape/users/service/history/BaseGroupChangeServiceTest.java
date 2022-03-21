@@ -11,15 +11,22 @@ import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.BaseGroupChange;
+import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
 import de.ma_vin.ape.utils.generators.IdGenerator;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,10 +38,12 @@ public class BaseGroupChangeServiceTest {
     public static final Long COMMON_GROUP_ID = 2L;
     public static final Long PRIVILEGE_GROUP_ID = 3L;
     public static final Long ANOTHER_BASE_GROUP_ID = 4L;
+    public static final Long EDITOR_ID = 5L;
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String ANOTHER_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ANOTHER_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
+    public static final String EDITOR_IDENTIFICATION = IdGenerator.generateIdentification(EDITOR_ID, User.ID_PREFIX);
     public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
     @Mock
@@ -53,6 +62,10 @@ public class BaseGroupChangeServiceTest {
     private CommonGroupDao commonGroupDao;
     @Mock
     private PrivilegeGroupDao privilegeGroupDao;
+    @Mock
+    private BaseGroupChangeDao baseGroupChangeDao;
+    @Mock
+    private UserDao editorDao;
 
 
     private BaseGroupChangeService cut;
@@ -74,6 +87,10 @@ public class BaseGroupChangeServiceTest {
         when(storedBaseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(editorDao.getIdentification()).thenReturn(EDITOR_IDENTIFICATION);
+        when(baseGroupChangeDao.getBaseGroup()).thenReturn(baseGroupDao);
+
+        SystemProperties.getInstance().setTestingDateTime(LocalDateTime.of(2022, 3, 21, 20, 31, 0));
     }
 
     @AfterEach
@@ -196,6 +213,29 @@ public class BaseGroupChangeServiceTest {
 
         verify(privilegeGroupChangeRepository).markedAsDeleted(any(BaseGroupDao.class), any());
         verify(baseGroupChangeRepository).markedSubAsDeleted(any(BaseGroupDao.class), any());
+    }
+
+    @DisplayName("load changes")
+    @Test
+    public void testLoadChanges() {
+        when(baseGroupChangeDao.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(baseGroupChangeDao.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(baseGroupChangeDao.getEditor()).thenReturn(editorDao);
+        when(baseGroupChangeRepository.findByBaseGroup(any())).then(a -> {
+            assertEquals(BASE_GROUP_ID, ((BaseGroupDao) a.getArgument(0)).getId(), "Wrong id of base group");
+            return Collections.singletonList(baseGroupChangeDao);
+        });
+
+        List<BaseGroupChange> changes = cut.loadChanges(BASE_GROUP_IDENTIFICATION);
+
+        assertNotNull(changes, "There should be a list of changes");
+        assertEquals(1, changes.size(), "Wrong number of changes");
+        assertEquals(ChangeType.CREATE, changes.get(0).getChangeType(), "Wrong change type");
+        assertEquals(SystemProperties.getSystemDateTime(), changes.get(0).getChangeTime(), "Wrong change time");
+        assertNotNull(changes.get(0).getEditor(), "Missing editor");
+        assertEquals(EDITOR_IDENTIFICATION, changes.get(0).getEditor().getIdentification(), "Wrong editor identification");
+
+        verify(baseGroupChangeRepository).findByBaseGroup(any());
     }
 
     @DisplayName("Add to first type of parent")

@@ -11,7 +11,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface CommonGroupChangeRepository extends JpaRepository<CommonGroupChangeDao, Long> {
+
+    List<CommonGroupChangeDao> findByCommonGroup(CommonGroupDao commonGroup);
 
     @Transactional
     @Modifying

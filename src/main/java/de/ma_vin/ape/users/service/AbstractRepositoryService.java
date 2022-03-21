@@ -2,6 +2,7 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.model.gen.dao.IIdentifiableDao;
 import de.ma_vin.ape.users.model.gen.domain.IIdentifiable;
+import de.ma_vin.ape.users.model.gen.domain.history.AbstractChange;
 import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
 import de.ma_vin.ape.users.service.context.SavingWithParentRepositoryServiceContext;
 import de.ma_vin.ape.users.service.history.AbstractChangeService;
@@ -10,8 +11,12 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.Optional;
 
+/**
+ * @param <S> dao class which is handled
+ * @param <Q> domain change class
+ */
 @Log4j2
-public abstract class AbstractRepositoryService<S extends IIdentifiableDao> {
+public abstract class AbstractRepositoryService<S extends IIdentifiableDao, Q extends AbstractChange> {
 
     public static final String GET_PARENT_ID_MISSING_CHILD_ID_LOG_ERROR = "The identification of the parent {} could not be determined without identification of the {}";
     public static final String GET_PARENT_ID_NOT_FOUND_LOG_ERROR = "The identification of the parent {} could not be determined";
@@ -38,7 +43,7 @@ public abstract class AbstractRepositoryService<S extends IIdentifiableDao> {
     /**
      * @return the change service for the class <code>S</code>
      */
-    protected abstract AbstractChangeService<S> getChangeService();
+    protected abstract AbstractChangeService<S, Q> getChangeService();
 
     /**
      * Creates the context for the child object

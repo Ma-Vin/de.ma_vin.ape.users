@@ -5,6 +5,7 @@ import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.CommonGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.CommonGroupRepository;
@@ -25,7 +26,7 @@ import java.util.Optional;
 @Component
 @Data
 @Log4j2
-public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao> {
+public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao, CommonGroupChange> {
     public static final String GROUP_LOG_PARAM = "common group";
     public static final String GROUPS_LOG_PARAM = "common groups";
 
@@ -43,7 +44,7 @@ public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao
     private CommonGroupChangeService commonGroupChangeService;
 
     @Override
-    protected AbstractChangeService<CommonGroupDao> getChangeService() {
+    protected AbstractChangeService<CommonGroupDao, CommonGroupChange> getChangeService() {
         return commonGroupChangeService;
     }
 

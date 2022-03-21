@@ -1,13 +1,16 @@
 package de.ma_vin.ape.users.service.history;
 
 import de.ma_vin.ape.users.model.gen.dao.IIdentifiableDao;
+import de.ma_vin.ape.users.model.gen.domain.history.AbstractChange;
 
 /**
  * @param <T> the class whose changes are stored
  * @param <S> the first type of parent
  * @param <P> the second type of parent
+ * @param <O> domain change class
  */
-public abstract class AbstractChildChangeService<T extends IIdentifiableDao, S extends IIdentifiableDao, P extends IIdentifiableDao> extends AbstractChangeService<T> {
+public abstract class AbstractChildChangeService<T extends IIdentifiableDao, S extends IIdentifiableDao, P extends IIdentifiableDao, O extends AbstractChange>
+        extends AbstractChangeService<T, O> {
     /**
      * Store an addition event of a new object
      *

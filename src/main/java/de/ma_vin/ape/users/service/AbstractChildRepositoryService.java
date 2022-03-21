@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.model.gen.dao.IIdentifiableDao;
+import de.ma_vin.ape.users.model.gen.domain.history.AbstractChange;
 import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
 import de.ma_vin.ape.users.service.history.AbstractChildChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
@@ -14,12 +15,14 @@ import java.util.Optional;
  * @param <C> the class which is mainly handled by this class
  * @param <P> the first type of parent
  * @param <O> the second type of parent
+ * @param <Q> domain change class
  */
 @Log4j2
-public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao, P extends IIdentifiableDao, O extends IIdentifiableDao> extends AbstractRepositoryService<C> {
+public abstract class AbstractChildRepositoryService<C extends IIdentifiableDao, P extends IIdentifiableDao, O extends IIdentifiableDao, Q extends AbstractChange>
+        extends AbstractRepositoryService<C, Q> {
 
     @Override
-    protected abstract AbstractChildChangeService<C, P, O> getChangeService();
+    protected abstract AbstractChildChangeService<C, P, O, Q> getChangeService();
 
     /**
      * Creates the context for the parent object

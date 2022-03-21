@@ -1,18 +1,23 @@
 package de.ma_vin.ape.users.service.history;
 
 import de.ma_vin.ape.users.enums.ChangeType;
+import de.ma_vin.ape.users.model.dao.group.CommonGroupDaoExt;
 import de.ma_vin.ape.users.model.dao.group.history.CommonGroupChangeDaoExt;
 import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
+import de.ma_vin.ape.users.model.gen.domain.group.history.CommonGroupChange;
+import de.ma_vin.ape.users.model.gen.mapper.GroupHistoryAccessMapper;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @Data
 @Log4j2
-public class CommonGroupChangeService extends AbstractChangeService<CommonGroupDao> {
+public class CommonGroupChangeService extends AbstractChangeService<CommonGroupDao, CommonGroupChange> {
 
     @Autowired
     private CommonGroupChangeRepository commonGroupChangeRepository;
@@ -38,5 +43,12 @@ public class CommonGroupChangeService extends AbstractChangeService<CommonGroupD
         deletion.setChangeType(ChangeType.DELETE);
         commonGroupChangeRepository.markedAsDeleted(deletedObject, deletedObject.getIdentification());
         commonGroupChangeRepository.save(deletion);
+    }
+
+    @Override
+    public List<CommonGroupChange> loadChanges(String identification) {
+        return commonGroupChangeRepository.findByCommonGroup(new CommonGroupDaoExt(identification)).stream()
+                .map(cgc -> GroupHistoryAccessMapper.convertToCommonGroupChange(cgc, false))
+                .toList();
     }
 }

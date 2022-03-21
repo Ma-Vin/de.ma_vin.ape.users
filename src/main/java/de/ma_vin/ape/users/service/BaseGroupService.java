@@ -9,6 +9,7 @@ import de.ma_vin.ape.users.model.gen.dao.group.*;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.BaseGroupChange;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
@@ -30,7 +31,7 @@ import java.util.Optional;
 @Component
 @Data
 @Log4j2
-public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDao, PrivilegeGroupDao, BaseGroupDao> {
+public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDao, PrivilegeGroupDao, BaseGroupDao, BaseGroupChange> {
     public static final String GROUP_LOG_PARAM = "base group";
     public static final String GROUPS_LOG_PARAM = "base groups";
     public static final String AVAILABLE_GROUPS_LOG_PARAM = " available users";
@@ -51,7 +52,7 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
     private BaseGroupChangeService baseGroupChangeService;
 
     @Override
-    protected AbstractChildChangeService<BaseGroupDao, PrivilegeGroupDao, BaseGroupDao> getChangeService() {
+    protected AbstractChildChangeService<BaseGroupDao, PrivilegeGroupDao, BaseGroupDao, BaseGroupChange> getChangeService() {
         return baseGroupChangeService;
     }
 

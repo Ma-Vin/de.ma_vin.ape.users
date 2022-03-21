@@ -1,11 +1,14 @@
 package de.ma_vin.ape.users.service.history;
 
 import de.ma_vin.ape.users.enums.ChangeType;
+import de.ma_vin.ape.users.model.dao.group.BaseGroupDaoExt;
 import de.ma_vin.ape.users.model.dao.group.history.BaseGroupChangeDaoExt;
 import de.ma_vin.ape.users.model.dao.group.history.CommonGroupChangeDaoExt;
 import de.ma_vin.ape.users.model.dao.group.history.PrivilegeGroupChangeDaoExt;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
 import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
+import de.ma_vin.ape.users.model.gen.domain.group.history.BaseGroupChange;
+import de.ma_vin.ape.users.model.gen.mapper.GroupHistoryAccessMapper;
 import de.ma_vin.ape.users.persistence.history.BaseGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.CommonGroupChangeRepository;
 import de.ma_vin.ape.users.persistence.history.PrivilegeGroupChangeRepository;
@@ -14,10 +17,12 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @Data
 @Log4j2
-public class BaseGroupChangeService extends AbstractChildChangeService<BaseGroupDao, PrivilegeGroupDao, BaseGroupDao> {
+public class BaseGroupChangeService extends AbstractChildChangeService<BaseGroupDao, PrivilegeGroupDao, BaseGroupDao, BaseGroupChange> {
 
     @Autowired
     private BaseGroupChangeRepository baseGroupChangeRepository;
@@ -64,6 +69,13 @@ public class BaseGroupChangeService extends AbstractChildChangeService<BaseGroup
 
         privilegeGroupChangeRepository.markedAsDeleted(deletedObject, deletedObject.getIdentification());
         baseGroupChangeRepository.markedSubAsDeleted(deletedObject, deletedObject.getIdentification());
+    }
+
+    @Override
+    public List<BaseGroupChange> loadChanges(String identification) {
+        return baseGroupChangeRepository.findByBaseGroup(new BaseGroupDaoExt(identification)).stream()
+                .map(bgc -> GroupHistoryAccessMapper.convertToBaseGroupChange(bgc, false))
+                .toList();
     }
 
     @Override

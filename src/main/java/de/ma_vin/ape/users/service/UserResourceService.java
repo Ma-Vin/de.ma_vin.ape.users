@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.model.gen.dao.resource.UserResourceDao;
+import de.ma_vin.ape.users.model.gen.domain.history.AbstractChange;
 import de.ma_vin.ape.users.model.gen.domain.resource.UserResource;
 import de.ma_vin.ape.users.model.gen.mapper.ResourceAccessMapper;
 import de.ma_vin.ape.users.persistence.UserResourceRepository;
@@ -12,12 +13,14 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Component
 @Log4j2
 @Data
-public class UserResourceService extends AbstractRepositoryService<UserResourceDao> {
+public class UserResourceService extends AbstractRepositoryService<UserResourceDao, AbstractChange> {
     public static final String USER_RESOURCE_LOG_PARAM = "user resource";
 
     @Autowired
@@ -28,7 +31,7 @@ public class UserResourceService extends AbstractRepositoryService<UserResourceD
         return new RepositoryServiceContext<>(identification, UserResource.class.getSimpleName(), UserResource.ID_PREFIX, userResourceRepository, UserResourceDao::new);
     }
 
-    protected AbstractChangeService<UserResourceDao> getChangeService() {
+    protected AbstractChangeService<UserResourceDao, AbstractChange> getChangeService() {
         return new AbstractChangeService<>() {
 
             @SuppressWarnings("java:S1186")
@@ -44,6 +47,11 @@ public class UserResourceService extends AbstractRepositoryService<UserResourceD
             @SuppressWarnings("java:S1186")
             @Override
             public void delete(UserResourceDao deletedObject, String editorIdentification) {
+            }
+
+            @Override
+            public List<AbstractChange> loadChanges(String identification) {
+                return Collections.emptyList();
             }
         };
     }

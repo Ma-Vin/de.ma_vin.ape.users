@@ -16,6 +16,7 @@ import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.domain.user.history.UserChange;
 import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.persistence.history.UserChangeRepository;
@@ -37,7 +38,7 @@ import java.util.*;
 @Component
 @Log4j2
 @Data
-public class UserService extends AbstractChildRepositoryService<UserDao, PrivilegeGroupDao, BaseGroupDao> {
+public class UserService extends AbstractChildRepositoryService<UserDao, PrivilegeGroupDao, BaseGroupDao, UserChange> {
 
     public static final String ADMIN_OR_COMMON_GROUP_LOG_PARAM = "admin or common group";
     public static final String ADMIN_GROUP_LOG_PARAM = "admin group";
@@ -78,7 +79,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
 
 
     @Override
-    protected AbstractChildChangeService<UserDao, PrivilegeGroupDao, BaseGroupDao> getChangeService() {
+    protected AbstractChildChangeService<UserDao, PrivilegeGroupDao, BaseGroupDao, UserChange> getChangeService() {
         return userChangeService;
     }
 

@@ -9,7 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface AdminGroupChangeRepository extends JpaRepository<AdminGroupChangeDao, Long> {
+
+    List<AdminGroupChangeDao> findByAdminGroup(AdminGroupDao adminGroup);
 
     @Transactional
     @Modifying

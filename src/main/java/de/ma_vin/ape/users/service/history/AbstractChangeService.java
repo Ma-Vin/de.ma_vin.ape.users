@@ -3,13 +3,18 @@ package de.ma_vin.ape.users.service.history;
 import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.model.gen.dao.IIdentifiableDao;
 import de.ma_vin.ape.users.model.gen.dao.history.AbstractChangeDao;
+import de.ma_vin.ape.users.model.gen.domain.history.AbstractChange;
 import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
+/**
+ * @param <T> dao class whose changes are handled
+ * @param <S> domain change class
+ */
 @Log4j2
-public abstract class AbstractChangeService<T extends IIdentifiableDao> {
+public abstract class AbstractChangeService<T extends IIdentifiableDao, S extends AbstractChange> {
     public static final String CHANGE_TEMPLATE = "%s: \"%s\" -> \"%s\"";
 
     /**
@@ -36,6 +41,14 @@ public abstract class AbstractChangeService<T extends IIdentifiableDao> {
      * @param editorIdentification the identification of the deleter
      */
     public abstract void delete(T deletedObject, String editorIdentification);
+
+    /**
+     * Loads changes for a given identification
+     *
+     * @param identification the identification of the object whose changes are to load
+     * @return the list of changes
+     */
+    public abstract List<S> loadChanges(String identification);
 
     /**
      * Sets the action and {@link ChangeType} of an existing object at an {@link AbstractChangeDao}

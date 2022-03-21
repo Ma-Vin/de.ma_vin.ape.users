@@ -3,6 +3,7 @@ package de.ma_vin.ape.users.service;
 
 import de.ma_vin.ape.users.model.gen.dao.group.AdminGroupDao;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.AdminGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
 import de.ma_vin.ape.users.persistence.AdminGroupRepository;
@@ -21,7 +22,7 @@ import java.util.Optional;
 @Component
 @Data
 @Log4j2
-public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> {
+public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao, AdminGroupChange> {
     public static final String GROUP_LOG_PARAM = "admin group";
     public static final String GROUPS_LOG_PARAM = "admin groups";
 
@@ -33,7 +34,7 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao> 
     private AdminGroupChangeService adminGroupChangeService;
 
     @Override
-    protected AbstractChangeService<AdminGroupDao> getChangeService() {
+    protected AbstractChangeService<AdminGroupDao, AdminGroupChange> getChangeService() {
         return adminGroupChangeService;
     }
 
