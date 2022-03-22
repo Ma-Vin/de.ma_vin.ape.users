@@ -253,12 +253,12 @@
                 <entity baseName="Change" models="DTO" description="Change events of entities during history">
                     <fields>
                         <field fieldName="subjectIdentification" type="String"
-                               shortDescription="The subject which is effected"/>
+                               shortDescription="The subject which is affected"/>
                         <field fieldName="changeType" type="ChangeType" typePackage="de.ma_vin.ape.users.enums"
                                isTypeEnum="true" shortDescription="The general type of action"/>
                         <field fieldName="action" type="String" shortDescription="The concrete action of this change"/>
                         <field fieldName="targetIdentification" type="String"
-                               shortDescription="The target which is effected"/>
+                               shortDescription="The target which is affected"/>
                         <field fieldName="editor" type="String" shortDescription="Editor of the change"/>
                         <field fieldName="changeTime" type="LocalDateTime" typePackage="java.time"
                                shortDescription="date time of the change"/>
