@@ -85,6 +85,11 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
         shared.getResultActions().andExpect(jsonPath("response[" + position + "]." + propertyName, is(propertyValue)));
     }
 
+    @Then("The {string} property at response position {int} is the same like the one of alias {string}")
+    public void checkPropertyAtCompareToAlias(String propertyName, int position, String alias) throws Exception {
+        shared.getResultActions().andExpect(jsonPath("response[" + position + "]." + propertyName, is(getIdentification(alias))));
+    }
+
     @Then("The {string} property at response position {int} is {int}")
     public void checkPropertyAt(String propertyName, int position, Integer propertyValue) throws Exception {
         shared.getResultActions().andExpect(jsonPath("response[" + position + "]." + propertyName, is(propertyValue)));

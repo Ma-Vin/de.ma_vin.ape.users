@@ -169,7 +169,7 @@ public class ChangeTransportMapper {
 
         result.setChangeType(sourceChange.getChangeType());
         result.setChangeTime(sourceChange.getChangeTime());
-        result.setEditor(sourceChange.getEditor().getIdentification());
+        result.setEditor(sourceChange.getEditor() != null ? sourceChange.getEditor().getIdentification() : null);
         result.setAction(sourceChange.getAction());
 
         return result;

@@ -1,13 +1,22 @@
 package de.ma_vin.ape.users.controller;
 
+import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.AdminGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.domain.user.history.UserChange;
 import de.ma_vin.ape.users.model.gen.dto.group.AdminGroupDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
 import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
 import de.ma_vin.ape.users.service.AdminGroupService;
 import de.ma_vin.ape.users.service.UserService;
+import de.ma_vin.ape.users.service.history.AdminGroupChangeService;
+import de.ma_vin.ape.users.service.history.UserChangeService;
+import de.ma_vin.ape.utils.controller.response.Message;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
+import de.ma_vin.ape.utils.generators.IdGenerator;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,12 +42,16 @@ import static org.mockito.MockitoAnnotations.openMocks;
  * {@link AdminController} is the class under test
  */
 public class AdminControllerTest {
-    public static final String ADMIN_GROUP_IDENTIFICATION = "GA00001";
-    public static final String USER_IDENTIFICATION = "UA00001";
+    public static final Long ADMIN_GROUP_ID = 1L;
+    public static final Long USER_ID = 2L;
+    public static final Long EDITOR_ID = 3L;
+    public static final String ADMIN_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ADMIN_GROUP_ID, AdminGroup.ID_PREFIX);
+    public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
+    public static final String EDITOR_IDENTIFICATION = IdGenerator.generateIdentification(EDITOR_ID, User.ID_PREFIX);
     public static final String DEFAULT_USER_FIRST_NAME = "DummyFirstName";
     public static final String DEFAULT_USER_LAST_NAME = "DummyLastName";
     public static final String USER_PASSWORD = "1 Dummy Password!";
-    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
+    public static final String PRINCIPAL_IDENTIFICATION = EDITOR_IDENTIFICATION;
 
     private AdminController cut;
     private AutoCloseable openMocks;
@@ -47,7 +61,13 @@ public class AdminControllerTest {
     @Mock
     private AdminGroupService adminGroupService;
     @Mock
+    private AdminGroupChangeService adminGroupChangeService;
+    @Mock
+    private UserChangeService userChangeService;
+    @Mock
     private User user;
+    @Mock
+    private User editor;
     @Mock
     private UserDto userDto;
     @Mock
@@ -55,20 +75,32 @@ public class AdminControllerTest {
     @Mock
     private AdminGroupDto adminGroupDto;
     @Mock
+    private AdminGroupChange adminGroupChange;
+    @Mock
+    private UserChange userChange;
+    @Mock
     private Principal principal;
 
     @BeforeEach
     public void setUp() {
         openMocks = openMocks(this);
 
+        SystemProperties.getInstance().setTestingDateTime(LocalDateTime.of(2022, 3, 26, 20, 4, 0));
+
         cut = new AdminController();
 
         cut.setUserService(userService);
         cut.setAdminGroupService(adminGroupService);
+        cut.setAdminGroupChangeService(adminGroupChangeService);
+        cut.setUserChangeService(userChangeService);
 
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.getFirstName()).thenReturn(DEFAULT_USER_FIRST_NAME);
         when(user.getLastName()).thenReturn(DEFAULT_USER_LAST_NAME);
+
+        when(editor.getIdentification()).thenReturn(EDITOR_IDENTIFICATION);
+
+        when(adminGroup.getIdentification()).thenReturn(ADMIN_GROUP_IDENTIFICATION);
 
         when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
     }
@@ -169,7 +201,6 @@ public class AdminControllerTest {
     }
 
     private void mockDefaultGetAdmin() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
     }
@@ -265,7 +296,6 @@ public class AdminControllerTest {
     @DisplayName("Delete an user")
     @Test
     public void testDeleteAdmin() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.TRUE);
@@ -287,7 +317,6 @@ public class AdminControllerTest {
     @DisplayName("Delete an non existing user")
     @Test
     public void testDeleteAdminNonExisting() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.FALSE);
@@ -304,7 +333,6 @@ public class AdminControllerTest {
     @DisplayName("Delete an non global admin")
     @Test
     public void testDeleteAdminNonGlobalAdmin() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.FALSE);
@@ -326,7 +354,6 @@ public class AdminControllerTest {
     @DisplayName("Delete an user but still existing afterwards")
     @Test
     public void testDeleteAdminExistingAfterDeletion() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.TRUE);
@@ -492,7 +519,6 @@ public class AdminControllerTest {
     }
 
     private void mockDefaultGetAllAdmins() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
         when(userService.findAllUsersAtAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
     }
@@ -503,7 +529,6 @@ public class AdminControllerTest {
     }
 
     private void mockDefaultUpdateAdminWithoutSaving() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
@@ -513,7 +538,6 @@ public class AdminControllerTest {
     @DisplayName("Get a admin group")
     @Test
     public void testGetAdminGroup() {
-        when(adminGroup.getIdentification()).thenReturn(ADMIN_GROUP_IDENTIFICATION);
         when(adminGroupService.findAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION))).thenReturn(Optional.of(adminGroup));
 
         ResponseWrapper<AdminGroupDto> response = cut.getAdminGroup(ADMIN_GROUP_IDENTIFICATION);
@@ -603,7 +627,6 @@ public class AdminControllerTest {
     }
 
     private void mockDefaultUpdateAdminGroupWithoutSaving() {
-        when(adminGroup.getIdentification()).thenReturn(ADMIN_GROUP_IDENTIFICATION);
         when(adminGroupDto.getIdentification()).thenReturn(ADMIN_GROUP_IDENTIFICATION);
         when(adminGroupService.findAdminGroup(eq(ADMIN_GROUP_IDENTIFICATION))).thenReturn(Optional.of(adminGroup));
     }
@@ -613,4 +636,109 @@ public class AdminControllerTest {
         when(adminGroupService.save(any(), any())).then(a -> Optional.of(a.getArgument(0)));
     }
 
+    @DisplayName("Get history of an admin group")
+    @Test
+    public void testGetAdminGroupHistory() {
+        when(adminGroupChangeService.loadChanges(eq(ADMIN_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(adminGroupChange));
+        when(adminGroupChange.getAdminGroup()).thenReturn(adminGroup);
+        when(adminGroupChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(adminGroupChange.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(adminGroupChange.getEditor()).thenReturn(editor);
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getAdminGroupHistory(ADMIN_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of changes");
+        ChangeDto change = response.getResponse().get(0);
+        assertEquals(ADMIN_GROUP_IDENTIFICATION, change.getSubjectIdentification(), "Wrong admin group id");
+        assertEquals(ChangeType.CREATE, change.getChangeType(), "Wrong change typ");
+        assertEquals(SystemProperties.getSystemDateTime(), change.getChangeTime(), "Wrong change time");
+        assertEquals(EDITOR_IDENTIFICATION, change.getEditor(), "Wrong editor id");
+
+        verify(adminGroupChangeService).loadChanges(eq(ADMIN_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Get empty history of an admin group")
+    @Test
+    public void testGetAdminGroupHistoryEmpty() {
+        when(adminGroupChangeService.loadChanges(any())).thenReturn(Collections.emptyList());
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getAdminGroupHistory(ADMIN_GROUP_IDENTIFICATION);
+
+        checkWarn(response);
+        assertTrue(response.getMessages().stream()
+                        .map(Message::getMessageText)
+                        .anyMatch(String.format("No changes were found for admin group %s, but at least one creation should exist at history", ADMIN_GROUP_IDENTIFICATION)::equals)
+                , "Missing warning message");
+
+        verify(adminGroupChangeService).loadChanges(eq(ADMIN_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Get history of an admin")
+    @Test
+    public void testGetAdminHistory() {
+        when(userChangeService.loadChanges(eq(USER_IDENTIFICATION))).thenReturn(Collections.singletonList(userChange));
+        when(userChange.getUser()).thenReturn(user);
+        when(userChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(userChange.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(userChange.getEditor()).thenReturn(editor);
+        when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
+        when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getAdminHistory(USER_IDENTIFICATION);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of changes");
+        ChangeDto change = response.getResponse().get(0);
+        assertEquals(USER_IDENTIFICATION, change.getSubjectIdentification(), "Wrong admin group id");
+        assertEquals(ChangeType.CREATE, change.getChangeType(), "Wrong change typ");
+        assertEquals(SystemProperties.getSystemDateTime(), change.getChangeTime(), "Wrong change time");
+        assertEquals(EDITOR_IDENTIFICATION, change.getEditor(), "Wrong editor id");
+
+        verify(userChangeService).loadChanges(eq(USER_IDENTIFICATION));
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+    }
+
+    @DisplayName("Get history of an admin, but is not an admin")
+    @Test
+    public void testGetAdminHistoryNonAdmin() {
+        when(userChangeService.loadChanges(eq(USER_IDENTIFICATION))).thenReturn(Collections.singletonList(userChange));
+        when(userChange.getUser()).thenReturn(user);
+        when(userChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(userChange.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(userChange.getEditor()).thenReturn(editor);
+        when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
+        when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getAdminHistory(USER_IDENTIFICATION);
+
+        checkError(response);
+        assertTrue(response.getMessages().stream()
+                        .map(Message::getMessageText)
+                        .anyMatch(String.format("There cannot be any admin history for an non admin user %s", USER_IDENTIFICATION)::equals)
+                , "Missing error message");
+
+        verify(userChangeService, never()).loadChanges(eq(USER_IDENTIFICATION));
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+    }
+
+    @DisplayName("Get history of an admin")
+    @Test
+    public void testGetAdminHistoryEmpty() {
+        when(userChangeService.loadChanges(any())).thenReturn(Collections.emptyList());
+        when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
+        when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
+
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getAdminHistory(USER_IDENTIFICATION);
+
+        checkWarn(response);
+        assertTrue(response.getMessages().stream()
+                        .map(Message::getMessageText)
+                        .anyMatch(String.format("No changes were found for admin %s, but at least one creation should exist at history", USER_IDENTIFICATION)::equals)
+                , "Missing warning message");
+
+        verify(userChangeService).loadChanges(eq(USER_IDENTIFICATION));
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+    }
 }

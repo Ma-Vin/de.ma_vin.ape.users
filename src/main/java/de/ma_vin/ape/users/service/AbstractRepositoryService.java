@@ -142,8 +142,9 @@ public abstract class AbstractRepositoryService<S extends IIdentifiableDao, Q ex
 
         daoObject = context.getAdoption().takeOver(daoObject, storedDao.get());
 
-        daoObject = context.getRepository().save(daoObject);
         getChangeService().saveChange(daoObject, storedDao.get(), context.getEditorIdentification());
+
+        daoObject = context.getRepository().save(daoObject);
 
         result = context.getDomainConverter().convert(daoObject);
         log.debug("The {} with identification {} was saved", simpleClassName, result.getIdentification());

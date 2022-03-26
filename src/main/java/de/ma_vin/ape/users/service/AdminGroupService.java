@@ -149,11 +149,11 @@ public class AdminGroupService extends AbstractRepositoryService<AdminGroupDao, 
             return Optional.empty();
         }
 
+        adminGroupChangeService.saveChange(adminGroupDao, storedAdminGroupDao.get(), editorIdentification);
+
         adminGroupDao = adminGroupRepository.save(adminGroupDao);
         AdminGroup result = GroupAccessMapper.convertToAdminGroup(adminGroupDao, false);
         log.debug("The admin group with identification {} was saved", result.getIdentification());
-
-        adminGroupChangeService.saveChange(adminGroupDao, storedAdminGroupDao.get(), editorIdentification);
 
         return Optional.of(result);
     }

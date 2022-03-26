@@ -3,16 +3,22 @@ package de.ma_vin.ape.users.controller;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.AdminGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.domain.user.history.UserChange;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.AdminGroupDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
 import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.UserPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.UserTransportMapper;
+import de.ma_vin.ape.users.model.mapper.ChangeTransportMapper;
 import de.ma_vin.ape.users.service.AdminGroupService;
 import de.ma_vin.ape.users.service.UserService;
+import de.ma_vin.ape.users.service.history.AdminGroupChangeService;
+import de.ma_vin.ape.users.service.history.UserChangeService;
 import de.ma_vin.ape.utils.controller.response.ResponseUtil;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import lombok.Data;
@@ -21,12 +27,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createEmptyResponseWithError;
-import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createSuccessResponse;
+import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
 
 @RestController
 @RequestMapping(path = "admin")
@@ -37,6 +43,10 @@ public class AdminController extends AbstractDefaultOperationController {
     private UserService userService;
     @Autowired
     private AdminGroupService adminGroupService;
+    @Autowired
+    private AdminGroupChangeService adminGroupChangeService;
+    @Autowired
+    private UserChangeService userChangeService;
 
 
     @PreAuthorize("isGlobalAdmin()")
@@ -59,6 +69,17 @@ public class AdminController extends AbstractDefaultOperationController {
                 , GroupTransportMapper::convertToAdminGroupDto
                 , GroupTransportMapper::convertToAdminGroup
         );
+    }
+
+    @PreAuthorize("isGlobalAdmin()")
+    @GetMapping("/getAdminGroupHistory/{adminGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<ChangeDto>> getAdminGroupHistory(@PathVariable String adminGroupIdentification) {
+        List<AdminGroupChange> changes = adminGroupChangeService.loadChanges(adminGroupIdentification);
+        if (changes.isEmpty()) {
+            return createResponseWithWarning(Collections.emptyList(), String.format("No changes were found for admin group %s, but at least one creation should exist at history", adminGroupIdentification));
+        }
+        return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
     }
 
     @PreAuthorize("isGlobalAdmin()")
@@ -155,6 +176,21 @@ public class AdminController extends AbstractDefaultOperationController {
             return createSuccessResponse(Boolean.TRUE);
         }
         return createEmptyResponseWithError(String.format("The password could not be set at user with identification %s", userIdentification));
+    }
+
+    @PreAuthorize("isGlobalAdmin()")
+    @GetMapping("/getAdminHistory/{userIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<ChangeDto>> getAdminHistory(@PathVariable String userIdentification) {
+        Optional<User> admin = getGlobalAdminSearcher().find(userIdentification);
+        if (admin.isEmpty()) {
+            return createEmptyResponseWithError(String.format("There cannot be any admin history for an non admin user %s", userIdentification));
+        }
+        List<UserChange> changes = userChangeService.loadChanges(userIdentification);
+        if (changes.isEmpty()) {
+            return createResponseWithWarning(Collections.emptyList(), String.format("No changes were found for admin %s, but at least one creation should exist at history", userIdentification));
+        }
+        return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
     }
 
     /**

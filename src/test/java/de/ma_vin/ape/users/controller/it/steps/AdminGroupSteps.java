@@ -42,6 +42,19 @@ public class AdminGroupSteps extends AbstractIntegrationTestSteps {
         shared.put(adminGroupAlias, TestUtil.getObjectMapper().readValue(getAdminGroupText, AdminGroupDto.class));
     }
 
+    @Given("The admin with identification {string} is known as alias {string}")
+    public void getAdmin(String identification, String admin) throws Exception {
+        MockHttpServletResponse getAdminResponse = performGetWithAuthorization("/admin/getAdmin", identification)
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("status", is(Status.OK.name())))
+                .andExpect(jsonPath("response.identification", anything()))
+                .andReturn().getResponse();
+
+        String getAdminText = TestUtil.getObjectMapper().readTree(getAdminResponse.getContentAsString()).findValue("response").toString();
+        shared.put(admin, TestUtil.getObjectMapper().readValue(getAdminText, UserDto.class));
+    }
+
     @Given("There exists an admin with first name {string} and last name {string} with alias {string} at admin group {string}")
     public void createAdmin(String firstName, String lastName, String adminAlias, String adminGroupAlias) throws Exception {
         if (!shared.containsKey(adminGroupAlias)) {
@@ -127,6 +140,16 @@ public class AdminGroupSteps extends AbstractIntegrationTestSteps {
     @When("Controller is called to update the admin group with the identification of the alias {string}")
     public void callControllerToUpdateAdminGroup(String adminGroupAlias) {
         shared.setResultActions(performPutWithAuthorization("/admin/updateAdminGroup", getIdentification(adminGroupAlias), adminGroupAlias));
+    }
+
+    @When("Controller is called to get the history of admin group with the identification of the alias {string}")
+    public void callControllerToGetAdminGroupHistory(String adminGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/admin/getAdminGroupHistory", getIdentification(adminGroupAlias)));
+    }
+
+    @When("Controller is called to get the history of admin with the identification of the alias {string}")
+    public void callControllerToGetAdminHistory(String adminAlias) {
+        shared.setResultActions(performGetWithAuthorization("/admin/getAdminHistory", getIdentification(adminAlias)));
     }
 
     @Then("The response is equal to the number of created admins")
