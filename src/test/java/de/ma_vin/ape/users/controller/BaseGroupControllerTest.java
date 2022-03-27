@@ -1,15 +1,22 @@
 package de.ma_vin.ape.users.controller;
 
+import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.BaseGroupChange;
+import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.BaseGroupPartDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.service.BaseGroupService;
+import de.ma_vin.ape.users.service.history.BaseGroupChangeService;
+import de.ma_vin.ape.utils.controller.response.Message;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.generators.IdGenerator;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +32,7 @@ import java.util.Optional;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -35,11 +44,13 @@ public class BaseGroupControllerTest {
     public static final Long BASE_GROUP_ID = 2L;
     public static final Long PRIVILEGE_GROUP_ID = 3L;
     public static final Long PARENT_BASE_GROUP_ID = 4L;
+    public static final Long EDITOR_ID = 5L;
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String PARENT_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PARENT_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
-    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
+    public static final String EDITOR_IDENTIFICATION = IdGenerator.generateIdentification(EDITOR_ID, User.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = EDITOR_IDENTIFICATION;
 
     private AutoCloseable openMocks;
     private BaseGroupController cut;
@@ -47,11 +58,17 @@ public class BaseGroupControllerTest {
     @Mock
     private BaseGroupService baseGroupService;
     @Mock
+    private BaseGroupChangeService baseGroupChangeService;
+    @Mock
     private BaseGroup baseGroup;
     @Mock
     private BaseGroupDto baseGroupDto;
     @Mock
     private BaseGroupIdRoleDto baseGroupIdRoleDto;
+    @Mock
+    private User editor;
+    @Mock
+    private BaseGroupChange baseGroupChange;
     @Mock
     private Principal principal;
 
@@ -60,10 +77,15 @@ public class BaseGroupControllerTest {
     public void setUp() {
         openMocks = openMocks(this);
 
+        SystemProperties.getInstance().setTestingDateTime(LocalDateTime.of(2022, 3, 27, 13, 7, 0));
+
         cut = new BaseGroupController();
         cut.setBaseGroupService(baseGroupService);
+        cut.setBaseGroupChangeService(baseGroupChangeService);
 
         when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
+        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(editor.getIdentification()).thenReturn(EDITOR_IDENTIFICATION);
     }
 
     @AfterEach
@@ -101,7 +123,6 @@ public class BaseGroupControllerTest {
     @DisplayName("Delete a base group")
     @Test
     public void testDeleteBaseGroup() {
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
         when(baseGroupService.baseGroupExits(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Boolean.TRUE);
         doAnswer(a -> {
@@ -122,7 +143,6 @@ public class BaseGroupControllerTest {
     @DisplayName("Delete a non existing base group")
     @Test
     public void testDeleteBaseGroupNonExisting() {
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
         when(baseGroupService.baseGroupExits(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
@@ -138,7 +158,6 @@ public class BaseGroupControllerTest {
     @DisplayName("Delete a base group but still existing afterwards")
     @Test
     public void testDeleteBaseGroupExistingAfterDeletion() {
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
         when(baseGroupService.baseGroupExits(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Boolean.TRUE);
         doAnswer(a -> {
@@ -158,7 +177,6 @@ public class BaseGroupControllerTest {
     @DisplayName("Get a base group")
     @Test
     public void testGetBaseGroup() {
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
 
         ResponseWrapper<BaseGroupDto> response = cut.getBaseGroup(BASE_GROUP_IDENTIFICATION);
@@ -183,7 +201,6 @@ public class BaseGroupControllerTest {
     @DisplayName("Update a base group")
     @Test
     public void testUpdateBaseGroup() {
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupDto.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
         when(baseGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
@@ -216,7 +233,6 @@ public class BaseGroupControllerTest {
     @DisplayName("Update a base group without save return")
     @Test
     public void testUpdateBaseGroupNoSaveReturn() {
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupDto.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(baseGroup));
         when(baseGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.empty());
@@ -481,7 +497,6 @@ public class BaseGroupControllerTest {
     private void mockDefaultFindAllBaseAtBaseGroup() {
         when(baseGroupService.findAllBasesAtBaseGroup(any())).thenReturn(Collections.singletonList(baseGroup));
         when(baseGroupService.findAllBasesAtBaseGroup(any(), any(), any())).thenReturn(Collections.singletonList(baseGroup));
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
     }
 
     @DisplayName("Find all base group parts at base group")
@@ -683,7 +698,6 @@ public class BaseGroupControllerTest {
     }
 
     private void mockDefaultGetAvailableBasesForBaseGroup() {
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findAllAvailableBasesForBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroup));
         when(baseGroupService.findAllAvailableBasesForBaseGroup(eq(PARENT_BASE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(baseGroup));
     }
@@ -757,7 +771,6 @@ public class BaseGroupControllerTest {
     private void mockDefaultFindAllBaseAtPrivilegeGroup() {
         when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any())).thenReturn(Collections.singletonList(baseGroup));
         when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any(), any(), any())).thenReturn(Collections.singletonList(baseGroup));
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
     }
 
     @DisplayName("Find all base group parts at privilege group")
@@ -973,7 +986,6 @@ public class BaseGroupControllerTest {
     }
 
     private void mockDefaultGetAvailableBasesForPrivilegeGroup() {
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupService.findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroup));
         when(baseGroupService.findAllAvailableBasesForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(baseGroup));
     }
@@ -1115,6 +1127,43 @@ public class BaseGroupControllerTest {
     private void mockDefaultGetAllBaseGroups() {
         when(baseGroupService.findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroup));
         when(baseGroupService.findAllBaseGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(baseGroup));
-        when(baseGroup.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+    }
+
+    @DisplayName("Get history of a base group")
+    @Test
+    public void testGetPrivilegeGroupHistory() {
+        when(baseGroupChangeService.loadChanges(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(baseGroupChange));
+        when(baseGroupChange.getBaseGroup()).thenReturn(baseGroup);
+        when(baseGroupChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(baseGroupChange.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(baseGroupChange.getEditor()).thenReturn(editor);
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getBaseGroupHistory(BASE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of changes");
+        ChangeDto change = response.getResponse().get(0);
+        assertEquals(BASE_GROUP_IDENTIFICATION, change.getSubjectIdentification(), "Wrong admin group id");
+        assertEquals(ChangeType.CREATE, change.getChangeType(), "Wrong change typ");
+        assertEquals(SystemProperties.getSystemDateTime(), change.getChangeTime(), "Wrong change time");
+        assertEquals(EDITOR_IDENTIFICATION, change.getEditor(), "Wrong editor id");
+
+        verify(baseGroupChangeService).loadChanges(eq(BASE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Get empty history of a base group")
+    @Test
+    public void testGetPrivilegeGroupHistoryEmpty() {
+        when(baseGroupChangeService.loadChanges(any())).thenReturn(Collections.emptyList());
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getBaseGroupHistory(BASE_GROUP_IDENTIFICATION);
+
+        checkWarn(response);
+        assertTrue(response.getMessages().stream()
+                        .map(Message::getMessageText)
+                        .anyMatch(String.format("No changes were found for base group %s, but at least one creation should exist at history", BASE_GROUP_IDENTIFICATION)::equals)
+                , "Missing warning message");
+
+        verify(baseGroupChangeService).loadChanges(eq(BASE_GROUP_IDENTIFICATION));
     }
 }

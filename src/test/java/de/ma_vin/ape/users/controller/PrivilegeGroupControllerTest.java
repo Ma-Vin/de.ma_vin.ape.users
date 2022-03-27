@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,6 +66,8 @@ public class PrivilegeGroupControllerTest {
     @BeforeEach
     public void setUp() {
         openMocks = openMocks(this);
+
+        SystemProperties.getInstance().setTestingDateTime(LocalDateTime.of(2022, 3, 27, 13, 7, 0));
 
         cut = new PrivilegeGroupController();
         cut.setPrivilegeGroupService(privilegeGroupService);

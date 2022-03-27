@@ -1,14 +1,5 @@
 package de.ma_vin.ape.users.controller;
 
-import static de.ma_vin.ape.users.controller.AbstractDefaultOperationController.DEFAULT_PAGE;
-import static de.ma_vin.ape.users.controller.AbstractDefaultOperationController.DEFAULT_SIZE;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.openMocks;
-import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
-
 import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.history.CommonGroupChange;
@@ -29,10 +20,21 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import static de.ma_vin.ape.users.controller.AbstractDefaultOperationController.DEFAULT_PAGE;
+import static de.ma_vin.ape.users.controller.AbstractDefaultOperationController.DEFAULT_SIZE;
+import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 public class CommonGroupControllerTest {
 
@@ -64,6 +66,8 @@ public class CommonGroupControllerTest {
     @BeforeEach
     public void setUp() {
         openMocks = openMocks(this);
+
+        SystemProperties.getInstance().setTestingDateTime(LocalDateTime.of(2022, 3, 27, 13, 7, 0));
 
         cut = new CommonGroupController();
         cut.setCommonGroupService(commonGroupService);

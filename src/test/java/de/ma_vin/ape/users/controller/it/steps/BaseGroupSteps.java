@@ -245,4 +245,9 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
         MultiValueMap<String, String> getAllBaseGroupValues = createValueMap("page", "" + page, "size", "" + size);
         shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseGroups", getIdentification(commonGroupAlias), getAllBaseGroupValues));
     }
+
+    @When("Controller is called to get the history of base group with the identification of the alias {string}")
+    public void callControllerToGetBaseGroupHistory(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getBaseGroupHistory", getIdentification(baseGroupAlias)));
+    }
 }

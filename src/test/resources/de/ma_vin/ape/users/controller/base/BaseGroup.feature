@@ -35,7 +35,7 @@ Feature: Testing methods of the base group controller
     And The identification at 0 is the same like the one of alias "base"
     And The "identification" property at response position 1 does not exists
 
-  Scenario: Update and get base group
+  Scenario: Update, get base group and check history
     Given There exists a base group with name "Base Group Name" with alias "base" at common group "common"
     And The "description" of the base group with alias "base" is set to "anythingNew"
     When Controller is called to update the base group with the identification of the alias "base"
@@ -48,6 +48,15 @@ Feature: Testing methods of the base group controller
     And The status of the result should be "OK"
     And The "description" property at response is "anythingNew"
     And The identification is the same like the one of alias "base"
+    When Controller is called to get the history of base group with the identification of the alias "base"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The "subjectIdentification" property at response position 0 is the same like the one of alias "base"
+    And The "changeType" property at response position 0 is "CREATE"
+    And The "subjectIdentification" property at response position 1 is the same like the one of alias "base"
+    And The "changeType" property at response position 1 is "MODIFY"
+    And The "action" property at response position 1 is "Description: \"null\" -> \"anythingNew\""
+    And At response position 2 does not exists
 
   Scenario: Add, count and remove sub base groups
     Given There exists a base group with name "Parent Base Group Name" with alias "parentBase" at common group "common"
