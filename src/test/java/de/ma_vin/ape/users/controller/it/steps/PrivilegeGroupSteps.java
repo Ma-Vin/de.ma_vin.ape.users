@@ -98,4 +98,9 @@ public class PrivilegeGroupSteps extends AbstractIntegrationTestSteps {
                 , "size", "" + size);
         shared.setResultActions(performGetWithAuthorization("/group/privilege/getAllPrivilegeGroups", getIdentification(commonGroupAlias), getAllPrivilegeGroupValues));
     }
+
+    @When("Controller is called to get the history of privilege group with the identification of the alias {string}")
+    public void callControllerToGetPrivilegeGroupHistory(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/privilege/getPrivilegeGroupHistory", getIdentification(privilegeGroupAlias)));
+    }
 }

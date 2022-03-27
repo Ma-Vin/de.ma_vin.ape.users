@@ -1,12 +1,19 @@
 package de.ma_vin.ape.users.controller;
 
+import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.PrivilegeGroupChange;
+import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.PrivilegeGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.PrivilegeGroupPartDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
+import de.ma_vin.ape.users.service.history.PrivilegeGroupChangeService;
+import de.ma_vin.ape.utils.controller.response.Message;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.generators.IdGenerator;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +28,7 @@ import java.util.Optional;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -30,9 +38,11 @@ public class PrivilegeGroupControllerTest {
 
     public static final Long COMMON_GROUP_ID = 1L;
     public static final Long PRIVILEGE_GROUP_ID = 2L;
+    public static final Long EDITOR_ID = 3L;
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
-    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
+    public static final String EDITOR_IDENTIFICATION = IdGenerator.generateIdentification(EDITOR_ID, User.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = EDITOR_IDENTIFICATION;
 
     private AutoCloseable openMocks;
     private PrivilegeGroupController cut;
@@ -40,9 +50,15 @@ public class PrivilegeGroupControllerTest {
     @Mock
     private PrivilegeGroupService privilegeGroupService;
     @Mock
+    private PrivilegeGroupChangeService privilegeGroupChangeService;
+    @Mock
     private PrivilegeGroup privilegeGroup;
     @Mock
     private PrivilegeGroupDto privilegeGroupDto;
+    @Mock
+    private User editor;
+    @Mock
+    private PrivilegeGroupChange privilegeGroupChange;
     @Mock
     private Principal principal;
 
@@ -52,8 +68,11 @@ public class PrivilegeGroupControllerTest {
 
         cut = new PrivilegeGroupController();
         cut.setPrivilegeGroupService(privilegeGroupService);
+        cut.setPrivilegeGroupChangeService(privilegeGroupChangeService);
 
         when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
+        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(editor.getIdentification()).thenReturn(EDITOR_IDENTIFICATION);
     }
 
     @AfterEach
@@ -91,7 +110,6 @@ public class PrivilegeGroupControllerTest {
     @DisplayName("Delete a privilege group")
     @Test
     public void testDeletePrivilegeGroup() {
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
         when(privilegeGroupService.privilegeGroupExits(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Boolean.TRUE);
         doAnswer(a -> {
@@ -112,7 +130,6 @@ public class PrivilegeGroupControllerTest {
     @DisplayName("Delete a non existing privilege group")
     @Test
     public void testDeletePrivilegeGroupNonExisting() {
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
         when(privilegeGroupService.privilegeGroupExits(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
@@ -128,7 +145,6 @@ public class PrivilegeGroupControllerTest {
     @DisplayName("Delete a privilege group but still existing afterwards")
     @Test
     public void testDeletePrivilegeGroupExistingAfterDeletion() {
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
         when(privilegeGroupService.privilegeGroupExits(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Boolean.TRUE);
         doAnswer(a -> {
@@ -148,7 +164,6 @@ public class PrivilegeGroupControllerTest {
     @DisplayName("Get a privilege group")
     @Test
     public void testGetPrivilegeGroup() {
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
 
         ResponseWrapper<PrivilegeGroupDto> response = cut.getPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
@@ -173,7 +188,6 @@ public class PrivilegeGroupControllerTest {
     @DisplayName("Update a privilege group")
     @Test
     public void testUpdatePrivilegeGroup() {
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupDto.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
         when(privilegeGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.of(a.getArgument(0)));
@@ -206,7 +220,6 @@ public class PrivilegeGroupControllerTest {
     @DisplayName("Update a privilege group without save return")
     @Test
     public void testUpdatePrivilegeGroupNoSaveReturn() {
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupDto.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Optional.of(privilegeGroup));
         when(privilegeGroupService.save(any(), eq(PRINCIPAL_IDENTIFICATION))).then(a -> Optional.empty());
@@ -393,8 +406,45 @@ public class PrivilegeGroupControllerTest {
     }
 
     private void mockDefaultGetAllPrivilegeGroups() {
-        when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(privilegeGroupService.findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(privilegeGroup));
         when(privilegeGroupService.findAllPrivilegeGroups(eq(COMMON_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(privilegeGroup));
+    }
+
+    @DisplayName("Get history of a privilege group")
+    @Test
+    public void testGetPrivilegeGroupHistory() {
+        when(privilegeGroupChangeService.loadChanges(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(privilegeGroupChange));
+        when(privilegeGroupChange.getPrivilegeGroup()).thenReturn(privilegeGroup);
+        when(privilegeGroupChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(privilegeGroupChange.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(privilegeGroupChange.getEditor()).thenReturn(editor);
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getPrivilegeGroupHistory(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of changes");
+        ChangeDto change = response.getResponse().get(0);
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, change.getSubjectIdentification(), "Wrong admin group id");
+        assertEquals(ChangeType.CREATE, change.getChangeType(), "Wrong change typ");
+        assertEquals(SystemProperties.getSystemDateTime(), change.getChangeTime(), "Wrong change time");
+        assertEquals(EDITOR_IDENTIFICATION, change.getEditor(), "Wrong editor id");
+
+        verify(privilegeGroupChangeService).loadChanges(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Get empty history of a privilege group")
+    @Test
+    public void testGetPrivilegeGroupHistoryEmpty() {
+        when(privilegeGroupChangeService.loadChanges(any())).thenReturn(Collections.emptyList());
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getPrivilegeGroupHistory(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        checkWarn(response);
+        assertTrue(response.getMessages().stream()
+                        .map(Message::getMessageText)
+                        .anyMatch(String.format("No changes were found for privilege group %s, but at least one creation should exist at history", PRIVILEGE_GROUP_IDENTIFICATION)::equals)
+                , "Missing warning message");
+
+        verify(privilegeGroupChangeService).loadChanges(eq(PRIVILEGE_GROUP_IDENTIFICATION));
     }
 }

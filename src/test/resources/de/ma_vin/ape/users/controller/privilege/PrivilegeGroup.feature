@@ -35,7 +35,7 @@ Feature: Testing methods of the privilege group controller
     And The identification at 0 is the same like the one of alias "privilege"
     And The "identification" property at response position 1 does not exists
 
-  Scenario: Update and get privilege group
+  Scenario: Update, get privilege group and check history
     Given There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"
     And The "description" of the privilege group with alias "privilege" is set to "anythingNew"
     When Controller is called to update the privilege group with the identification of the alias "privilege"
@@ -48,6 +48,15 @@ Feature: Testing methods of the privilege group controller
     And The status of the result should be "OK"
     And The "description" property at response is "anythingNew"
     And The identification is the same like the one of alias "privilege"
+    When Controller is called to get the history of privilege group with the identification of the alias "privilege"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The "subjectIdentification" property at response position 0 is the same like the one of alias "privilege"
+    And The "changeType" property at response position 0 is "CREATE"
+    And The "subjectIdentification" property at response position 1 is the same like the one of alias "privilege"
+    And The "changeType" property at response position 1 is "MODIFY"
+    And The "action" property at response position 1 is "Description: \"null\" -> \"anythingNew\""
+    And At response position 2 does not exists
 
   Scenario: Delete privilege group
     Given There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"

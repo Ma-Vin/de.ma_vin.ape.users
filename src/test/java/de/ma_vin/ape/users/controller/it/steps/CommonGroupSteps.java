@@ -17,7 +17,6 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsAnything.anything;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 public class CommonGroupSteps extends AbstractIntegrationTestSteps {
 
@@ -123,7 +122,7 @@ public class CommonGroupSteps extends AbstractIntegrationTestSteps {
     }
 
     @When("Controller is called to get the history of common group with the identification of the alias {string}")
-    public void callControllerToGetAdminGroupHistory(String commonGroupAlias) {
+    public void callControllerToGetCommonGroupHistory(String commonGroupAlias) {
         shared.setResultActions(performGetWithAuthorization("/group/common/getCommonGroupHistory", getIdentification(commonGroupAlias)));
     }
 }

@@ -3,12 +3,16 @@ package de.ma_vin.ape.users.controller;
 
 import de.ma_vin.ape.users.model.domain.group.PrivilegeGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.PrivilegeGroupChange;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.PrivilegeGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.PrivilegeGroupPartDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.mapper.GroupPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
+import de.ma_vin.ape.users.model.mapper.ChangeTransportMapper;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
+import de.ma_vin.ape.users.service.history.PrivilegeGroupChangeService;
 import de.ma_vin.ape.utils.controller.response.ResponseUtil;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import lombok.Data;
@@ -18,10 +22,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createResponseWithWarning;
 import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createSuccessResponse;
 
 @RestController
@@ -32,6 +38,8 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
 
     @Autowired
     private PrivilegeGroupService privilegeGroupService;
+    @Autowired
+    private PrivilegeGroupChangeService privilegeGroupChangeService;
 
     @PreAuthorize("isManager(#commonGroupIdentification, 'COMMON')")
     @PostMapping("/createPrivilegeGroup")
@@ -118,5 +126,16 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
                 , identification -> privilegeGroupService.findAllPrivilegeGroups(identification)
                 , (identification, pageToUse, sizeToUse) -> privilegeGroupService.findAllPrivilegeGroups(identification, pageToUse, sizeToUse)
                 , mapper);
+    }
+
+    @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
+    @GetMapping("/getPrivilegeGroupHistory/{privilegeGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<ChangeDto>> getPrivilegeGroupHistory(@PathVariable String privilegeGroupIdentification) {
+        List<PrivilegeGroupChange> changes = privilegeGroupChangeService.loadChanges(privilegeGroupIdentification);
+        if (changes.isEmpty()) {
+            return createResponseWithWarning(Collections.emptyList(), String.format(NO_CHANGES_FOUND_WARNING_TEXT, "privilege group", privilegeGroupIdentification));
+        }
+        return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
     }
 }
