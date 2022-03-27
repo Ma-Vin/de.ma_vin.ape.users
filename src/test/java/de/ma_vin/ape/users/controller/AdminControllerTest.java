@@ -722,7 +722,7 @@ public class AdminControllerTest {
         verify(userService).findUser(eq(USER_IDENTIFICATION));
     }
 
-    @DisplayName("Get history of an admin")
+    @DisplayName("Get empty history of an admin")
     @Test
     public void testGetAdminHistoryEmpty() {
         when(userChangeService.loadChanges(any())).thenReturn(Collections.emptyList());
