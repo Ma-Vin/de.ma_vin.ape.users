@@ -3,17 +3,20 @@ package de.ma_vin.ape.users.controller;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.user.UserExt;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.domain.user.history.UserChange;
 import de.ma_vin.ape.users.model.gen.dto.IBasicTransportable;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.UserRolePartDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
 import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
 import de.ma_vin.ape.users.model.gen.mapper.UserPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.UserTransportMapper;
-import de.ma_vin.ape.users.service.PrivilegeGroupService;
+import de.ma_vin.ape.users.model.mapper.ChangeTransportMapper;
 import de.ma_vin.ape.users.service.UserService;
+import de.ma_vin.ape.users.service.history.UserChangeService;
 import de.ma_vin.ape.utils.controller.response.ResponseUtil;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.controller.response.Status;
@@ -23,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,7 +42,7 @@ public class UserController extends AbstractDefaultOperationController {
     @Autowired
     private UserService userService;
     @Autowired
-    private PrivilegeGroupService privilegeGroupService;
+    private UserChangeService userChangeService;
 
     @PreAuthorize("isContributor(#commonGroupIdentification, 'COMMON')")
     @PostMapping("/createUser")
@@ -154,6 +158,21 @@ public class UserController extends AbstractDefaultOperationController {
                 , identification -> userService.findAllUsersAtCommonGroup(identification)
                 , (identification, pageToUse, sizeToUse) -> userService.findAllUsersAtCommonGroup(identification, pageToUse, sizeToUse)
                 , mapper);
+    }
+
+    @PreAuthorize("isVisitor(#userIdentification, 'USER')")
+    @GetMapping("/getUserHistory/{userIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<ChangeDto>> getUserHistory(@PathVariable String userIdentification) {
+        Optional<User> user = getNonGlobalAdminSearcher().find(userIdentification);
+        if (user.isEmpty()) {
+            return createEmptyResponseWithError(String.format("There cannot be any user history for an admin %s", userIdentification));
+        }
+        List<UserChange> changes = userChangeService.loadChanges(userIdentification);
+        if (changes.isEmpty()) {
+            return createResponseWithWarning(Collections.emptyList(), String.format("No changes were found for user %s, but at least one creation should exist at history", userIdentification));
+        }
+        return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
     }
 
     @PreAuthorize("isManager(#privilegeGroupIdentification, 'PRIVILEGE')")

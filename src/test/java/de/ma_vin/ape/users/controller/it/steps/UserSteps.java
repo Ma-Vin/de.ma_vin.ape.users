@@ -142,6 +142,11 @@ public class UserSteps extends AbstractIntegrationTestSteps {
         shared.setResultActions(performGetWithAuthorization("/user/getAllUsers", getIdentification(commonGroupAlias), getAllUsersValues));
     }
 
+    @When("Controller is called to get the history of user with the identification of the alias {string}")
+    public void callControllerToGetAdminHistory(String userAlias) {
+        shared.setResultActions(performGetWithAuthorization("/user/getUserHistory", getIdentification(userAlias)));
+    }
+
     @When("Controller is called to add the user with alias {string} to base group with alias {string}")
     public void callControllerToAddUserToBaseGroup(String userAlias, String baseGroupAlias) {
         shared.setResultActions(performPatchWithAuthorization("/user/addUserToBaseGroup", getIdentification(baseGroupAlias)

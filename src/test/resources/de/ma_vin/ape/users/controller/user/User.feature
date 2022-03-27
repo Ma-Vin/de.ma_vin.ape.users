@@ -171,7 +171,7 @@ Feature: Testing methods of the user controller
     And The identification of "user" at 0 is the same like the one of alias "indirectUser"
     And At response position 1 does not exists
 
-  Scenario: Update and get user
+  Scenario: Update, get user and check changes
     Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"
     And The "mail" of the user with alias "user" is set to "anythingNew"
     When Controller is called to update the user with the identification of the alias "user"
@@ -184,6 +184,15 @@ Feature: Testing methods of the user controller
     And The status of the result should be "OK"
     And The "mail" property at response is "anythingNew"
     And The identification is the same like the one of alias "user"
+    When Controller is called to get the history of user with the identification of the alias "user"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The "subjectIdentification" property at response position 0 is the same like the one of alias "user"
+    And The "changeType" property at response position 0 is "CREATE"
+    And The "subjectIdentification" property at response position 1 is the same like the one of alias "user"
+    And The "changeType" property at response position 1 is "MODIFY"
+    And The "action" property at response position 1 is "Mail: \"null\" -> \"anythingNew\""
+    And At response position 2 does not exists
 
   Scenario: Delete user
     Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"

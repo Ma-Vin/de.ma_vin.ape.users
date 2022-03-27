@@ -73,6 +73,8 @@ Feature: Testing methods of the user controller
     Then The result is a <httpCodeRange>
     When Controller is called to get all user parts from common group with identification of "common"
     Then The result is a <httpCodeRange>
+    When Controller is called to get the history of user with the identification of the alias "userToGet"
+    Then The result is a <httpCodeRange>
     Examples:
       | role    | httpCodeRange |
     # indirect included: test only the httpCode switch from ok to not ok

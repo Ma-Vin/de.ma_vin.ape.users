@@ -1,18 +1,23 @@
 package de.ma_vin.ape.users.controller;
 
+import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
+import de.ma_vin.ape.users.model.gen.domain.user.history.UserChange;
 import de.ma_vin.ape.users.model.gen.dto.group.UserIdRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UserRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.UserRolePartDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.dto.user.UserDto;
 import de.ma_vin.ape.users.model.gen.dto.user.part.UserPartDto;
-import de.ma_vin.ape.users.service.PrivilegeGroupService;
 import de.ma_vin.ape.users.service.UserService;
+import de.ma_vin.ape.users.service.history.UserChangeService;
+import de.ma_vin.ape.utils.controller.response.Message;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.generators.IdGenerator;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
@@ -36,12 +42,14 @@ public class UserControllerTest {
     public static final Long BASE_GROUP_ID = 2L;
     public static final Long PRIVILEGE_GROUP_ID = 3L;
     public static final Long USER_ID = 4L;
+    public static final Long EDITOR_ID = 5L;
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, User.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
+    public static final String EDITOR_IDENTIFICATION = IdGenerator.generateIdentification(EDITOR_ID, User.ID_PREFIX);
     public static final String USER_PASSWORD = "1 Dummy Password!";
-    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
+    public static final String PRINCIPAL_IDENTIFICATION = EDITOR_IDENTIFICATION;
 
     private AutoCloseable openMocks;
 
@@ -50,13 +58,17 @@ public class UserControllerTest {
     @Mock
     private UserService userService;
     @Mock
-    private PrivilegeGroupService privilegeGroupService;
+    private UserChangeService userChangeService;
     @Mock
     private User user;
+    @Mock
+    private User editor;
     @Mock
     private UserDto userDto;
     @Mock
     private UserIdRoleDto userIdRoleDto;
+    @Mock
+    private UserChange userChange;
     @Mock
     private Principal principal;
 
@@ -64,11 +76,15 @@ public class UserControllerTest {
     public void setUp() {
         openMocks = openMocks(this);
 
+        SystemProperties.getInstance().setTestingDateTime(LocalDateTime.of(2022, 3, 27, 11, 50, 0));
+
         cut = new UserController();
         cut.setUserService(userService);
-        cut.setPrivilegeGroupService(privilegeGroupService);
+        cut.setUserChangeService(userChangeService);
 
         when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(editor.getIdentification()).thenReturn(EDITOR_IDENTIFICATION);
     }
 
     @AfterEach
@@ -106,7 +122,6 @@ public class UserControllerTest {
     @DisplayName("Delete an user")
     @Test
     public void testDeleteUser() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.TRUE);
@@ -128,7 +143,6 @@ public class UserControllerTest {
     @DisplayName("Delete an non existing user")
     @Test
     public void testDeleteUserNonExisting() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.empty());
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.FALSE);
@@ -145,7 +159,6 @@ public class UserControllerTest {
     @DisplayName("Delete an global admin")
     @Test
     public void testDeleteUserGlobalAdmin() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.FALSE);
@@ -167,7 +180,6 @@ public class UserControllerTest {
     @DisplayName("Delete an user but still existing afterwards")
     @Test
     public void testDeleteUserExistingAfterDeletion() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
         when(userService.userExits(eq(USER_IDENTIFICATION))).thenReturn(Boolean.TRUE);
@@ -188,7 +200,6 @@ public class UserControllerTest {
     @DisplayName("Get an user")
     @Test
     public void testGetUser() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
 
@@ -214,7 +225,6 @@ public class UserControllerTest {
     @DisplayName("Get an global admin")
     @Test
     public void testGetUserGlobalAdmin() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
 
@@ -228,7 +238,6 @@ public class UserControllerTest {
     @DisplayName("Update an user")
     @Test
     public void testUpdateUser() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(user.getRole()).thenReturn(Role.CONTRIBUTOR);
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
@@ -251,7 +260,6 @@ public class UserControllerTest {
     @DisplayName("Update an global admin")
     @Test
     public void testUpdateUserGlobalAdmin() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
@@ -285,7 +293,6 @@ public class UserControllerTest {
     @DisplayName("Update an user without save return")
     @Test
     public void testUpdateUserNoSaveReturn() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(userDto.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
@@ -641,9 +648,76 @@ public class UserControllerTest {
     }
 
     private void mockDefaultGetAllUsers() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
         when(userService.findAllUsersAtCommonGroup(eq(COMMON_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
+    }
+
+    @DisplayName("Get history of an user")
+    @Test
+    public void testGetUserHistory() {
+        when(userChangeService.loadChanges(eq(USER_IDENTIFICATION))).thenReturn(Collections.singletonList(userChange));
+        when(userChange.getUser()).thenReturn(user);
+        when(userChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(userChange.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(userChange.getEditor()).thenReturn(editor);
+        when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
+        when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getUserHistory(USER_IDENTIFICATION);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of changes");
+        ChangeDto change = response.getResponse().get(0);
+        assertEquals(USER_IDENTIFICATION, change.getSubjectIdentification(), "Wrong admin group id");
+        assertEquals(ChangeType.CREATE, change.getChangeType(), "Wrong change typ");
+        assertEquals(SystemProperties.getSystemDateTime(), change.getChangeTime(), "Wrong change time");
+        assertEquals(EDITOR_IDENTIFICATION, change.getEditor(), "Wrong editor id");
+
+        verify(userChangeService).loadChanges(eq(USER_IDENTIFICATION));
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+    }
+
+    @DisplayName("Get history of an user, but is an admin")
+    @Test
+    public void testGetUserHistoryNonAdmin() {
+        when(userChangeService.loadChanges(eq(USER_IDENTIFICATION))).thenReturn(Collections.singletonList(userChange));
+        when(userChange.getUser()).thenReturn(user);
+        when(userChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(userChange.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(userChange.getEditor()).thenReturn(editor);
+        when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
+        when(user.isGlobalAdmin()).thenReturn(Boolean.TRUE);
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getUserHistory(USER_IDENTIFICATION);
+
+        checkError(response);
+        assertTrue(response.getMessages().stream()
+                        .map(Message::getMessageText)
+                        .anyMatch(String.format("There cannot be any user history for an admin %s", USER_IDENTIFICATION)::equals)
+                , "Missing error message");
+
+        verify(userChangeService, never()).loadChanges(eq(USER_IDENTIFICATION));
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
+    }
+
+    @DisplayName("Get empty history of an user")
+    @Test
+    public void testGetUserHistoryEmpty() {
+        when(userChangeService.loadChanges(any())).thenReturn(Collections.emptyList());
+        when(userService.findUser(eq(USER_IDENTIFICATION))).thenReturn(Optional.of(user));
+        when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
+
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getUserHistory(USER_IDENTIFICATION);
+
+        checkWarn(response);
+        assertTrue(response.getMessages().stream()
+                        .map(Message::getMessageText)
+                        .anyMatch(String.format("No changes were found for user %s, but at least one creation should exist at history", USER_IDENTIFICATION)::equals)
+                , "Missing warning message");
+
+        verify(userChangeService).loadChanges(eq(USER_IDENTIFICATION));
+        verify(userService).findUser(eq(USER_IDENTIFICATION));
     }
 
     @DisplayName("Count users at base group")
@@ -827,7 +901,6 @@ public class UserControllerTest {
     }
 
     private void mockDefaultGetAllUsersFromBaseGroup() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), anyBoolean())).thenReturn(Collections.singletonList(user));
         when(userService.findAllUsersAtBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
     }
@@ -980,7 +1053,6 @@ public class UserControllerTest {
     }
 
     private void mockDefaultGetAvailableUsersForBaseGroup() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
         when(userService.findAllAvailableUsersForBaseGroup(eq(BASE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
     }
@@ -1180,7 +1252,6 @@ public class UserControllerTest {
         Map<Role, List<User>> rolesAndUsers = new EnumMap<>(Role.class);
         rolesAndUsers.put(Role.ADMIN, Collections.singletonList(user));
 
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), anyBoolean())).thenReturn(rolesAndUsers);
         when(userService.findAllUsersAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any())).thenReturn(rolesAndUsers);
     }
@@ -1332,7 +1403,6 @@ public class UserControllerTest {
     }
 
     private void mockDefaultGetAvailableUsersForPrivilegeGroup() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(userService.findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(user));
         when(userService.findAllAvailableUsersForPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any())).thenReturn(Collections.singletonList(user));
     }
