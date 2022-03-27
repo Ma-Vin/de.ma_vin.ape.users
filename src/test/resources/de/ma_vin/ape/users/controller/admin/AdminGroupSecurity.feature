@@ -53,6 +53,8 @@ Feature: Testing security at methods of the admin group controller
     Then The result is a <httpCodeRange>
     When Controller is called to get all admin parts from admin group with identification of "adminGroup"
     Then The result is a <httpCodeRange>
+    When Controller is called to get the history of admin with the identification of the alias "adminToGet"
+    Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
       | ADMIN       | 4xx           |
@@ -97,6 +99,8 @@ Feature: Testing security at methods of the admin group controller
     Given There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to get the admin group with the identification of the alias "adminGroup"
+    Then The result is a <httpCodeRange>
+    When Controller is called to get the history of admin group with the identification of the alias "adminGroup"
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
