@@ -10,11 +10,22 @@ Feature: Testing methods of the common group controller
     When The Controller is called to create a common group with name "New Common Group"
     Then The result is a 4xx
 
+  Scenario: Create a common group, but missing privilege
+    Given There exists a common group with name "Common Group Name" with alias "common"
+    And There exists an user with first name "Anybody" and last name "User" with alias "anyUser" at common group "common"
+    When Controller is called to set the password "1 Dummy Password!" of user with the identification of the alias "anyUser"
+    Then The result is Ok and Json
+    Given There is token for user with alias "anyUser" and password "1 Dummy Password!"
+    When The Controller is called to create a common group with name "New Common Group"
+    Then The result is a 4xx
+
   Scenario Outline: Check <role> privilege to get common group
     Given There exists a common group with name "Common Group Name" with alias "common"
     And There exists an user with first name "firstname", last name "lastname", password "1 Dummy Password!" and role <role> with alias "user" at common group "common"
     And There is token for user with alias "user" and password "1 Dummy Password!"
     When Controller is called to get the common group with the identification of the alias "common"
+    Then The result is a <httpCodeRange>
+    When Controller is called to get the history of common group with the identification of the alias "common"
     Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |

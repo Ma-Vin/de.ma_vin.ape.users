@@ -1,7 +1,5 @@
 package de.ma_vin.ape.users.controller;
 
-import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
-
 import de.ma_vin.ape.users.model.gen.domain.IIdentifiable;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
@@ -10,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static de.ma_vin.ape.utils.controller.response.ResponseUtil.*;
+
 
 public abstract class AbstractDefaultOperationController {
 
@@ -17,6 +17,7 @@ public abstract class AbstractDefaultOperationController {
     public static final Integer DEFAULT_SIZE = 50;
     public static final String MISSING_PAGE_WARNING_TEXT = "The page was empty while a size was given. The default page %d was used";
     public static final String MISSING_SIZE_WARNING_TEXT = "The size was empty while a page was given. The default size %d was used";
+    public static final String NO_CHANGES_FOUND_WARNING_TEXT = "No changes were found for %s %s, but at least one creation should exist at history";
 
     /**
      * Gets a Dto object from Repository

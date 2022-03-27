@@ -12,15 +12,6 @@ Feature: Testing methods of the common group controller
     And The "groupName" property at response is "New Common Group"
     And There is any identification at response
 
-  Scenario: Create a common group, but missing privilege
-    Given There exists a common group with name "Common Group Name" with alias "common"
-    And There exists an user with first name "Anybody" and last name "User" with alias "anyUser" at common group "common"
-    When Controller is called to set the password "1 Dummy Password!" of user with the identification of the alias "anyUser"
-    Then The result is Ok and Json
-    Given There is token for user with alias "anyUser" and password "1 Dummy Password!"
-    When The Controller is called to create a common group with name "New Common Group"
-    Then The result is a 4xx
-
   Scenario: Get common group
     Given There exists a common group with name "Common Group Name" with alias "common"
     When Controller is called to get the common group with the identification of the alias "common"
@@ -87,7 +78,7 @@ Feature: Testing methods of the common group controller
     When Controller is called to get all common groups
     Then The result is a 4xx
 
-  Scenario: Update and get common group
+  Scenario: Update, get common group and check history
     Given There exists a common group with name "Common Group Name" with alias "common"
     And The "description" of the common group with alias "common" is set to "anythingNew"
     When Controller is called to update the common group with the identification of the alias "common"
@@ -100,6 +91,15 @@ Feature: Testing methods of the common group controller
     And The status of the result should be "OK"
     And The "description" property at response is "anythingNew"
     And The identification is the same like the one of alias "common"
+    When Controller is called to get the history of common group with the identification of the alias "common"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The "subjectIdentification" property at response position 0 is the same like the one of alias "common"
+    And The "changeType" property at response position 0 is "CREATE"
+    And The "subjectIdentification" property at response position 1 is the same like the one of alias "common"
+    And The "changeType" property at response position 1 is "MODIFY"
+    And The "action" property at response position 1 is "Description: \"null\" -> \"anythingNew\""
+    And At response position 2 does not exists
 
   Scenario: Delete common group
     Given There exists a common group with name "Common Group Name" with alias "common"

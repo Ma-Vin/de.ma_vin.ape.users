@@ -121,4 +121,9 @@ public class CommonGroupSteps extends AbstractIntegrationTestSteps {
     public void callControllerToDeleteCommonGroup(String commonGroupAlias) {
         shared.setResultActions(performDeleteWithAuthorization("/group/common/deleteCommonGroup", getIdentification(commonGroupAlias)));
     }
+
+    @When("Controller is called to get the history of common group with the identification of the alias {string}")
+    public void callControllerToGetAdminGroupHistory(String commonGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/common/getCommonGroupHistory", getIdentification(commonGroupAlias)));
+    }
 }

@@ -77,7 +77,7 @@ public class AdminController extends AbstractDefaultOperationController {
     ResponseWrapper<List<ChangeDto>> getAdminGroupHistory(@PathVariable String adminGroupIdentification) {
         List<AdminGroupChange> changes = adminGroupChangeService.loadChanges(adminGroupIdentification);
         if (changes.isEmpty()) {
-            return createResponseWithWarning(Collections.emptyList(), String.format("No changes were found for admin group %s, but at least one creation should exist at history", adminGroupIdentification));
+            return createResponseWithWarning(Collections.emptyList(), String.format(NO_CHANGES_FOUND_WARNING_TEXT, "admin group", adminGroupIdentification));
         }
         return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
     }
@@ -188,7 +188,7 @@ public class AdminController extends AbstractDefaultOperationController {
         }
         List<UserChange> changes = userChangeService.loadChanges(userIdentification);
         if (changes.isEmpty()) {
-            return createResponseWithWarning(Collections.emptyList(), String.format("No changes were found for admin %s, but at least one creation should exist at history", userIdentification));
+            return createResponseWithWarning(Collections.emptyList(), String.format(NO_CHANGES_FOUND_WARNING_TEXT, "admin", userIdentification));
         }
         return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
     }

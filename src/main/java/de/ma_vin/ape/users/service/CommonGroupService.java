@@ -217,11 +217,11 @@ public class CommonGroupService extends AbstractRepositoryService<CommonGroupDao
             return Optional.empty();
         }
 
+        commonGroupChangeService.saveChange(commonGroupDao, storedCommonGroupDao.get(), editorIdentification);
+
         commonGroupDao = commonGroupRepository.save(commonGroupDao);
         CommonGroup result = GroupAccessMapper.convertToCommonGroup(commonGroupDao, false);
         log.debug("The common group with identification {} was saved", result.getIdentification());
-
-        commonGroupChangeService.saveChange(commonGroupDao, storedCommonGroupDao.get(), editorIdentification);
 
         return Optional.of(result);
     }

@@ -9,13 +9,19 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
 
+import de.ma_vin.ape.users.enums.ChangeType;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.CommonGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.CommonGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.CommonGroupPartDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.service.CommonGroupService;
+import de.ma_vin.ape.users.service.history.CommonGroupChangeService;
+import de.ma_vin.ape.utils.controller.response.Message;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import de.ma_vin.ape.utils.generators.IdGenerator;
+import de.ma_vin.ape.utils.properties.SystemProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +37,10 @@ import java.util.Optional;
 public class CommonGroupControllerTest {
 
     public static final Long COMMON_GROUP_ID = 1L;
+    public static final Long EDITOR_ID = 2L;
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
-    public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
+    public static final String EDITOR_IDENTIFICATION = IdGenerator.generateIdentification(EDITOR_ID, User.ID_PREFIX);
+    public static final String PRINCIPAL_IDENTIFICATION = EDITOR_IDENTIFICATION;
 
     private AutoCloseable openMocks;
     private CommonGroupController cut;
@@ -40,9 +48,15 @@ public class CommonGroupControllerTest {
     @Mock
     private CommonGroupService commonGroupService;
     @Mock
+    private CommonGroupChangeService commonGroupChangeService;
+    @Mock
     private CommonGroup commonGroup;
     @Mock
     private CommonGroupDto commonGroupDto;
+    @Mock
+    private CommonGroupChange commonGroupChange;
+    @Mock
+    private User editor;
     @Mock
     private Principal principal;
 
@@ -53,7 +67,10 @@ public class CommonGroupControllerTest {
 
         cut = new CommonGroupController();
         cut.setCommonGroupService(commonGroupService);
+        cut.setCommonGroupChangeService(commonGroupChangeService);
 
+        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
+        when(editor.getIdentification()).thenReturn(EDITOR_IDENTIFICATION);
         when(principal.getName()).thenReturn(PRINCIPAL_IDENTIFICATION);
     }
 
@@ -92,7 +109,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Delete a common group")
     @Test
     public void testDeleteCommonGroup() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.of(commonGroup));
         when(commonGroupService.commonGroupExits(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Boolean.TRUE);
         doAnswer(a -> {
@@ -113,7 +129,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Delete a non existing common group")
     @Test
     public void testDeleteCommonGroupNonExisting() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.empty());
         when(commonGroupService.commonGroupExits(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Boolean.FALSE);
 
@@ -129,7 +144,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Delete a common group but still existing afterwards")
     @Test
     public void testDeleteCommonGroupExistingAfterDeletion() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.of(commonGroup));
         when(commonGroupService.commonGroupExits(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Boolean.TRUE);
         doAnswer(a -> {
@@ -149,7 +163,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get a common group")
     @Test
     public void testGetCommonGroup() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.of(commonGroup));
 
         ResponseWrapper<CommonGroupDto> response = cut.getCommonGroup(COMMON_GROUP_IDENTIFICATION);
@@ -175,7 +188,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get all common groups without pages")
     @Test
     public void testGetAllCommonGroups() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
@@ -192,7 +204,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get all common groups with pages")
     @Test
     public void testGetAllCommonGroupsWithPages() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
@@ -209,7 +220,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get all common groups with pages, but missing page")
     @Test
     public void testGetAllCommonGroupsWithPagesMissingPage() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
@@ -226,7 +236,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get all common groups with pages, but missing size")
     @Test
     public void testGetAllCommonGroupsWithPagesMissingSize() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
@@ -243,7 +252,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get all common group parts without pages")
     @Test
     public void testGetAllCommonGroupParts() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
@@ -260,7 +268,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get all common group parts with pages")
     @Test
     public void testGetAllCommonGroupPartsWithPages() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
@@ -277,7 +284,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get all common group parts with pages, but missing page")
     @Test
     public void testGetAllCommonGroupPartsWithPagesMissingPage() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
@@ -294,7 +300,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Get all common group parts with pages, but missing size")
     @Test
     public void testGetAllCommonGroupPartsWithPagesMissingSize() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findAllCommonGroups(any(), any())).thenReturn(Collections.singletonList(commonGroup));
         when(commonGroupService.findAllCommonGroups()).thenReturn(Collections.singletonList(commonGroup));
 
@@ -311,7 +316,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Update a common group")
     @Test
     public void testUpdateCommonGroup() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupDto.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.of(commonGroup));
         when(commonGroupService.save(any(), any())).then(a -> Optional.of(a.getArgument(0)));
@@ -342,7 +346,6 @@ public class CommonGroupControllerTest {
     @DisplayName("Update a common group without save return")
     @Test
     public void testUpdateCommonGroupNoSaveReturn() {
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupDto.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findCommonGroup(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Optional.of(commonGroup));
         when(commonGroupService.save(any(), any())).then(a -> Optional.empty());
@@ -384,7 +387,6 @@ public class CommonGroupControllerTest {
     @Test
     public void testGetParentCommonGroupOfUser() {
         String userIdentification = IdGenerator.generateIdentification(1L, User.ID_PREFIX);
-        when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(commonGroupService.findParentCommonGroupOfUser(eq(userIdentification))).thenReturn(Optional.of(commonGroup));
 
         ResponseWrapper<CommonGroupDto> response = cut.getParentCommonGroupOfUser(userIdentification);
@@ -405,5 +407,43 @@ public class CommonGroupControllerTest {
         checkError(response);
 
         verify(commonGroupService).findParentCommonGroupOfUser(eq(userIdentification));
+    }
+
+    @DisplayName("Get history of a common group")
+    @Test
+    public void testGetCommonGroupHistory() {
+        when(commonGroupChangeService.loadChanges(eq(COMMON_GROUP_IDENTIFICATION))).thenReturn(Collections.singletonList(commonGroupChange));
+        when(commonGroupChange.getCommonGroup()).thenReturn(commonGroup);
+        when(commonGroupChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(commonGroupChange.getChangeTime()).thenReturn(SystemProperties.getSystemDateTime());
+        when(commonGroupChange.getEditor()).thenReturn(editor);
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getCommonGroupHistory(COMMON_GROUP_IDENTIFICATION);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of changes");
+        ChangeDto change = response.getResponse().get(0);
+        assertEquals(COMMON_GROUP_IDENTIFICATION, change.getSubjectIdentification(), "Wrong admin group id");
+        assertEquals(ChangeType.CREATE, change.getChangeType(), "Wrong change typ");
+        assertEquals(SystemProperties.getSystemDateTime(), change.getChangeTime(), "Wrong change time");
+        assertEquals(EDITOR_IDENTIFICATION, change.getEditor(), "Wrong editor id");
+
+        verify(commonGroupChangeService).loadChanges(eq(COMMON_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Get empty history of a common group")
+    @Test
+    public void testGetCommonGroupHistoryEmpty() {
+        when(commonGroupChangeService.loadChanges(any())).thenReturn(Collections.emptyList());
+
+        ResponseWrapper<List<ChangeDto>> response = cut.getCommonGroupHistory(COMMON_GROUP_IDENTIFICATION);
+
+        checkWarn(response);
+        assertTrue(response.getMessages().stream()
+                        .map(Message::getMessageText)
+                        .anyMatch(String.format("No changes were found for common group %s, but at least one creation should exist at history", COMMON_GROUP_IDENTIFICATION)::equals)
+                , "Missing warning message");
+
+        verify(commonGroupChangeService).loadChanges(eq(COMMON_GROUP_IDENTIFICATION));
     }
 }

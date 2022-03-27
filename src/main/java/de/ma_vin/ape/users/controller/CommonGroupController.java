@@ -2,12 +2,16 @@ package de.ma_vin.ape.users.controller;
 
 import de.ma_vin.ape.users.model.domain.group.CommonGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.history.CommonGroupChange;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.CommonGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.CommonGroupPartDto;
+import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.mapper.GroupPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
+import de.ma_vin.ape.users.model.mapper.ChangeTransportMapper;
 import de.ma_vin.ape.users.service.CommonGroupService;
+import de.ma_vin.ape.users.service.history.CommonGroupChangeService;
 import de.ma_vin.ape.utils.controller.response.ResponseUtil;
 import de.ma_vin.ape.utils.controller.response.ResponseWrapper;
 import lombok.Data;
@@ -18,9 +22,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+
+import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createResponseWithWarning;
+import static de.ma_vin.ape.utils.controller.response.ResponseUtil.createSuccessResponse;
 
 @RestController
 @RequestMapping(path = "group/common")
@@ -30,6 +38,8 @@ public class CommonGroupController extends AbstractDefaultOperationController {
 
     @Autowired
     private CommonGroupService commonGroupService;
+    @Autowired
+    private CommonGroupChangeService commonGroupChangeService;
 
     @PreAuthorize("isGlobalAdmin()")
     @PostMapping("/createCommonGroup")
@@ -118,5 +128,16 @@ public class CommonGroupController extends AbstractDefaultOperationController {
             return ResponseUtil.createEmptyResponseWithError(String.format("The parent common group of user \"%s\" was not found", userIdentification));
         }
         return ResponseUtil.createSuccessResponse(GroupTransportMapper.convertToCommonGroupDto(result.get()));
+    }
+
+    @PreAuthorize("isVisitor(#commonGroupIdentification, 'COMMON')")
+    @GetMapping("/getCommonGroupHistory/{commonGroupIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<ChangeDto>> getCommonGroupHistory(@PathVariable String commonGroupIdentification) {
+        List<CommonGroupChange> changes = commonGroupChangeService.loadChanges(commonGroupIdentification);
+        if (changes.isEmpty()) {
+            return createResponseWithWarning(Collections.emptyList(), String.format(NO_CHANGES_FOUND_WARNING_TEXT, "common group", commonGroupIdentification));
+        }
+        return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
     }
 }

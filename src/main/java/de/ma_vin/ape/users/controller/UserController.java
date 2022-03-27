@@ -170,7 +170,7 @@ public class UserController extends AbstractDefaultOperationController {
         }
         List<UserChange> changes = userChangeService.loadChanges(userIdentification);
         if (changes.isEmpty()) {
-            return createResponseWithWarning(Collections.emptyList(), String.format("No changes were found for user %s, but at least one creation should exist at history", userIdentification));
+            return createResponseWithWarning(Collections.emptyList(), String.format(NO_CHANGES_FOUND_WARNING_TEXT, "user", userIdentification));
         }
         return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
     }
