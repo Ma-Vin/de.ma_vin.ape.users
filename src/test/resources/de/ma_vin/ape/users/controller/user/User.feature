@@ -196,6 +196,12 @@ Feature: Testing methods of the user controller
 
   Scenario: Delete user
     Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"
+    And There exists a privilege group with name "Privilege Group" with alias "privilege" at common group "common"
+    And There exists a base group with name "Base Group" with alias "base" at common group "common"
+    When Controller is called to add the user with alias "user" as ADMIN to privilege group with alias "privilege"
+    Then The result is Ok and Json
+    When Controller is called to add the user with alias "user" to base group with alias "base"
+    Then The result is Ok and Json
     When Controller is called to delete the user with the identification of the alias "user"
     Then The result is Ok and Json
     And The status of the result should be "OK"
@@ -203,6 +209,12 @@ Feature: Testing methods of the user controller
     When Controller is called to get the user with the identification of the alias "user"
     Then The result is Ok and Json
     And The status of the result should be "ERROR"
+    When Controller is called to count users at privilege group with alias "privilege" with role NOT_RELEVANT
+    Then The result is Ok and Json
+    And The response is 0
+    When Controller is called to count users at base group with alias "base"
+    Then The result is Ok and Json
+    And The response is 0
 
   Scenario: Set Password
     Given There exists an user with first name "New" and last name "User" with alias "user" at common group "common"

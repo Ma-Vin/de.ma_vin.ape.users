@@ -17,6 +17,9 @@ public interface BaseGroupToUserRepository extends JpaRepository<BaseGroupToUser
     long deleteByBaseGroup(BaseGroupDao baseGroup);
 
     @Transactional
+    long deleteByUser(UserDao user);
+
+    @Transactional
     long deleteByBaseGroupAndUser(BaseGroupDao baseGroup, UserDao user);
 
     List<BaseGroupToUserDao> findAllByBaseGroup(BaseGroupDao baseGroup);

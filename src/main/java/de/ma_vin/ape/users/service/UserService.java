@@ -128,6 +128,14 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
             }
         });
 
+        long numFromPrivilegeGroup = privilegeGroupToUserRepository.deleteByUser(userDao);
+        log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, numFromPrivilegeGroup, "connections from privilege group", USER_LOG_PARAM
+                , userDao.getIdentification(), userDao.getId());
+
+        long numFromBaseGroup = baseGroupToUserRepository.deleteByUser(userDao);
+        log.debug(DELETE_SUB_ENTITY_LOG_MESSAGE, numFromBaseGroup, "connections from base group", USER_LOG_PARAM
+                , userDao.getIdentification(), userDao.getId());
+
         userChangeService.delete(userDao, deleterIdentification);
         userRepository.delete(userDao);
 

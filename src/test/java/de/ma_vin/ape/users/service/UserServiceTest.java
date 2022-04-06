@@ -155,6 +155,8 @@ public class UserServiceTest {
         verify(userRepository).delete(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
         verify(userChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(privilegeGroupToUserRepository).deleteByUser(any());
+        verify(baseGroupToUserRepository).deleteByUser(any());
     }
 
     @DisplayName("Delete user with references")
@@ -167,6 +169,8 @@ public class UserServiceTest {
         verify(userRepository).delete(any());
         verify(userResourceService, times(2)).delete(any(UserResource.class));
         verify(userChangeService).delete(any(), eq(PRINCIPAL_IDENTIFICATION));
+        verify(privilegeGroupToUserRepository).deleteByUser(any());
+        verify(baseGroupToUserRepository).deleteByUser(any());
     }
 
     @DisplayName("Check existence of user")

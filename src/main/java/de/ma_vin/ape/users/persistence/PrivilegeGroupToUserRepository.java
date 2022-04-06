@@ -18,6 +18,9 @@ public interface PrivilegeGroupToUserRepository extends JpaRepository<PrivilegeG
     long deleteByPrivilegeGroup(PrivilegeGroupDao privilegeGroup);
 
     @Transactional
+    long deleteByUser(UserDao user);
+
+    @Transactional
     long deleteByPrivilegeGroupAndUser(PrivilegeGroupDao privilegeGroup, UserDao user);
 
     List<PrivilegeGroupToUserDao> findAllByPrivilegeGroup(PrivilegeGroupDao privilegeGroup);
