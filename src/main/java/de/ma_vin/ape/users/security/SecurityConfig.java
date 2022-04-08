@@ -34,7 +34,7 @@ public class SecurityConfig {
     public FilterRegistrationBean<ClientCheckFilter> clientCheckFilterRegistrationBean(ClientCheckFilter clientCheckFilter) {
         FilterRegistrationBean<ClientCheckFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(clientCheckFilter);
-        registrationBean.addUrlPatterns("oauth/token");
+        registrationBean.addUrlPatterns("/oauth/token");
         registrationBean.setOrder(2);
         return registrationBean;
     }
