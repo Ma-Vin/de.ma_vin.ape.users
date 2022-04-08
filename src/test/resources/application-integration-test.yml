@@ -33,6 +33,7 @@ refreshTokenExpiresInSeconds: 900
 encodingAlgorithm: HS256
 authorizeCodeExpiresInSeconds: 600
 auth:
+  tokenWithClientSecret: true
   clients:
     - clientId: users-test
       secret: f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15

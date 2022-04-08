@@ -18,6 +18,8 @@ import java.util.List;
 @NoArgsConstructor
 public class AuthClients {
 
+    private boolean tokenWithClientSecret;
+
     private List<Client> clients = new ArrayList<>();
 
     @Data
@@ -26,6 +28,7 @@ public class AuthClients {
     public static class Client {
         private String clientId;
         private String secret;
+        private String url;
         private List<Redirect> redirects = new ArrayList<>();
 
         /**

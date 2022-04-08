@@ -7,7 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import javax.servlet.*;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class ClientCheckFilter extends OncePerRequestFilter {
         String clientId = request.getParameter("client_id");
         String clientSecret = request.getParameter("client_secret");
 
-        if (clientId == null || clientSecret == null) {
+        if (clientId == null || (clientSecret == null && authClients.isTokenWithClientSecret())) {
             sendError(response, HttpServletResponse.SC_BAD_REQUEST, "Missing client id or secret");
             return;
         }
@@ -39,7 +40,7 @@ public class ClientCheckFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!client.get().getBase64UrlEncodedSecret().equals(clientSecret)) {
+        if (authClients.isTokenWithClientSecret() && !client.get().getBase64UrlEncodedSecret().equals(clientSecret)) {
             sendError(response, HttpServletResponse.SC_FORBIDDEN, String.format("Invalid secret for client with id \"%s\"", clientId));
             return;
         }

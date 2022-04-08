@@ -11,7 +11,6 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -20,7 +19,6 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 
@@ -30,6 +28,7 @@ import static org.mockito.MockitoAnnotations.openMocks;
 public class ClientCheckFilterTest {
     public static final String CLIENT_ID = "clientId";
     public static final String CLIENT_SECRET = "clientSecret";
+    public static final String CLIENT_URL = "http://localhost:8080/";
     public static final String CLIENT_SECRET_ENCODED = Base64.getUrlEncoder().encodeToString(CLIENT_SECRET.getBytes(StandardCharsets.UTF_8));
 
     private ClientCheckFilter cut;
@@ -50,8 +49,9 @@ public class ClientCheckFilterTest {
 
         cut = new ClientCheckFilter();
         authClients = new AuthClients();
+        authClients.setTokenWithClientSecret(true);
         authClients.setClients(new ArrayList<>());
-        authClients.getClients().add(new AuthClients.Client(CLIENT_ID, CLIENT_SECRET, Collections.emptyList()));
+        authClients.getClients().add(new AuthClients.Client(CLIENT_ID, CLIENT_SECRET, CLIENT_URL, Collections.emptyList()));
         cut.setAuthClients(authClients);
     }
 
@@ -95,6 +95,20 @@ public class ClientCheckFilterTest {
             cut.doFilterInternal(request, response, filterChain);
             verify(response).sendError(eq(HttpServletResponse.SC_BAD_REQUEST), anyString());
             verify(filterChain, never()).doFilter(any(), any());
+        } catch (ServletException | IOException e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @DisplayName("Do filter missing client secret, but not necessary")
+    @Test
+    public void testDoFilterInternalMissingClientSecretButNotNecessary() {
+        authClients.setTokenWithClientSecret(false);
+        when(request.getParameter(eq("client_id"))).thenReturn(CLIENT_ID);
+        try {
+            cut.doFilterInternal(request, response, filterChain);
+            verify(response, never()).sendError(anyInt(), anyString());
+            verify(filterChain).doFilter(eq(request), eq(response));
         } catch (ServletException | IOException e) {
             fail(e.getMessage());
         }

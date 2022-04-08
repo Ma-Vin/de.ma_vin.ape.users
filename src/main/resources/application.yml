@@ -31,8 +31,15 @@ refreshTokenExpiresInSeconds: 900
 encodingAlgorithm: HS256
 authorizeCodeExpiresInSeconds: 600
 auth:
+  tokenWithClientSecret: false
   clients:
     - clientId: users
       secret: f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15
+      url: http://localhost:8080
       redirects:
         - redirect-start: http://localhost:8080/
+    - clientId: ape.user.ui
+      secret: changeIt
+      url: http://localhost:4200
+      redirects:
+        - redirect-start: http://localhost:4200/
