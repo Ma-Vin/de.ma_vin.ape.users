@@ -105,12 +105,13 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            HttpSecurity confSec = http.antMatcher("/oauth/token").authorizeRequests().anyRequest().authenticated()
-                    .and().cors()
-                    .and().csrf().disable();
             if (authClients.isTokenWithClientSecret()) {
-                confSec.httpBasic();
+                http.antMatcher("/oauth/token").authorizeRequests().anyRequest().authenticated()
+                        .and().httpBasic();
+            } else {
+                http.antMatcher("/oauth/token").authorizeRequests().anyRequest().permitAll();
             }
+            http.cors().and().csrf().disable();
         }
     }
 
