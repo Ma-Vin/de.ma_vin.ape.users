@@ -25,6 +25,12 @@ import java.util.Collections;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    public static final String TOKEN_PATTERN = "/oauth/token";
+    public static final String AUTHORIZE_PATTERN = "/oauth/authorize";
+    public static final String INTROSPECTION_PATTERN = "/oauth/introspection";
+    public static final String CONSOLE_PATTERN = "/console/**";
+    public static final String OAUTH_SECURED_REGEX = "\\/(group|user|admin)\\/.*";
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -34,7 +40,7 @@ public class SecurityConfig {
     public FilterRegistrationBean<ClientCheckFilter> clientCheckFilterRegistrationBean(ClientCheckFilter clientCheckFilter) {
         FilterRegistrationBean<ClientCheckFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(clientCheckFilter);
-        registrationBean.addUrlPatterns("/oauth/token");
+        registrationBean.addUrlPatterns(TOKEN_PATTERN);
         registrationBean.setOrder(2);
         return registrationBean;
     }
@@ -67,7 +73,7 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.authorizeRequests().antMatchers("/oauth/authorize").authenticated()
+            http.authorizeRequests().antMatchers(AUTHORIZE_PATTERN).authenticated()
                     .and().cors()
                     .and().formLogin();
         }
@@ -79,7 +85,7 @@ public class SecurityConfig {
     public static class H2ConsoleConfig extends WebSecurityConfigurerAdapter {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.authorizeRequests().antMatchers("/console/**").permitAll()
+            http.authorizeRequests().antMatchers(CONSOLE_PATTERN).permitAll()
                     .and().csrf().disable()
                     .headers().frameOptions().disable();
         }
@@ -106,10 +112,10 @@ public class SecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             if (authClients.isTokenWithClientSecret()) {
-                http.antMatcher("/oauth/token").authorizeRequests().anyRequest().authenticated()
+                http.antMatcher(TOKEN_PATTERN).authorizeRequests().anyRequest().authenticated()
                         .and().httpBasic();
             } else {
-                http.antMatcher("/oauth/token").authorizeRequests().anyRequest().permitAll();
+                http.antMatcher(TOKEN_PATTERN).authorizeRequests().anyRequest().permitAll();
             }
             http.cors().and().csrf().disable();
         }
@@ -132,7 +138,7 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.antMatcher("/oauth/introspection").authorizeRequests().anyRequest().authenticated()
+            http.antMatcher(INTROSPECTION_PATTERN).authorizeRequests().anyRequest().authenticated()
                     .and().cors()
                     .and().httpBasic()
                     .and().csrf().disable();
@@ -154,7 +160,7 @@ public class SecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.regexMatcher("\\/(group|user|admin)\\/.*").authorizeRequests().anyRequest().authenticated().and()
+            http.regexMatcher(OAUTH_SECURED_REGEX).authorizeRequests().anyRequest().authenticated().and()
                     .oauth2ResourceServer(
                             oauth2 -> oauth2.opaqueToken(token -> token.introspectionUri(this.introspectionUri)
                                     .introspectionClientCredentials(this.clientId, this.clientSecret)
