@@ -1,5 +1,6 @@
 package de.ma_vin.ape.users.model.mapper;
 
+import de.ma_vin.ape.users.enums.ModelType;
 import de.ma_vin.ape.users.model.gen.domain.IIdentifiable;
 import de.ma_vin.ape.users.model.gen.domain.group.history.AdminGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.group.history.BaseGroupChange;
@@ -24,9 +25,9 @@ public class ChangeTransportMapper {
      */
     public static ChangeDto convertToChangeDto(UserChange userChange) {
         return switch (userChange.getChangeType()) {
-            case CREATE, MODIFY -> createChangeDto(userChange, userChange.getUser(), null);
-            case DELETE -> createChangeDto(userChange, userChange.getDeletionInformation(), null);
-            default -> createChangeDto(userChange, (String) null, null);
+            case CREATE, MODIFY -> createChangeDto(userChange, userChange.getUser());
+            case DELETE -> createChangeDto(userChange, userChange.getDeletionInformation());
+            default -> createChangeDto(userChange);
         };
     }
 
@@ -39,9 +40,9 @@ public class ChangeTransportMapper {
     public static ChangeDto convertToChangeDto(AdminGroupChange adminGroupChange) {
         return switch (adminGroupChange.getChangeType()) {
             case ADD, REMOVE -> createChangeDto(adminGroupChange, adminGroupChange.getAdminGroup(), adminGroupChange.getAdmin());
-            case CREATE, MODIFY -> createChangeDto(adminGroupChange, adminGroupChange.getAdminGroup(), null);
-            case DELETE -> createChangeDto(adminGroupChange, adminGroupChange.getDeletionInformation(), null);
-            default -> createChangeDto(adminGroupChange, (String) null, null);
+            case CREATE, MODIFY -> createChangeDto(adminGroupChange, adminGroupChange.getAdminGroup());
+            case DELETE -> createChangeDto(adminGroupChange, adminGroupChange.getDeletionInformation());
+            default -> createChangeDto(adminGroupChange);
         };
     }
 
@@ -54,9 +55,9 @@ public class ChangeTransportMapper {
     public static ChangeDto convertToChangeDto(CommonGroupChange commonGroupChange) {
         return switch (commonGroupChange.getChangeType()) {
             case ADD, REMOVE -> createCommonGroupAddRemoveChange(commonGroupChange);
-            case CREATE, MODIFY -> createChangeDto(commonGroupChange, commonGroupChange.getCommonGroup(), null);
-            case DELETE -> createChangeDto(commonGroupChange, commonGroupChange.getDeletionInformation(), null);
-            default -> createChangeDto(commonGroupChange, (String) null, null);
+            case CREATE, MODIFY -> createChangeDto(commonGroupChange, commonGroupChange.getCommonGroup());
+            case DELETE -> createChangeDto(commonGroupChange, commonGroupChange.getDeletionInformation());
+            default -> createChangeDto(commonGroupChange);
         };
     }
 
@@ -88,9 +89,9 @@ public class ChangeTransportMapper {
     public static ChangeDto convertToChangeDto(PrivilegeGroupChange privilegeGroupChange) {
         return switch (privilegeGroupChange.getChangeType()) {
             case ADD, REMOVE -> createPrivilegeGroupAddRemoveChange(privilegeGroupChange);
-            case CREATE, MODIFY -> createChangeDto(privilegeGroupChange, privilegeGroupChange.getPrivilegeGroup(), null);
-            case DELETE -> createChangeDto(privilegeGroupChange, privilegeGroupChange.getDeletionInformation(), null);
-            default -> createChangeDto(privilegeGroupChange, (String) null, null);
+            case CREATE, MODIFY -> createChangeDto(privilegeGroupChange, privilegeGroupChange.getPrivilegeGroup());
+            case DELETE -> createChangeDto(privilegeGroupChange, privilegeGroupChange.getDeletionInformation());
+            default -> createChangeDto(privilegeGroupChange);
         };
     }
 
@@ -119,9 +120,9 @@ public class ChangeTransportMapper {
     public static ChangeDto convertToChangeDto(BaseGroupChange baseGroupChange) {
         return switch (baseGroupChange.getChangeType()) {
             case ADD, REMOVE -> createBaseGroupAddRemoveChange(baseGroupChange);
-            case CREATE, MODIFY -> createChangeDto(baseGroupChange, baseGroupChange.getBaseGroup(), null);
-            case DELETE -> createChangeDto(baseGroupChange, baseGroupChange.getDeletionInformation(), null);
-            default -> createChangeDto(baseGroupChange, (String) null, null);
+            case CREATE, MODIFY -> createChangeDto(baseGroupChange, baseGroupChange.getBaseGroup());
+            case DELETE -> createChangeDto(baseGroupChange, baseGroupChange.getDeletionInformation());
+            default -> createChangeDto(baseGroupChange);
         };
     }
 
@@ -146,11 +147,44 @@ public class ChangeTransportMapper {
      *
      * @param sourceChange the domain object which is to map
      * @param subject      the object which is affected
+     * @return a new dto change
+     */
+    private static ChangeDto createChangeDto(AbstractChange sourceChange, IIdentifiable subject) {
+        return createChangeDto(sourceChange, subject, null);
+    }
+
+    /**
+     * Creates a dto change and maps the common entries of {@link AbstractChange}
+     *
+     * @param sourceChange the domain object which is to map
+     * @param subject      the object which is affected
      * @param target       the object which is added or removed to/from the subject
      * @return a new dto change
      */
     private static ChangeDto createChangeDto(AbstractChange sourceChange, IIdentifiable subject, IIdentifiable target) {
-        return createChangeDto(sourceChange, subject.getIdentification(), target != null ? target.getIdentification() : null);
+        return createChangeDto(sourceChange, subject.getIdentification(), target != null ? target.getIdentification() : null
+                , target != null ? ModelType.getModelTypeByClass(target.getClass()) : null);
+    }
+
+    /**
+     * Creates a dto change and maps the common entries of {@link AbstractChange}
+     *
+     * @param sourceChange the domain object which is to map
+     * @return a new dto change
+     */
+    private static ChangeDto createChangeDto(AbstractChange sourceChange) {
+        return createChangeDto(sourceChange, (String) null);
+    }
+
+    /**
+     * Creates a dto change and maps the common entries of {@link AbstractChange}
+     *
+     * @param sourceChange          the domain object which is to map
+     * @param subjectIdentification identification of the object which is affected
+     * @return a new dto change
+     */
+    private static ChangeDto createChangeDto(AbstractChange sourceChange, String subjectIdentification) {
+        return createChangeDto(sourceChange, subjectIdentification, null, null);
     }
 
     /**
@@ -159,9 +193,10 @@ public class ChangeTransportMapper {
      * @param sourceChange          the domain object which is to map
      * @param subjectIdentification identification of the object which is affected
      * @param targetIdentification  identification of the object which is added or removed to/from the subject
+     * @param targetType            the typ of the object which is added or removed to/from the subject
      * @return a new dto change
      */
-    private static ChangeDto createChangeDto(AbstractChange sourceChange, String subjectIdentification, String targetIdentification) {
+    private static ChangeDto createChangeDto(AbstractChange sourceChange, String subjectIdentification, String targetIdentification, ModelType targetType) {
         ChangeDto result = new ChangeDto();
 
         result.setSubjectIdentification(subjectIdentification);
@@ -170,7 +205,9 @@ public class ChangeTransportMapper {
         result.setChangeType(sourceChange.getChangeType());
         result.setChangeTime(sourceChange.getChangeTime());
         result.setEditor(sourceChange.getEditor() != null ? sourceChange.getEditor().getIdentification() : null);
+        result.setIsEditorAdmin(sourceChange.getEditor() != null && sourceChange.getEditor().isGlobalAdmin());
         result.setAction(sourceChange.getAction());
+        result.setTargetType(targetType);
 
         return result;
     }

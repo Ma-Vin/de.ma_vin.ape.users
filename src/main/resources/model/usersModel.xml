@@ -259,7 +259,11 @@
                         <field fieldName="action" type="String" shortDescription="The concrete action of this change"/>
                         <field fieldName="targetIdentification" type="String"
                                shortDescription="The target which is affected"/>
+                        <field fieldName="targetType" type="ModelType" typePackage="de.ma_vin.ape.users.enums"
+                               isTypeEnum="true" shortDescription="Type of the target"/>
                         <field fieldName="editor" type="String" shortDescription="Editor of the change"/>
+                        <field fieldName="isEditorAdmin" type="Boolean"
+                               shortDescription="Indicator whether the editor is an admin or not"/>
                         <field fieldName="changeTime" type="LocalDateTime" typePackage="java.time"
                                shortDescription="date time of the change"/>
                     </fields>

@@ -1,6 +1,7 @@
 package de.ma_vin.ape.users.model.mapper;
 
 import de.ma_vin.ape.users.enums.ChangeType;
+import de.ma_vin.ape.users.enums.ModelType;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
@@ -85,6 +86,7 @@ public class ChangeTransportMapperTest {
 
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(editor.getIdentification()).thenReturn(EDITOR_IDENTIFICATION);
+        when(editor.isGlobalAdmin()).thenReturn(Boolean.FALSE);
         when(adminGroup.getIdentification()).thenReturn(ADMIN_GROUP_IDENTIFICATION);
         when(commonGroup.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
         when(privilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
@@ -123,6 +125,26 @@ public class ChangeTransportMapperTest {
 
         checkDefaultCreate(ChangeTransportMapper.convertToChangeDto(userChange), USER_IDENTIFICATION);
     }
+
+    @DisplayName("Convert user by an admin editor")
+    @Test
+    public void testConvertToChangeDtoUserAdminEditor() {
+        when(userChange.getChangeType()).thenReturn(ChangeType.CREATE);
+        when(editor.isGlobalAdmin()).thenReturn(Boolean.TRUE);
+
+        ChangeDto result = ChangeTransportMapper.convertToChangeDto(userChange);
+
+        assertNotNull(result, "There should be any result");
+        assertEquals(ChangeType.CREATE, result.getChangeType(), "wrong change type");
+        assertEquals(SystemProperties.getSystemDateTime(), result.getChangeTime(), "wrong change time");
+        assertEquals(EDITOR_IDENTIFICATION, result.getEditor(), "wrong editor");
+        assertTrue(result.getIsEditorAdmin(), "The editor should be an admin");
+        assertEquals(USER_IDENTIFICATION, result.getSubjectIdentification(), "wrong subject id");
+        assertNull(result.getTargetIdentification(), "target should be empty");
+        assertNull(result.getTargetType(), "target type should be empty");
+        assertEquals(DEFAULT_CHANGE_ACTION, result.getAction(), "wrong subject id");
+    }
+
 
     @DisplayName("Convert user change of type modify")
     @Test
@@ -194,7 +216,7 @@ public class ChangeTransportMapperTest {
         when(adminGroupChange.getChangeType()).thenReturn(ChangeType.ADD);
         when(adminGroupChange.getAdmin()).thenReturn(user);
 
-        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(adminGroupChange), ADMIN_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(adminGroupChange), ADMIN_GROUP_IDENTIFICATION, USER_IDENTIFICATION, ModelType.USER);
     }
 
     @DisplayName("Convert admin group change of type remove")
@@ -203,7 +225,7 @@ public class ChangeTransportMapperTest {
         when(adminGroupChange.getChangeType()).thenReturn(ChangeType.REMOVE);
         when(adminGroupChange.getAdmin()).thenReturn(user);
 
-        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(adminGroupChange), ADMIN_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(adminGroupChange), ADMIN_GROUP_IDENTIFICATION, USER_IDENTIFICATION, ModelType.USER);
     }
 
     @DisplayName("Convert admin group change of type unknown")
@@ -244,7 +266,7 @@ public class ChangeTransportMapperTest {
         when(commonGroupChange.getChangeType()).thenReturn(ChangeType.ADD);
         when(commonGroupChange.getUser()).thenReturn(user);
 
-        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, USER_IDENTIFICATION, ModelType.USER);
     }
 
     @DisplayName("Convert common group change of type remove for user")
@@ -253,7 +275,7 @@ public class ChangeTransportMapperTest {
         when(commonGroupChange.getChangeType()).thenReturn(ChangeType.REMOVE);
         when(commonGroupChange.getUser()).thenReturn(user);
 
-        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, USER_IDENTIFICATION, ModelType.USER);
     }
 
     @DisplayName("Convert common group change of type add for privilege group")
@@ -262,7 +284,7 @@ public class ChangeTransportMapperTest {
         when(commonGroupChange.getChangeType()).thenReturn(ChangeType.ADD);
         when(commonGroupChange.getPrivilegeGroup()).thenReturn(privilegeGroup);
 
-        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, PRIVILEGE_GROUP_IDENTIFICATION);
+        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, PRIVILEGE_GROUP_IDENTIFICATION, ModelType.PRIVILEGE_GROUP);
     }
 
     @DisplayName("Convert common group change of type remove for privilege group")
@@ -271,7 +293,7 @@ public class ChangeTransportMapperTest {
         when(commonGroupChange.getChangeType()).thenReturn(ChangeType.REMOVE);
         when(commonGroupChange.getPrivilegeGroup()).thenReturn(privilegeGroup);
 
-        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, PRIVILEGE_GROUP_IDENTIFICATION);
+        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, PRIVILEGE_GROUP_IDENTIFICATION, ModelType.PRIVILEGE_GROUP);
     }
 
     @DisplayName("Convert common group change of type add for base group")
@@ -280,7 +302,7 @@ public class ChangeTransportMapperTest {
         when(commonGroupChange.getChangeType()).thenReturn(ChangeType.ADD);
         when(commonGroupChange.getBaseGroup()).thenReturn(baseGroup);
 
-        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION, ModelType.BASE_GROUP);
     }
 
     @DisplayName("Convert common group change of type remove for base group")
@@ -289,7 +311,7 @@ public class ChangeTransportMapperTest {
         when(commonGroupChange.getChangeType()).thenReturn(ChangeType.REMOVE);
         when(commonGroupChange.getBaseGroup()).thenReturn(baseGroup);
 
-        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(commonGroupChange), COMMON_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION, ModelType.BASE_GROUP);
     }
 
     @DisplayName("Convert common group change of type add but all null")
@@ -338,7 +360,8 @@ public class ChangeTransportMapperTest {
         when(privilegeGroupChange.getChangeType()).thenReturn(ChangeType.ADD);
         when(privilegeGroupChange.getUser()).thenReturn(user);
 
-        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(privilegeGroupChange), PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(privilegeGroupChange), PRIVILEGE_GROUP_IDENTIFICATION
+                , USER_IDENTIFICATION, ModelType.USER);
     }
 
     @DisplayName("Convert privilege group change of type remove for user")
@@ -347,7 +370,8 @@ public class ChangeTransportMapperTest {
         when(privilegeGroupChange.getChangeType()).thenReturn(ChangeType.REMOVE);
         when(privilegeGroupChange.getUser()).thenReturn(user);
 
-        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(privilegeGroupChange), PRIVILEGE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(privilegeGroupChange), PRIVILEGE_GROUP_IDENTIFICATION
+                , USER_IDENTIFICATION, ModelType.USER);
     }
 
     @DisplayName("Convert privilege group change of type add for base group")
@@ -356,7 +380,8 @@ public class ChangeTransportMapperTest {
         when(privilegeGroupChange.getChangeType()).thenReturn(ChangeType.ADD);
         when(privilegeGroupChange.getBaseGroup()).thenReturn(baseGroup);
 
-        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(privilegeGroupChange), PRIVILEGE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(privilegeGroupChange), PRIVILEGE_GROUP_IDENTIFICATION
+                , BASE_GROUP_IDENTIFICATION, ModelType.BASE_GROUP);
     }
 
     @DisplayName("Convert privilege group change of type remove for base group")
@@ -365,7 +390,8 @@ public class ChangeTransportMapperTest {
         when(privilegeGroupChange.getChangeType()).thenReturn(ChangeType.REMOVE);
         when(privilegeGroupChange.getBaseGroup()).thenReturn(baseGroup);
 
-        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(privilegeGroupChange), PRIVILEGE_GROUP_IDENTIFICATION, BASE_GROUP_IDENTIFICATION);
+        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(privilegeGroupChange), PRIVILEGE_GROUP_IDENTIFICATION
+                , BASE_GROUP_IDENTIFICATION, ModelType.BASE_GROUP);
     }
 
     @DisplayName("Convert privilege group change of type add but all null")
@@ -414,7 +440,8 @@ public class ChangeTransportMapperTest {
         when(baseGroupChange.getChangeType()).thenReturn(ChangeType.ADD);
         when(baseGroupChange.getUser()).thenReturn(user);
 
-        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(baseGroupChange), BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(baseGroupChange), BASE_GROUP_IDENTIFICATION
+                , USER_IDENTIFICATION, ModelType.USER);
     }
 
     @DisplayName("Convert base group change of type remove for user")
@@ -423,7 +450,8 @@ public class ChangeTransportMapperTest {
         when(baseGroupChange.getChangeType()).thenReturn(ChangeType.REMOVE);
         when(baseGroupChange.getUser()).thenReturn(user);
 
-        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(baseGroupChange), BASE_GROUP_IDENTIFICATION, USER_IDENTIFICATION);
+        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(baseGroupChange), BASE_GROUP_IDENTIFICATION
+                , USER_IDENTIFICATION, ModelType.USER);
     }
 
     @DisplayName("Convert base group change of type add for base group")
@@ -432,7 +460,8 @@ public class ChangeTransportMapperTest {
         when(baseGroupChange.getChangeType()).thenReturn(ChangeType.ADD);
         when(baseGroupChange.getSubBaseGroup()).thenReturn(subBaseGroup);
 
-        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(baseGroupChange), BASE_GROUP_IDENTIFICATION, SUB_BASE_GROUP_IDENTIFICATION);
+        checkDefaultAdd(ChangeTransportMapper.convertToChangeDto(baseGroupChange), BASE_GROUP_IDENTIFICATION
+                , SUB_BASE_GROUP_IDENTIFICATION, ModelType.BASE_GROUP);
     }
 
     @DisplayName("Convert base group change of type remove for base group")
@@ -441,7 +470,8 @@ public class ChangeTransportMapperTest {
         when(baseGroupChange.getChangeType()).thenReturn(ChangeType.REMOVE);
         when(baseGroupChange.getSubBaseGroup()).thenReturn(subBaseGroup);
 
-        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(baseGroupChange), BASE_GROUP_IDENTIFICATION, SUB_BASE_GROUP_IDENTIFICATION);
+        checkDefaultRemove(ChangeTransportMapper.convertToChangeDto(baseGroupChange), BASE_GROUP_IDENTIFICATION
+                , SUB_BASE_GROUP_IDENTIFICATION, ModelType.BASE_GROUP);
     }
 
     @DisplayName("Convert base group change of type add but all null")
@@ -466,8 +496,10 @@ public class ChangeTransportMapperTest {
         assertEquals(ChangeType.CREATE, result.getChangeType(), "wrong change type");
         assertEquals(SystemProperties.getSystemDateTime(), result.getChangeTime(), "wrong change time");
         assertEquals(EDITOR_IDENTIFICATION, result.getEditor(), "wrong editor");
+        assertFalse(result.getIsEditorAdmin(), "The editor should not be an admin");
         assertEquals(subjectId, result.getSubjectIdentification(), "wrong subject id");
         assertNull(result.getTargetIdentification(), "target should be empty");
+        assertNull(result.getTargetType(), "target type should be empty");
         assertEquals(DEFAULT_CHANGE_ACTION, result.getAction(), "wrong subject id");
     }
 
@@ -476,8 +508,10 @@ public class ChangeTransportMapperTest {
         assertEquals(ChangeType.MODIFY, result.getChangeType(), "wrong change type");
         assertEquals(SystemProperties.getSystemDateTime(), result.getChangeTime(), "wrong change time");
         assertEquals(EDITOR_IDENTIFICATION, result.getEditor(), "wrong editor");
+        assertFalse(result.getIsEditorAdmin(), "The editor should not be an admin");
         assertEquals(subjectId, result.getSubjectIdentification(), "wrong subject id");
         assertNull(result.getTargetIdentification(), "target should be empty");
+        assertNull(result.getTargetType(), "target type should be empty");
         assertEquals(DEFAULT_CHANGE_ACTION, result.getAction(), "wrong subject id");
     }
 
@@ -486,29 +520,35 @@ public class ChangeTransportMapperTest {
         assertEquals(ChangeType.DELETE, result.getChangeType(), "wrong change type");
         assertEquals(SystemProperties.getSystemDateTime(), result.getChangeTime(), "wrong change time");
         assertEquals(EDITOR_IDENTIFICATION, result.getEditor(), "wrong editor");
+        assertFalse(result.getIsEditorAdmin(), "The editor should not be an admin");
         assertEquals(DEFAULT_CHANGE_DELETE_INFO, result.getSubjectIdentification(), "wrong subject id");
         assertNull(result.getTargetIdentification(), "target should be empty");
+        assertNull(result.getTargetType(), "target type should be empty");
         assertEquals(DEFAULT_CHANGE_ACTION, result.getAction(), "wrong subject id");
     }
 
-    private void checkDefaultAdd(ChangeDto result, String subjectId, String targetId) {
+    private void checkDefaultAdd(ChangeDto result, String subjectId, String targetId, ModelType targetType) {
         assertNotNull(result, "There should be any result");
         assertEquals(ChangeType.ADD, result.getChangeType(), "wrong change type");
         assertEquals(SystemProperties.getSystemDateTime(), result.getChangeTime(), "wrong change time");
         assertEquals(EDITOR_IDENTIFICATION, result.getEditor(), "wrong editor");
+        assertFalse(result.getIsEditorAdmin(), "The editor should not be an admin");
         assertEquals(subjectId, result.getSubjectIdentification(), "wrong subject id");
         assertEquals(targetId, result.getTargetIdentification(), "wrong target id");
         assertEquals(DEFAULT_CHANGE_ACTION, result.getAction(), "wrong subject id");
+        assertEquals(targetType, result.getTargetType(), "Wrong target type");
     }
 
-    private void checkDefaultRemove(ChangeDto result, String subjectId, String targetId) {
+    private void checkDefaultRemove(ChangeDto result, String subjectId, String targetId, ModelType targetType) {
         assertNotNull(result, "There should be any result");
         assertEquals(ChangeType.REMOVE, result.getChangeType(), "wrong change type");
         assertEquals(SystemProperties.getSystemDateTime(), result.getChangeTime(), "wrong change time");
         assertEquals(EDITOR_IDENTIFICATION, result.getEditor(), "wrong editor");
+        assertFalse(result.getIsEditorAdmin(), "The editor should not be an admin");
         assertEquals(subjectId, result.getSubjectIdentification(), "wrong subject id");
         assertEquals(targetId, result.getTargetIdentification(), "wrong target id");
         assertEquals(DEFAULT_CHANGE_ACTION, result.getAction(), "wrong subject id");
+        assertEquals(targetType, result.getTargetType(), "Wrong target type");
     }
 
     private void checkDefaultUnsupported(ChangeDto result, ChangeType changeType) {
@@ -516,8 +556,10 @@ public class ChangeTransportMapperTest {
         assertEquals(changeType, result.getChangeType(), "wrong change type");
         assertEquals(SystemProperties.getSystemDateTime(), result.getChangeTime(), "wrong change time");
         assertEquals(EDITOR_IDENTIFICATION, result.getEditor(), "wrong editor");
+        assertFalse(result.getIsEditorAdmin(), "The editor should not be an admin");
         assertNull(result.getSubjectIdentification(), "subject id should be null");
         assertNull(result.getTargetIdentification(), "target id should be null");
+        assertNull(result.getTargetType(), "target type should be empty");
         assertEquals(DEFAULT_CHANGE_ACTION, result.getAction(), "wrong subject id");
     }
 }
