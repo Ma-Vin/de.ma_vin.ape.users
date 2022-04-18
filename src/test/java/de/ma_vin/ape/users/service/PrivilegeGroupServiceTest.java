@@ -6,10 +6,9 @@ import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.UsersPrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeToBaseGroupRepository;
+import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.service.history.PrivilegeGroupChangeService;
 import de.ma_vin.ape.utils.generators.IdGenerator;
 import org.junit.jupiter.api.AfterEach;
@@ -18,26 +17,24 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.openMocks;
 
 public class PrivilegeGroupServiceTest {
     public static final Long PRIVILEGE_GROUP_ID = 1L;
     public static final Long COMMON_GROUP_ID = 2L;
     public static final Long BASE_GROUP_ID = 3L;
-    public static final Long USER_ID = 4L;
+    public static final Long SUB_BASE_GROUP_ID = 4L;
+    public static final Long USER_ID = 5L;
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(BASE_GROUP_ID, BaseGroup.ID_PREFIX);
+    public static final String SUB_BASE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(SUB_BASE_GROUP_ID, BaseGroup.ID_PREFIX);
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
     public static final String PRINCIPAL_IDENTIFICATION = "UAA00001";
 
@@ -53,13 +50,29 @@ public class PrivilegeGroupServiceTest {
     @Mock
     private PrivilegeToBaseGroupRepository privilegeToBaseGroupRepository;
     @Mock
+    private BaseGroupToUserRepository baseGroupToUserRepository;
+    @Mock
+    private BaseToBaseGroupRepository baseToBaseGroupRepository;
+    @Mock
     private PrivilegeGroup privilegeGroup;
     @Mock
     private PrivilegeGroupDao privilegeGroupDao;
     @Mock
     private BaseGroupDao baseGroupDao;
     @Mock
+    private BaseGroupDao subBaseGroupDao;
+    @Mock
     private UserDao userDao;
+    @Mock
+    private User user;
+    @Mock
+    private BaseGroupToUserDao baseGroupToUserDao;
+    @Mock
+    private BaseGroupToBaseGroupDao baseGroupToBaseGroupDao;
+    @Mock
+    private PrivilegeGroupToUserDao privilegeGroupToUserDao;
+    @Mock
+    private PrivilegeGroupToBaseGroupDao privilegeGroupToBaseGroupDao;
     @Mock
     private PrivilegeGroupChangeService privilegeGroupChangeService;
 
@@ -72,6 +85,8 @@ public class PrivilegeGroupServiceTest {
         cut.setPrivilegeGroupRepository(privilegeGroupRepository);
         cut.setPrivilegeGroupToUserRepository(privilegeGroupToUserRepository);
         cut.setPrivilegeToBaseGroupRepository(privilegeToBaseGroupRepository);
+        cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
+        cut.setBaseToBaseGroupRepository(baseToBaseGroupRepository);
         cut.setPrivilegeGroupChangeService(privilegeGroupChangeService);
     }
 
@@ -431,5 +446,168 @@ public class PrivilegeGroupServiceTest {
         verify(privilegeGroupRepository).findById(any());
         verify(privilegeGroupRepository, never()).save(any());
         verify(privilegeGroupChangeService, never()).saveChange(any(), any(), any());
+    }
+
+    @DisplayName("Find all privilege groups which contains an given user, which is a direct member")
+    @Test
+    public void testFindAllPrivilegeGroupsOfUserDirect() {
+        mockDefaultFindAllPrivilegeGroupsOfUser();
+
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        assertNotNull(result, "The result should not be null");
+        assertFalse(result.isEmpty(), "The result should not be empty");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
+        assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getUser(), "The user should not be null");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getRole(), "The role should not be null");
+        assertEquals(Role.ADMIN, result.get(0).getRole(), "Wrong role at privilege group");
+
+        verify(privilegeGroupToUserRepository).findAllByUser(any());
+        verify(baseGroupToUserRepository).findAllByUser(any());
+        verify(privilegeToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, times(2)).findAllBySubBaseGroup(any());
+    }
+
+    @DisplayName("Find all privilege groups which contains an given user, which is a direct member and overrides")
+    @Test
+    public void testFindAllPrivilegeGroupsOfUserDirectOverriding() {
+        mockDefaultFindAllPrivilegeGroupsOfUser();
+        when(privilegeGroupToUserDao.getFilterRole()).thenReturn(Role.CONTRIBUTOR);
+
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        assertNotNull(result, "The result should not be null");
+        assertFalse(result.isEmpty(), "The result should not be empty");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
+        assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getUser(), "The user should not be null");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getRole(), "The role should not be null");
+        assertEquals(Role.CONTRIBUTOR, result.get(0).getRole(), "Wrong role at privilege group");
+
+        verify(privilegeGroupToUserRepository).findAllByUser(any());
+        verify(baseGroupToUserRepository).findAllByUser(any());
+        verify(privilegeToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, times(2)).findAllBySubBaseGroup(any());
+    }
+
+    @DisplayName("Find all privilege groups which contains an given user, which is a indirect member")
+    @Test
+    public void testFindAllPrivilegeGroupsOfUserIndirect() {
+        mockDefaultFindAllPrivilegeGroupsOfUser();
+        when(privilegeGroupToUserRepository.findAllByUser(any())).thenReturn(Collections.emptyList());
+
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        assertNotNull(result, "The result should not be null");
+        assertFalse(result.isEmpty(), "The result should not be empty");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
+        assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getUser(), "The user should not be null");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getRole(), "The role should not be null");
+        assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
+
+        verify(privilegeGroupToUserRepository).findAllByUser(any());
+        verify(baseGroupToUserRepository).findAllByUser(any());
+        verify(privilegeToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, times(2)).findAllBySubBaseGroup(any());
+    }
+
+    @DisplayName("Find all privilege groups which contains an given user, which is a indirect member at base and sub base group")
+    @Test
+    public void testFindAllPrivilegeGroupsOfUserIndirectBaseAndSubBase() {
+        mockDefaultFindAllPrivilegeGroupsOfUser();
+        when(privilegeGroupToUserRepository.findAllByUser(any())).thenReturn(Collections.emptyList());
+        when(baseGroupToUserRepository.findAllByUser(any())).then(a -> {
+            when(baseGroupToUserDao.getUser()).thenReturn(a.getArgument(0));
+            return Arrays.asList(baseGroupToUserDao, baseGroupToUserDao);
+        });
+        when(baseGroupToUserDao.getBaseGroup()).thenReturn(baseGroupDao, subBaseGroupDao);
+
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        assertNotNull(result, "The result should not be null");
+        assertFalse(result.isEmpty(), "The result should not be empty");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
+        assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getUser(), "The user should not be null");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getRole(), "The role should not be null");
+        assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
+
+        verify(privilegeGroupToUserRepository).findAllByUser(any());
+        verify(baseGroupToUserRepository).findAllByUser(any());
+        verify(privilegeToBaseGroupRepository, times(3)).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, times(3)).findAllBySubBaseGroup(any());
+    }
+
+    @DisplayName("Find all privilege groups which contains an given user, which is a indirect member at two base groups")
+    @Test
+    public void testFindAllPrivilegeGroupsOfUserIndirectTwoBase() {
+        mockDefaultFindAllPrivilegeGroupsOfUser();
+        when(privilegeGroupToUserRepository.findAllByUser(any())).thenReturn(Collections.emptyList());
+        when(baseGroupToUserRepository.findAllByUser(any())).then(a -> {
+            when(baseGroupToUserDao.getUser()).thenReturn(a.getArgument(0));
+            return Arrays.asList(baseGroupToUserDao, baseGroupToUserDao);
+        });
+        when(baseGroupToUserDao.getBaseGroup()).thenReturn(baseGroupDao, subBaseGroupDao);
+        when(baseToBaseGroupRepository.findAllBySubBaseGroup(any())).thenReturn(Collections.emptyList());
+        when(privilegeToBaseGroupRepository.findAllByBaseGroup(any())).thenReturn(Collections.singletonList(privilegeGroupToBaseGroupDao));
+        when(privilegeGroupToBaseGroupDao.getBaseGroup()).thenReturn(baseGroupDao, subBaseGroupDao);
+        when(privilegeGroupToBaseGroupDao.getFilterRole()).thenReturn(Role.CONTRIBUTOR, Role.MANAGER);
+
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        assertNotNull(result, "The result should not be null");
+        assertFalse(result.isEmpty(), "The result should not be empty");
+        assertEquals(1, result.size(), "Wrong number of elements at result");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
+        assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getUser(), "The user should not be null");
+        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
+        assertNotNull(result.get(0).getRole(), "The role should not be null");
+        assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
+
+        verify(privilegeGroupToUserRepository).findAllByUser(any());
+        verify(baseGroupToUserRepository).findAllByUser(any());
+        verify(privilegeToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, times(2)).findAllBySubBaseGroup(any());
+    }
+
+    private void mockDefaultFindAllPrivilegeGroupsOfUser() {
+        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
+        when(subBaseGroupDao.getIdentification()).thenReturn(SUB_BASE_GROUP_IDENTIFICATION);
+        when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+
+        when(privilegeGroupToUserDao.getPrivilegeGroup()).thenReturn(privilegeGroupDao);
+        when(privilegeGroupToUserDao.getFilterRole()).thenReturn(Role.ADMIN);
+        when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(privilegeGroupDao);
+        when(privilegeGroupToBaseGroupDao.getBaseGroup()).thenReturn(baseGroupDao);
+        when(privilegeGroupToBaseGroupDao.getFilterRole()).thenReturn(Role.MANAGER);
+
+        when(baseGroupToUserDao.getBaseGroup()).thenReturn(subBaseGroupDao);
+        when(baseGroupToBaseGroupDao.getBaseGroup()).thenReturn(baseGroupDao);
+        when(baseGroupToBaseGroupDao.getSubBaseGroup()).thenReturn(subBaseGroupDao);
+
+        when(privilegeGroupToUserRepository.findAllByUser(any())).then(a -> {
+            when(privilegeGroupToUserDao.getUser()).thenReturn(a.getArgument(0));
+            return Collections.singletonList(privilegeGroupToUserDao);
+        });
+        when(privilegeToBaseGroupRepository.findAllByBaseGroup(eq(baseGroupDao))).thenReturn(Collections.singletonList(privilegeGroupToBaseGroupDao));
+
+        when(baseGroupToUserRepository.findAllByUser(any())).then(a -> {
+            when(baseGroupToUserDao.getUser()).thenReturn(a.getArgument(0));
+            return Collections.singletonList(baseGroupToUserDao);
+        });
+        when(baseToBaseGroupRepository.findAllBySubBaseGroup(any())).thenReturn(Collections.emptyList());
+        when(baseToBaseGroupRepository.findAllBySubBaseGroup(eq(subBaseGroupDao))).thenReturn(Collections.singletonList(baseGroupToBaseGroupDao));
     }
 }

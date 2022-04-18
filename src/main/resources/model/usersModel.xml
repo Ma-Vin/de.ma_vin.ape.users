@@ -130,6 +130,17 @@
                         <reference referenceName="user" targetEntity="User"/>
                     </references>
                 </entity>
+                <entity baseName="UsersPrivilegeGroup" models="DOMAIN_DTO"
+                        description="The user at a privilege group with its  role">
+                    <fields>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"
+                               shortDescription="The role of the user at the privilege group"/>
+                    </fields>
+                    <references>
+                        <reference referenceName="user" targetEntity="User"/>
+                        <reference referenceName="privilegeGroup" targetEntity="PrivilegeGroup"/>
+                    </references>
+                </entity>
             </entities>
         </grouping>
         <grouping groupingPackage="group.part">

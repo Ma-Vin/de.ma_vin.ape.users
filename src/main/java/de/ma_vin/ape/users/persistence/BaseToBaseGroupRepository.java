@@ -25,6 +25,8 @@ public interface BaseToBaseGroupRepository extends JpaRepository<BaseGroupToBase
 
     List<BaseGroupToBaseGroupDao> findAllByBaseGroup(BaseGroupDao baseGroup, Pageable pageable);
 
+    List<BaseGroupToBaseGroupDao> findAllBySubBaseGroup(BaseGroupDao subBaseGroup);
+
     long countByBaseGroup(BaseGroupDao baseGroup);
 
     @Query(value = "SELECT b FROM BaseGroupDao b WHERE b.parentCommonGroup=:commonGroup AND b!=:baseGroup"

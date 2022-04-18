@@ -1,15 +1,17 @@
 package de.ma_vin.ape.users.service;
 
+import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.dao.group.CommonGroupDaoExt;
-import de.ma_vin.ape.users.model.gen.dao.group.CommonGroupDao;
-import de.ma_vin.ape.users.model.gen.dao.group.PrivilegeGroupDao;
+import de.ma_vin.ape.users.model.gen.dao.group.*;
+import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.UsersPrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.history.PrivilegeGroupChange;
+import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeGroupToUserRepository;
-import de.ma_vin.ape.users.persistence.PrivilegeToBaseGroupRepository;
+import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
+import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
 import de.ma_vin.ape.users.service.context.SavingWithParentRepositoryServiceContext;
 import de.ma_vin.ape.users.service.history.AbstractChangeService;
@@ -21,9 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @Data
@@ -39,6 +39,10 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
     private PrivilegeGroupToUserRepository privilegeGroupToUserRepository;
     @Autowired
     private PrivilegeToBaseGroupRepository privilegeToBaseGroupRepository;
+    @Autowired
+    private BaseGroupToUserRepository baseGroupToUserRepository;
+    @Autowired
+    private BaseToBaseGroupRepository baseToBaseGroupRepository;
     @Autowired
     private BaseGroupService baseGroupService;
     @Autowired
@@ -228,6 +232,123 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
             return privilegeGroupRepository.findByParentCommonGroup(parent);
         }
         return privilegeGroupRepository.findByParentCommonGroup(parent, PageRequest.of(page, size));
+    }
+
+
+    /**
+     * Determines all privilege groups which contains a given user
+     *
+     * @param user the user who should be contained
+     * @return List of privilege groups and the role of the user at the groups
+     */
+    public List<UsersPrivilegeGroup> findAllPrivilegeGroupsOfUser(User user) {
+        UserDao userDao = UserAccessMapper.convertToUserDao(user);
+
+        List<UsersPrivilegeGroup> result = findAllPrivilegeThroughBaseGroups(user, userDao);
+
+        privilegeGroupToUserRepository.findAllByUser(userDao)
+                .forEach(ptu -> addOrTakeOverRole(ptu, result, user));
+
+        return result;
+    }
+
+    /**
+     * Determines all privilege groups which contains a given user which only can be achieved through a base group
+     *
+     * @param user    user whose privilege groups are searched for
+     * @param userDao dao representation of the user
+     * @return List of privilege groups and the role of the user at the groups
+     */
+    private List<UsersPrivilegeGroup> findAllPrivilegeThroughBaseGroups(User user, UserDao userDao) {
+        List<UsersPrivilegeGroup> result = new ArrayList<>();
+
+        baseGroupToUserRepository.findAllByUser(userDao).stream()
+                .flatMap(btu -> getPrivilegeGroupsOfBaseGroup(btu.getBaseGroup()).stream())
+                .forEach(ptb -> addOrTakeOverRole(ptb, result, user));
+
+        return result;
+    }
+
+    /**
+     * Checks whether there exists already an entry at result list and checks it against roles priority or adds a new entry with the given role.
+     *
+     * @param entryToCheck entry to check
+     * @param result       list of already determined privilege, user, role triples
+     * @param user         the user whose entries are determined
+     */
+    private void addOrTakeOverRole(PrivilegeGroupToBaseGroupDao entryToCheck, List<UsersPrivilegeGroup> result, User user) {
+        addOrTakeOverRole(entryToCheck.getPrivilegeGroup(), entryToCheck.getFilterRole(), result, user, false);
+    }
+
+    /**
+     * Checks whether there exists already an entry at result list and overrides the role or adds a new entry with the given role.
+     *
+     * @param entryToCheck entry to check
+     * @param result       list of already determined privilege, user, role triples
+     * @param user         the user whose entries are determined
+     */
+    private void addOrTakeOverRole(PrivilegeGroupToUserDao entryToCheck, List<UsersPrivilegeGroup> result, User user) {
+        addOrTakeOverRole(entryToCheck.getPrivilegeGroup(), entryToCheck.getFilterRole(), result, user, true);
+    }
+
+    /**
+     * Checks whether there exists already an entry at result list, adds a new one with the given role. An addition can be forced
+     *
+     * @param privilegeGroupToCheck privilege group which is to check
+     * @param roleToCheck           role which should be set
+     * @param result                list of already determined privilege, user, role triples
+     * @param user                  the user whose entries are determined
+     * @param alwaysOverride        {@code true} to force overriding an existing role value if there exists already an entry for the privilege group.
+     *                              {@code false} if the role should be used if it is a new entry or the given role has a higher priority than an existing one
+     */
+    private void addOrTakeOverRole(PrivilegeGroupDao privilegeGroupToCheck, Role roleToCheck, List<UsersPrivilegeGroup> result, User user, boolean alwaysOverride) {
+        Optional<UsersPrivilegeGroup> existingEntry = result.stream()
+                .filter(upg -> upg.getIdentification().equals(privilegeGroupToCheck.getIdentification()))
+                .findFirst();
+
+        if (existingEntry.isEmpty()) {
+            UsersPrivilegeGroup upg = new UsersPrivilegeGroup();
+            upg.setIdentification(privilegeGroupToCheck.getIdentification());
+            upg.setPrivilegeGroup(GroupAccessMapper.convertToPrivilegeGroup(privilegeGroupToCheck, false));
+            upg.setUser(user);
+            upg.setRole(roleToCheck);
+            result.add(upg);
+            return;
+        }
+
+        if (alwaysOverride || existingEntry.get().getRole().getPriority() < roleToCheck.getPriority()) {
+            existingEntry.get().setRole(roleToCheck);
+        }
+    }
+
+    /**
+     * Iterates from a given base group up to a parent privilege group
+     *
+     * @param baseGroupDao the base group where to start iteration
+     * @return All connections from a privilege group to the next base group which contains the base group
+     * (both directly or indirectly)
+     */
+    private List<PrivilegeGroupToBaseGroupDao> getPrivilegeGroupsOfBaseGroup(BaseGroupDao baseGroupDao) {
+        return getBaseParentsOfBaseGroup(baseGroupDao, new HashSet<>()).stream()
+                .flatMap(bg -> privilegeToBaseGroupRepository.findAllByBaseGroup(bg).stream())
+                .toList();
+    }
+
+    /**
+     * Determines all parent base groups (both directly or indirectly)
+     *
+     * @param baseGroupDao             the base group whose parent base groups are search for
+     * @param alreadyCheckedBaseGroups A Set to hold already checked base groups
+     * @return All Parent base groups
+     */
+    private Set<BaseGroupDao> getBaseParentsOfBaseGroup(BaseGroupDao baseGroupDao, Set<BaseGroupDao> alreadyCheckedBaseGroups) {
+        if (alreadyCheckedBaseGroups.contains(baseGroupDao)) {
+            return alreadyCheckedBaseGroups;
+        }
+        alreadyCheckedBaseGroups.add(baseGroupDao);
+        baseToBaseGroupRepository.findAllBySubBaseGroup(baseGroupDao)
+                .forEach(btb -> alreadyCheckedBaseGroups.addAll(getBaseParentsOfBaseGroup(btb.getBaseGroup(), alreadyCheckedBaseGroups)));
+        return alreadyCheckedBaseGroups;
     }
 
     /**
