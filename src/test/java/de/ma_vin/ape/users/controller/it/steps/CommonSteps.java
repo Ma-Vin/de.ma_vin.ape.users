@@ -5,7 +5,6 @@ import de.ma_vin.ape.utils.controller.response.Status;
 import io.cucumber.java.Before;
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.Then;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -83,6 +82,11 @@ public class CommonSteps extends AbstractIntegrationTestSteps {
     @Then("The {string} property at response position {int} is {string}")
     public void checkPropertyAt(String propertyName, int position, String propertyValue) throws Exception {
         shared.getResultActions().andExpect(jsonPath("response[" + position + "]." + propertyName, is(propertyValue)));
+    }
+
+    @Then("The role property at response position {int} is {roleValue}")
+    public void checkRolePropertyAt(int position, Role propertyValue) throws Exception {
+        shared.getResultActions().andExpect(jsonPath("response[" + position + "].role", is(propertyValue.name())));
     }
 
     @Then("The {string} property at response position {int} is the same like the one of alias {string}")

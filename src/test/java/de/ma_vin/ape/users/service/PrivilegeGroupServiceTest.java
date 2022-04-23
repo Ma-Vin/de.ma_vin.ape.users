@@ -54,6 +54,8 @@ public class PrivilegeGroupServiceTest {
     @Mock
     private BaseToBaseGroupRepository baseToBaseGroupRepository;
     @Mock
+    private UserRepository userRepository;
+    @Mock
     private PrivilegeGroup privilegeGroup;
     @Mock
     private PrivilegeGroupDao privilegeGroupDao;
@@ -87,6 +89,7 @@ public class PrivilegeGroupServiceTest {
         cut.setPrivilegeToBaseGroupRepository(privilegeToBaseGroupRepository);
         cut.setBaseGroupToUserRepository(baseGroupToUserRepository);
         cut.setBaseToBaseGroupRepository(baseToBaseGroupRepository);
+        cut.setUserRepository(userRepository);
         cut.setPrivilegeGroupChangeService(privilegeGroupChangeService);
     }
 
@@ -453,7 +456,7 @@ public class PrivilegeGroupServiceTest {
     public void testFindAllPrivilegeGroupsOfUserDirect() {
         mockDefaultFindAllPrivilegeGroupsOfUser();
 
-        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(USER_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertFalse(result.isEmpty(), "The result should not be empty");
         assertEquals(1, result.size(), "Wrong number of elements at result");
@@ -465,6 +468,7 @@ public class PrivilegeGroupServiceTest {
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.ADMIN, result.get(0).getRole(), "Wrong role at privilege group");
 
+        verify(userRepository).findById(eq(USER_ID));
         verify(privilegeGroupToUserRepository).findAllByUser(any());
         verify(baseGroupToUserRepository).findAllByUser(any());
         verify(privilegeToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
@@ -477,7 +481,7 @@ public class PrivilegeGroupServiceTest {
         mockDefaultFindAllPrivilegeGroupsOfUser();
         when(privilegeGroupToUserDao.getFilterRole()).thenReturn(Role.CONTRIBUTOR);
 
-        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(USER_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertFalse(result.isEmpty(), "The result should not be empty");
         assertEquals(1, result.size(), "Wrong number of elements at result");
@@ -489,6 +493,7 @@ public class PrivilegeGroupServiceTest {
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.CONTRIBUTOR, result.get(0).getRole(), "Wrong role at privilege group");
 
+        verify(userRepository).findById(eq(USER_ID));
         verify(privilegeGroupToUserRepository).findAllByUser(any());
         verify(baseGroupToUserRepository).findAllByUser(any());
         verify(privilegeToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
@@ -501,7 +506,7 @@ public class PrivilegeGroupServiceTest {
         mockDefaultFindAllPrivilegeGroupsOfUser();
         when(privilegeGroupToUserRepository.findAllByUser(any())).thenReturn(Collections.emptyList());
 
-        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(USER_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertFalse(result.isEmpty(), "The result should not be empty");
         assertEquals(1, result.size(), "Wrong number of elements at result");
@@ -513,6 +518,7 @@ public class PrivilegeGroupServiceTest {
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
 
+        verify(userRepository).findById(eq(USER_ID));
         verify(privilegeGroupToUserRepository).findAllByUser(any());
         verify(baseGroupToUserRepository).findAllByUser(any());
         verify(privilegeToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
@@ -530,7 +536,7 @@ public class PrivilegeGroupServiceTest {
         });
         when(baseGroupToUserDao.getBaseGroup()).thenReturn(baseGroupDao, subBaseGroupDao);
 
-        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(USER_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertFalse(result.isEmpty(), "The result should not be empty");
         assertEquals(1, result.size(), "Wrong number of elements at result");
@@ -542,6 +548,7 @@ public class PrivilegeGroupServiceTest {
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
 
+        verify(userRepository).findById(eq(USER_ID));
         verify(privilegeGroupToUserRepository).findAllByUser(any());
         verify(baseGroupToUserRepository).findAllByUser(any());
         verify(privilegeToBaseGroupRepository, times(3)).findAllByBaseGroup(any());
@@ -563,7 +570,7 @@ public class PrivilegeGroupServiceTest {
         when(privilegeGroupToBaseGroupDao.getBaseGroup()).thenReturn(baseGroupDao, subBaseGroupDao);
         when(privilegeGroupToBaseGroupDao.getFilterRole()).thenReturn(Role.CONTRIBUTOR, Role.MANAGER);
 
-        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(user);
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(USER_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertFalse(result.isEmpty(), "The result should not be empty");
         assertEquals(1, result.size(), "Wrong number of elements at result");
@@ -575,14 +582,35 @@ public class PrivilegeGroupServiceTest {
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
 
+        verify(userRepository).findById(eq(USER_ID));
         verify(privilegeGroupToUserRepository).findAllByUser(any());
         verify(baseGroupToUserRepository).findAllByUser(any());
         verify(privilegeToBaseGroupRepository, times(2)).findAllByBaseGroup(any());
         verify(baseToBaseGroupRepository, times(2)).findAllBySubBaseGroup(any());
     }
 
+    @DisplayName("Find all privilege groups which contains an given user, but it is unknown")
+    @Test
+    public void testFindAllPrivilegeGroupsOfUserButUnknown() {
+        mockDefaultFindAllPrivilegeGroupsOfUser();
+
+        List<UsersPrivilegeGroup> result = cut.findAllPrivilegeGroupsOfUser(USER_IDENTIFICATION + 1);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isEmpty(), "The result should be empty");
+
+        verify(userRepository).findById(any());
+        verify(privilegeGroupToUserRepository, never()).findAllByUser(any());
+        verify(baseGroupToUserRepository, never()).findAllByUser(any());
+        verify(privilegeToBaseGroupRepository, never()).findAllByBaseGroup(any());
+        verify(baseToBaseGroupRepository, never()).findAllBySubBaseGroup(any());
+    }
+
     private void mockDefaultFindAllPrivilegeGroupsOfUser() {
-        when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
+        when(userRepository.findById(any())).thenReturn(Optional.empty());
+        when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
+
+        when(userDao.getId()).thenReturn(USER_ID);
+        when(userDao.getIdentification()).thenReturn(USER_IDENTIFICATION);
         when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(subBaseGroupDao.getIdentification()).thenReturn(SUB_BASE_GROUP_IDENTIFICATION);
         when(privilegeGroupDao.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);

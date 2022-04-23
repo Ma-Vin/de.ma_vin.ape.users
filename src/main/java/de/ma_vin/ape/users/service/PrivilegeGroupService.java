@@ -44,6 +44,8 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
     @Autowired
     private BaseToBaseGroupRepository baseToBaseGroupRepository;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private BaseGroupService baseGroupService;
     @Autowired
     private PrivilegeGroupChangeService privilegeGroupChangeService;
@@ -238,15 +240,21 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
     /**
      * Determines all privilege groups which contains a given user
      *
-     * @param user the user who should be contained
+     * @param userIdentification the id of user who should be contained
      * @return List of privilege groups and the role of the user at the groups
      */
-    public List<UsersPrivilegeGroup> findAllPrivilegeGroupsOfUser(User user) {
-        UserDao userDao = UserAccessMapper.convertToUserDao(user);
+    public List<UsersPrivilegeGroup> findAllPrivilegeGroupsOfUser(String userIdentification) {
+        Optional<UserDao> userDaoOpt = userRepository.findById(IdGenerator.generateId(userIdentification, User.ID_PREFIX));
 
-        List<UsersPrivilegeGroup> result = findAllPrivilegeThroughBaseGroups(user, userDao);
+        if (userDaoOpt.isEmpty()) {
+            log.warn("try to get the privilege groups of user {}, but the user was not found", userIdentification);
+            return Collections.emptyList();
+        }
 
-        privilegeGroupToUserRepository.findAllByUser(userDao)
+        User user = UserAccessMapper.convertToUser(userDaoOpt.get());
+        List<UsersPrivilegeGroup> result = findAllPrivilegeThroughBaseGroups(user, userDaoOpt.get());
+
+        privilegeGroupToUserRepository.findAllByUser(userDaoOpt.get())
                 .forEach(ptu -> addOrTakeOverRole(ptu, result, user));
 
         return result;

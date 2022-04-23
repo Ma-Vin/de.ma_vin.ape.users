@@ -94,3 +94,49 @@ Feature: Testing methods of the privilege group controller
     And The status of the result should be "OK"
     And The identification at 0 is the same like the one of alias "privilege5"
     And The "identification" property at response position 1 does not exists
+
+  Scenario: Get users privilege groups
+    Given There exists a privilege group with name "Privilege Group Name" with alias "privilege" at common group "common"
+    And There exists a privilege group with name "Other Privilege Group Name" with alias "otherPrivilege" at common group "common"
+    And There exists a base group with name "base Group Name" with alias "base" at common group "common"
+    And There exists a base group with name "Sub Base Group Name" with alias "subBase" at common group "common"
+    And There exists an user with first name "Direct" and last name "User" with alias "directUser" at common group "common"
+    And There exists an user with first name "Indirect" and last name "User" with alias "indirectUser" at common group "common"
+    And There exists an user with first name "AnotherIndirect" and last name "User" with alias "anotherUser" at common group "common"
+    When Controller is called to add the base group with alias "base" as MANAGER to privilege group with alias "privilege"
+    Then The result is Ok and Json
+    When Controller is called to add the base group with alias "subBase" to base group with alias "base"
+    Then The result is Ok and Json
+    When Controller is called to add the user with alias "directUser" as CONTRIBUTOR to privilege group with alias "privilege"
+    Then The result is Ok and Json
+    When Controller is called to add the user with alias "indirectUser" to base group with alias "subBase"
+    Then The result is Ok and Json
+    When Controller is called to add the user with alias "anotherUser" as VISITOR to privilege group with alias "otherPrivilege"
+    Then The result is Ok and Json
+    When Controller is called to add the user with alias "anotherUser" to base group with alias "subBase"
+    Then The result is Ok and Json
+    When Controller is called to get the privilege groups of user with alias "directUser"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "privilege"
+    And The identification of "privilegeGroup" at 0 is the same like the one of alias "privilege"
+    And The identification of "user" at 0 is the same like the one of alias "directUser"
+    And The role property at response position 0 is CONTRIBUTOR
+    When Controller is called to get the privilege groups of user with alias "indirectUser"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "privilege"
+    And The identification of "privilegeGroup" at 0 is the same like the one of alias "privilege"
+    And The identification of "user" at 0 is the same like the one of alias "indirectUser"
+    And The role property at response position 0 is MANAGER
+    When Controller is called to get the privilege groups of user with alias "anotherUser"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification at 0 is the same like the one of alias "privilege"
+    And The identification of "privilegeGroup" at 0 is the same like the one of alias "privilege"
+    And The identification of "user" at 0 is the same like the one of alias "anotherUser"
+    And The role property at response position 0 is MANAGER
+    And The identification at 1 is the same like the one of alias "otherPrivilege"
+    And The identification of "privilegeGroup" at 1 is the same like the one of alias "otherPrivilege"
+    And The identification of "user" at 1 is the same like the one of alias "anotherUser"
+    And The role property at response position 1 is VISITOR

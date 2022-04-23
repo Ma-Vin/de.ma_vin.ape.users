@@ -1,11 +1,14 @@
 package de.ma_vin.ape.users.controller;
 
 import de.ma_vin.ape.users.enums.ChangeType;
+import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.UsersPrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.history.PrivilegeGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.PrivilegeGroupDto;
+import de.ma_vin.ape.users.model.gen.dto.group.UsersPrivilegeGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.PrivilegeGroupPartDto;
 import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.service.PrivilegeGroupService;
@@ -56,6 +59,8 @@ public class PrivilegeGroupControllerTest {
     private PrivilegeGroup privilegeGroup;
     @Mock
     private PrivilegeGroupDto privilegeGroupDto;
+    @Mock
+    private UsersPrivilegeGroup usersPrivilegeGroup;
     @Mock
     private User editor;
     @Mock
@@ -449,5 +454,36 @@ public class PrivilegeGroupControllerTest {
                 , "Missing warning message");
 
         verify(privilegeGroupChangeService).loadChanges(eq(PRIVILEGE_GROUP_IDENTIFICATION));
+    }
+
+    @DisplayName("Get privilege groups of user")
+    @Test
+    public void testGetPrivilegeGroupsOfUser(){
+        when(privilegeGroupService.findAllPrivilegeGroupsOfUser(eq(EDITOR_IDENTIFICATION))).thenReturn(Collections.singletonList(usersPrivilegeGroup));
+        when(usersPrivilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
+        when(usersPrivilegeGroup.getPrivilegeGroup()).thenReturn(privilegeGroup);
+        when(usersPrivilegeGroup.getUser()).thenReturn(editor);
+        when(usersPrivilegeGroup.getRole()).thenReturn(Role.MANAGER);
+
+        ResponseWrapper<List<UsersPrivilegeGroupDto>> response = cut.getPrivilegeGroupsOfUser(EDITOR_IDENTIFICATION);
+
+        checkOk(response);
+        assertEquals(1, response.getResponse().size(), "Wrong number of privilege groups");
+        UsersPrivilegeGroupDto entry = response.getResponse().get(0);
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, entry.getIdentification(), "Wrong id");
+        assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, entry.getPrivilegeGroup().getIdentification(), "Wrong privilege group id");
+        assertEquals(EDITOR_IDENTIFICATION, entry.getUser().getIdentification(), "Wrong user id");
+        assertEquals(Role.MANAGER, entry.getRole(), "Wrong role");
+    }
+
+    @DisplayName("Get privilege groups of user, but there none")
+    @Test
+    public void testGetPrivilegeGroupsOfUserNotExsiting(){
+        when(privilegeGroupService.findAllPrivilegeGroupsOfUser(eq(EDITOR_IDENTIFICATION))).thenReturn(Collections.emptyList());
+
+        ResponseWrapper<List<UsersPrivilegeGroupDto>> response = cut.getPrivilegeGroupsOfUser(EDITOR_IDENTIFICATION);
+
+        checkWarn(response);
+        assertEquals(0, response.getResponse().size(), "Wrong number of privilege groups");
     }
 }

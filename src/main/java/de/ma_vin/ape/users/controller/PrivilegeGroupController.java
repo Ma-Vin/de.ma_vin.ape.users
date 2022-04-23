@@ -3,9 +3,11 @@ package de.ma_vin.ape.users.controller;
 
 import de.ma_vin.ape.users.model.domain.group.PrivilegeGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
+import de.ma_vin.ape.users.model.gen.domain.group.UsersPrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.history.PrivilegeGroupChange;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.PrivilegeGroupDto;
+import de.ma_vin.ape.users.model.gen.dto.group.UsersPrivilegeGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.PrivilegeGroupPartDto;
 import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.mapper.GroupPartTransportMapper;
@@ -137,5 +139,16 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
             return createResponseWithWarning(Collections.emptyList(), String.format(NO_CHANGES_FOUND_WARNING_TEXT, "privilege group", privilegeGroupIdentification));
         }
         return createSuccessResponse(changes.stream().map(ChangeTransportMapper::convertToChangeDto).toList());
+    }
+
+    @PreAuthorize("isVisitor(#userIdentification, 'USER')")
+    @GetMapping("/getPrivilegeGroupsOfUser/{userIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UsersPrivilegeGroupDto>> getPrivilegeGroupsOfUser(@PathVariable String userIdentification) {
+        List<UsersPrivilegeGroup> groups = privilegeGroupService.findAllPrivilegeGroupsOfUser(userIdentification);
+        if (groups.isEmpty()) {
+            return createResponseWithWarning(Collections.emptyList(), String.format("There is no privilege group for %s", userIdentification));
+        }
+        return createSuccessResponse(groups.stream().map(GroupTransportMapper::convertToUsersPrivilegeGroupDto).toList());
     }
 }

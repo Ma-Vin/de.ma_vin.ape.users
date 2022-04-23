@@ -54,6 +54,8 @@ Feature: Testing methods of the privilege group controller
     Then The result is a <httpCodeRange>
     When Controller is called to get the history of privilege group with the identification of the alias "privilege"
     Then The result is a <httpCodeRange>
+    When Controller is called to get the privilege groups of user with alias "user"
+    Then The result is a <httpCodeRange>
     Examples:
       | role        | httpCodeRange |
     # indirect included: test only the httpCode switch from ok to not ok
