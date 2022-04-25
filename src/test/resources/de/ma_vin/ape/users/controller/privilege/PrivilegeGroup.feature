@@ -120,23 +120,19 @@ Feature: Testing methods of the privilege group controller
     And The status of the result should be "OK"
     And The identification at 0 is the same like the one of alias "privilege"
     And The identification of "privilegeGroup" at 0 is the same like the one of alias "privilege"
-    And The identification of "user" at 0 is the same like the one of alias "directUser"
     And The role property at response position 0 is CONTRIBUTOR
     When Controller is called to get the privilege groups of user with alias "indirectUser"
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The identification at 0 is the same like the one of alias "privilege"
     And The identification of "privilegeGroup" at 0 is the same like the one of alias "privilege"
-    And The identification of "user" at 0 is the same like the one of alias "indirectUser"
     And The role property at response position 0 is MANAGER
     When Controller is called to get the privilege groups of user with alias "anotherUser"
     Then The result is Ok and Json
     And The status of the result should be "OK"
     And The identification at 0 is the same like the one of alias "privilege"
     And The identification of "privilegeGroup" at 0 is the same like the one of alias "privilege"
-    And The identification of "user" at 0 is the same like the one of alias "anotherUser"
     And The role property at response position 0 is MANAGER
     And The identification at 1 is the same like the one of alias "otherPrivilege"
     And The identification of "privilegeGroup" at 1 is the same like the one of alias "otherPrivilege"
-    And The identification of "user" at 1 is the same like the one of alias "anotherUser"
     And The role property at response position 1 is VISITOR

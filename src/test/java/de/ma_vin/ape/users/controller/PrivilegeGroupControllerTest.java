@@ -462,7 +462,6 @@ public class PrivilegeGroupControllerTest {
         when(privilegeGroupService.findAllPrivilegeGroupsOfUser(eq(EDITOR_IDENTIFICATION))).thenReturn(Collections.singletonList(usersPrivilegeGroup));
         when(usersPrivilegeGroup.getIdentification()).thenReturn(PRIVILEGE_GROUP_IDENTIFICATION);
         when(usersPrivilegeGroup.getPrivilegeGroup()).thenReturn(privilegeGroup);
-        when(usersPrivilegeGroup.getUser()).thenReturn(editor);
         when(usersPrivilegeGroup.getRole()).thenReturn(Role.MANAGER);
 
         ResponseWrapper<List<UsersPrivilegeGroupDto>> response = cut.getPrivilegeGroupsOfUser(EDITOR_IDENTIFICATION);
@@ -472,7 +471,6 @@ public class PrivilegeGroupControllerTest {
         UsersPrivilegeGroupDto entry = response.getResponse().get(0);
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, entry.getIdentification(), "Wrong id");
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, entry.getPrivilegeGroup().getIdentification(), "Wrong privilege group id");
-        assertEquals(EDITOR_IDENTIFICATION, entry.getUser().getIdentification(), "Wrong user id");
         assertEquals(Role.MANAGER, entry.getRole(), "Wrong role");
     }
 

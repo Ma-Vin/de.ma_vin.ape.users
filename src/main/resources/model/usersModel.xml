@@ -137,7 +137,6 @@
                                shortDescription="The role of the user at the privilege group"/>
                     </fields>
                     <references>
-                        <reference referenceName="user" targetEntity="User"/>
                         <reference referenceName="privilegeGroup" targetEntity="PrivilegeGroup"/>
                     </references>
                 </entity>

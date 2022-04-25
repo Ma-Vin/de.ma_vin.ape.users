@@ -463,8 +463,6 @@ public class PrivilegeGroupServiceTest {
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
         assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
-        assertNotNull(result.get(0).getUser(), "The user should not be null");
-        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.ADMIN, result.get(0).getRole(), "Wrong role at privilege group");
 
@@ -488,8 +486,6 @@ public class PrivilegeGroupServiceTest {
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
         assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
-        assertNotNull(result.get(0).getUser(), "The user should not be null");
-        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.CONTRIBUTOR, result.get(0).getRole(), "Wrong role at privilege group");
 
@@ -513,8 +509,6 @@ public class PrivilegeGroupServiceTest {
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
         assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
-        assertNotNull(result.get(0).getUser(), "The user should not be null");
-        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
 
@@ -543,8 +537,6 @@ public class PrivilegeGroupServiceTest {
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
         assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
-        assertNotNull(result.get(0).getUser(), "The user should not be null");
-        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
 
@@ -577,8 +569,6 @@ public class PrivilegeGroupServiceTest {
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification");
         assertNotNull(result.get(0).getPrivilegeGroup(), "The privilege group should not be null");
         assertEquals(PRIVILEGE_GROUP_IDENTIFICATION, result.get(0).getPrivilegeGroup().getIdentification(), "Wrong identification at privilege group");
-        assertNotNull(result.get(0).getUser(), "The user should not be null");
-        assertEquals(USER_IDENTIFICATION, result.get(0).getUser().getIdentification(), "Wrong identification at privilege group");
         assertNotNull(result.get(0).getRole(), "The role should not be null");
         assertEquals(Role.MANAGER, result.get(0).getRole(), "Wrong role at privilege group");
 

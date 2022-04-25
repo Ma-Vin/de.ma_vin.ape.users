@@ -10,7 +10,6 @@ import de.ma_vin.ape.users.model.gen.domain.group.UsersPrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.history.PrivilegeGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
-import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
 import de.ma_vin.ape.users.service.context.SavingWithParentRepositoryServiceContext;
@@ -251,11 +250,10 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
             return Collections.emptyList();
         }
 
-        User user = UserAccessMapper.convertToUser(userDaoOpt.get());
-        List<UsersPrivilegeGroup> result = findAllPrivilegeThroughBaseGroups(user, userDaoOpt.get());
+        List<UsersPrivilegeGroup> result = findAllPrivilegeThroughBaseGroups(userDaoOpt.get());
 
         privilegeGroupToUserRepository.findAllByUser(userDaoOpt.get())
-                .forEach(ptu -> addOrTakeOverRole(ptu, result, user));
+                .forEach(ptu -> addOrTakeOverRole(ptu, result));
 
         return result;
     }
@@ -263,16 +261,15 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
     /**
      * Determines all privilege groups which contains a given user which only can be achieved through a base group
      *
-     * @param user    user whose privilege groups are searched for
      * @param userDao dao representation of the user
      * @return List of privilege groups and the role of the user at the groups
      */
-    private List<UsersPrivilegeGroup> findAllPrivilegeThroughBaseGroups(User user, UserDao userDao) {
+    private List<UsersPrivilegeGroup> findAllPrivilegeThroughBaseGroups(UserDao userDao) {
         List<UsersPrivilegeGroup> result = new ArrayList<>();
 
         baseGroupToUserRepository.findAllByUser(userDao).stream()
                 .flatMap(btu -> getPrivilegeGroupsOfBaseGroup(btu.getBaseGroup()).stream())
-                .forEach(ptb -> addOrTakeOverRole(ptb, result, user));
+                .forEach(ptb -> addOrTakeOverRole(ptb, result));
 
         return result;
     }
@@ -282,10 +279,9 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
      *
      * @param entryToCheck entry to check
      * @param result       list of already determined privilege, user, role triples
-     * @param user         the user whose entries are determined
      */
-    private void addOrTakeOverRole(PrivilegeGroupToBaseGroupDao entryToCheck, List<UsersPrivilegeGroup> result, User user) {
-        addOrTakeOverRole(entryToCheck.getPrivilegeGroup(), entryToCheck.getFilterRole(), result, user, false);
+    private void addOrTakeOverRole(PrivilegeGroupToBaseGroupDao entryToCheck, List<UsersPrivilegeGroup> result) {
+        addOrTakeOverRole(entryToCheck.getPrivilegeGroup(), entryToCheck.getFilterRole(), result, false);
     }
 
     /**
@@ -293,10 +289,9 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
      *
      * @param entryToCheck entry to check
      * @param result       list of already determined privilege, user, role triples
-     * @param user         the user whose entries are determined
      */
-    private void addOrTakeOverRole(PrivilegeGroupToUserDao entryToCheck, List<UsersPrivilegeGroup> result, User user) {
-        addOrTakeOverRole(entryToCheck.getPrivilegeGroup(), entryToCheck.getFilterRole(), result, user, true);
+    private void addOrTakeOverRole(PrivilegeGroupToUserDao entryToCheck, List<UsersPrivilegeGroup> result) {
+        addOrTakeOverRole(entryToCheck.getPrivilegeGroup(), entryToCheck.getFilterRole(), result, true);
     }
 
     /**
@@ -305,11 +300,10 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
      * @param privilegeGroupToCheck privilege group which is to check
      * @param roleToCheck           role which should be set
      * @param result                list of already determined privilege, user, role triples
-     * @param user                  the user whose entries are determined
      * @param alwaysOverride        {@code true} to force overriding an existing role value if there exists already an entry for the privilege group.
      *                              {@code false} if the role should be used if it is a new entry or the given role has a higher priority than an existing one
      */
-    private void addOrTakeOverRole(PrivilegeGroupDao privilegeGroupToCheck, Role roleToCheck, List<UsersPrivilegeGroup> result, User user, boolean alwaysOverride) {
+    private void addOrTakeOverRole(PrivilegeGroupDao privilegeGroupToCheck, Role roleToCheck, List<UsersPrivilegeGroup> result, boolean alwaysOverride) {
         Optional<UsersPrivilegeGroup> existingEntry = result.stream()
                 .filter(upg -> upg.getIdentification().equals(privilegeGroupToCheck.getIdentification()))
                 .findFirst();
@@ -318,7 +312,6 @@ public class PrivilegeGroupService extends AbstractRepositoryService<PrivilegeGr
             UsersPrivilegeGroup upg = new UsersPrivilegeGroup();
             upg.setIdentification(privilegeGroupToCheck.getIdentification());
             upg.setPrivilegeGroup(GroupAccessMapper.convertToPrivilegeGroup(privilegeGroupToCheck, false));
-            upg.setUser(user);
             upg.setRole(roleToCheck);
             result.add(upg);
             return;
