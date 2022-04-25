@@ -136,3 +136,10 @@ Feature: Testing methods of the privilege group controller
     And The identification at 1 is the same like the one of alias "otherPrivilege"
     And The identification of "privilegeGroup" at 1 is the same like the one of alias "otherPrivilege"
     And The role property at response position 1 is VISITOR
+    When Controller is called to get the privilege group parts of user with alias "anotherUser"
+    Then The result is Ok and Json
+    And The status of the result should be "OK"
+    And The identification of "privilegeGroup" at 0 is the same like the one of alias "privilege"
+    And The role property at response position 0 is MANAGER
+    And The identification of "privilegeGroup" at 1 is the same like the one of alias "otherPrivilege"
+    And The role property at response position 1 is VISITOR

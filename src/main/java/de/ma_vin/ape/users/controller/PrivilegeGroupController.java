@@ -9,6 +9,7 @@ import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.PrivilegeGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.UsersPrivilegeGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.PrivilegeGroupPartDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.UsersPrivilegeGroupPartDto;
 import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.mapper.GroupPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
@@ -150,5 +151,21 @@ public class PrivilegeGroupController extends AbstractDefaultOperationController
             return createResponseWithWarning(Collections.emptyList(), String.format("There is no privilege group for %s", userIdentification));
         }
         return createSuccessResponse(groups.stream().map(GroupTransportMapper::convertToUsersPrivilegeGroupDto).toList());
+    }
+
+    @PreAuthorize("isVisitor(#userIdentification, 'USER')")
+    @GetMapping("/getPrivilegeGroupsOfUserParts/{userIdentification}")
+    public @ResponseBody
+    ResponseWrapper<List<UsersPrivilegeGroupPartDto>> getPrivilegeGroupsOfUserParts(@PathVariable String userIdentification) {
+        List<UsersPrivilegeGroup> groups = privilegeGroupService.findAllPrivilegeGroupsOfUser(userIdentification);
+        if (groups.isEmpty()) {
+            return createResponseWithWarning(Collections.emptyList(), String.format("There is no privilege group for %s", userIdentification));
+        }
+        return createSuccessResponse(groups.stream().map(upg -> {
+            UsersPrivilegeGroupPartDto usersPrivilegeGroupPartDto = new UsersPrivilegeGroupPartDto();
+            usersPrivilegeGroupPartDto.setPrivilegeGroup(GroupPartTransportMapper.convertToPrivilegeGroupPartDto(upg.getPrivilegeGroup()));
+            usersPrivilegeGroupPartDto.setRole(upg.getRole());
+            return usersPrivilegeGroupPartDto;
+        }).toList());
     }
 }
