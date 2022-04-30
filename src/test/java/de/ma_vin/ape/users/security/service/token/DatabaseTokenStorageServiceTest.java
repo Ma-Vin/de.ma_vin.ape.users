@@ -226,6 +226,11 @@ public class DatabaseTokenStorageServiceTest {
         verify(tokenRepository).deleteWithoutExpiration();
     }
 
+    @DisplayName("The service should be a storing one")
+    @Test
+    public void testIsStoringTokens() {
+        assertTrue(cut.isStoringTokens(), "The service should store tokens");
+    }
 
     @AfterEach
     public void tearDown() throws Exception {

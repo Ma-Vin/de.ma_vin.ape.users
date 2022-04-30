@@ -107,6 +107,11 @@ public class InMemoryTokenStorageServiceTest {
         assertTrue(result.isEmpty(), "The result should be empty for third id");
     }
 
+    @DisplayName("The service should be a storing one")
+    @Test
+    public void testIsStoringTokens() {
+        assertTrue(cut.isStoringTokens(), "The service should store tokens");
+    }
 
     @AfterEach
     public void tearDown() throws Exception {

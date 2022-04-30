@@ -17,7 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Base64;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Service to provide operations on tokens
@@ -72,7 +75,14 @@ public class TokenIssuerService {
         if (refreshToken.isEmpty()) {
             return Optional.empty();
         }
-        Optional<TokenInfo> tokenInfoOpt = tokenStorageService.findToken(refreshToken.get().getPayload().getJti());
+
+        Optional<TokenInfo> tokenInfoOpt;
+        if (tokenStorageService.isStoringTokens()) {
+            tokenInfoOpt = tokenStorageService.findToken(refreshToken.get().getPayload().getJti());
+        } else {
+            tokenInfoOpt = getTokenInfo(encodedRefreshToken, false, null);
+        }
+
         if (tokenInfoOpt.isEmpty()) {
             log.warn("The token {} is unknown", encodedRefreshToken);
             return Optional.empty();
@@ -270,21 +280,38 @@ public class TokenIssuerService {
      * @return Optional of the known and valid token info.
      */
     private Optional<TokenInfo> getTokenInfo(String encodedToken, boolean isToken, String scope) {
-        LocalDateTime now = SystemProperties.getSystemDateTime();
         String logText = isToken ? "token" : "refresh token";
         Optional<JsonWebToken> token = JsonWebToken.decodeToken(encodedToken, secret);
         if (token.isEmpty()) {
             log.error("The {} {} could not be decoded", logText, encodedToken);
             return Optional.empty();
         }
-        Optional<TokenInfo> tokenInfoOpt = tokenStorageService.findToken(token.get().getPayload().getJti());
+        if (tokenStorageService.isStoringTokens()) {
+            return getTokenInfoOfStoredOne(encodedToken, token.get(), isToken, scope);
+        }
+        return getTokenInfoOfVerification(token.get(), scope);
+    }
+
+    /**
+     * Determines the token info from <code>tokenStorageService</code> and verifies against the stored one
+     *
+     * @param encodedToken token to check
+     * @param token        the encoded jwt
+     * @param isToken      {@code true} if to check a token. {@code false} if the its a refresh token
+     * @param scope        the scope for which is validated
+     * @return Optional of the known and valid token info.
+     */
+    private Optional<TokenInfo> getTokenInfoOfStoredOne(String encodedToken, JsonWebToken token, boolean isToken, String scope) {
+        LocalDateTime now = SystemProperties.getSystemDateTime();
+        String logText = isToken ? "token" : "refresh token";
+        Optional<TokenInfo> tokenInfoOpt = tokenStorageService.findToken(token.getPayload().getJti());
         if (tokenInfoOpt.isEmpty()) {
             log.error("The {} {} is unknown", logText, encodedToken);
             return Optional.empty();
         }
         TokenInfo tokenInfo = tokenInfoOpt.get();
         JsonWebToken referenceToken = isToken ? tokenInfo.getToken() : tokenInfo.getRefreshToken();
-        if (!referenceToken.getPayload().equals(token.get().getPayload())) {
+        if (!referenceToken.getPayload().equals(token.getPayload())) {
             log.error("The {} {} is different to the known one", logText, encodedToken);
             return Optional.empty();
         }
@@ -297,6 +324,20 @@ public class TokenIssuerService {
             return Optional.empty();
         }
         return Optional.of(tokenInfo);
+    }
+
+    /**
+     * This methods only checks the signature and does not check against a stored token
+     *
+     * @param token   the encoded jwt
+     * @param scope   the scope for which is validated
+     * @return Optional of a new token info. The token and the refresh token are the same, since the other can not be determined
+     */
+    private Optional<TokenInfo> getTokenInfoOfVerification(JsonWebToken token, String scope) {
+        TokenInfo result = new TokenInfo(tokenStorageService.getUuid(), token.getPayload().getExpAsLocalDateTime()
+                , token, token, scope);
+
+        return Optional.of(result);
     }
 
     @Data

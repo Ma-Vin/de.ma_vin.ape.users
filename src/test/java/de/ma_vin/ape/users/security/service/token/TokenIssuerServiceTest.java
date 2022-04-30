@@ -93,6 +93,7 @@ public class TokenIssuerServiceTest {
         when(tokenStorageService.findToken(any())).thenReturn(Optional.empty());
         when(tokenStorageService.findToken(eq("abc"))).thenReturn(Optional.of(tokenInfo));
         when(tokenStorageService.getUuid()).thenReturn("abcd");
+        when(tokenStorageService.isStoringTokens()).thenReturn(Boolean.TRUE);
     }
 
     @DisplayName("The encoded token is invalid cause unable to decode")
@@ -147,6 +148,18 @@ public class TokenIssuerServiceTest {
         String encodedToken = token.getEncodedToken();
 
         assertTrue(cut.isValid(encodedToken, "read"), "The token should be valid");
+    }
+
+    @DisplayName("The encoded token is valid and not store but is not needed to")
+    @Test
+    public void testIsValidNotStoredButNotNeeded() throws JwtGeneratingException {
+        when(tokenStorageService.isStoringTokens()).thenReturn(Boolean.FALSE);
+        when(tokenStorageService.findToken(any())).thenReturn(Optional.empty());
+
+        String encodedToken = token.getEncodedToken();
+
+        assertTrue(cut.isValid(encodedToken), "The token should be valid");
+        verify(tokenStorageService).isStoringTokens();
     }
 
     @DisplayName("The encoded token could not be determined cause unable to decode")
@@ -384,6 +397,7 @@ public class TokenIssuerServiceTest {
         assertNotEquals(encodedRefreshToken, result.get().getRefreshToken().getEncodedToken(), "The refresh token should be changed");
 
         verify(tokenStorageService, times(2)).findToken(any());
+        verify(tokenStorageService, times(2)).isStoringTokens();
         verify(tokenStorageService).getUuid();
         verify(tokenStorageService).putTokenInfo(any(), any());
     }
@@ -398,6 +412,7 @@ public class TokenIssuerServiceTest {
         assertTrue(result.isEmpty(), "The result should be empty");
 
         verify(tokenStorageService, never()).findToken(any());
+        verify(tokenStorageService, never()).isStoringTokens();
         verify(tokenStorageService, never()).getUuid();
         verify(tokenStorageService, never()).putTokenInfo(any(), any());
     }
@@ -413,8 +428,31 @@ public class TokenIssuerServiceTest {
         assertTrue(result.isEmpty(), "The result should be empty");
 
         verify(tokenStorageService).findToken(any());
+        verify(tokenStorageService).isStoringTokens();
         verify(tokenStorageService, never()).getUuid();
         verify(tokenStorageService, never()).putTokenInfo(any(), any());
+    }
+
+    @DisplayName("Refresh a not stored token at not storing service")
+    @Test
+    public void testRefreshNonStoredTokenButNotNeeded() throws JwtGeneratingException {
+        when(tokenStorageService.isStoringTokens()).thenReturn(Boolean.FALSE);
+        when(tokenStorageService.findToken(any())).thenReturn(Optional.empty());
+        String encodedToken = token.getEncodedToken();
+        String encodedRefreshToken = refreshToken.getEncodedToken();
+
+        Optional<TokenIssuerService.TokenInfo> result = cut.refresh(encodedRefreshToken);
+        assertNotNull(result, "There should be a result");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertNotNull(result.get().getToken(), "The token should not be null");
+        assertNotNull(result.get().getRefreshToken(), "The refresh token should not be null");
+        assertNotEquals(encodedToken, result.get().getToken().getEncodedToken(), "The token should be changed");
+        assertNotEquals(encodedRefreshToken, result.get().getRefreshToken().getEncodedToken(), "The refresh token should be changed");
+
+        verify(tokenStorageService, never()).findToken(any());
+        verify(tokenStorageService, times(3)).isStoringTokens();
+        verify(tokenStorageService, times(3)).getUuid();
+        verify(tokenStorageService).putTokenInfo(any(), any());
     }
 
     @DisplayName("Clear all tokens")

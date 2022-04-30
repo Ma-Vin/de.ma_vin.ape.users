@@ -8,6 +8,11 @@ import java.util.Optional;
 public interface ITokenStorageService {
 
     /**
+     * @return indicator whether tokens are stored by service or not. In case of{@code false} not all methods return a valid value
+     */
+    boolean isStoringTokens();
+
+    /**
      * Clears a token
      *
      * @param uuid the id of the token to delete

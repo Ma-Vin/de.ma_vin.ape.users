@@ -28,6 +28,11 @@ public class DatabaseTokenStorageService implements ITokenStorageService {
 
 
     @Override
+    public boolean isStoringTokens() {
+        return true;
+    }
+
+    @Override
     public void clearToken(String uuid) {
         tokenRepository.deleteByUuid(uuid);
     }

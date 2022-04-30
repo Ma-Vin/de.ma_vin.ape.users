@@ -17,6 +17,11 @@ public class InMemoryTokenStorageService implements ITokenStorageService {
     private Map<String, TokenInfo> inMemoryTokens = new HashMap<>();
 
     @Override
+    public boolean isStoringTokens() {
+        return true;
+    }
+
+    @Override
     public void clearToken(String uuid) {
         inMemoryTokens.remove(uuid);
     }
