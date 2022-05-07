@@ -55,6 +55,11 @@ jobs:
           GITHUB_PACKAGES_TOKEN: ${{ secrets.APE_GITHUB_PACKAGES_PAT }}
           GITHUB_TOKEN: ${{ secrets.APE_DEPENDENCY_BUILD_PAT }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B clean install org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -P sonar-cloud,gen-model --file main/pom.xml --settings maven/settings.xml
+        run: > 
+          mvn -B clean install org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+          -P sonar-cloud,gen-model
+          -Djavax.net.ssl.trustStore=main\target\keystore\keystore.p12 -Djavax.net.ssl.trustStorePassword=changeit
+          --file main/pom.xml
+          --settings maven/settings.xml
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1

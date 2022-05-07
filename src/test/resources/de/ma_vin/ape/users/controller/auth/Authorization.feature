@@ -22,7 +22,7 @@ Feature: Testing methods of the authorization controller
     Given The scope is "READ"
     Given The state is "SomeState"
     When The Controller is called to authorize with response type CODE
-    Then The result is redirected to location "http://localhost/login"
+    Then The result is redirected to location "https://localhost/login"
 
   Scenario: Authorize with response type token
     Given The scope is "READ"
@@ -37,7 +37,7 @@ Feature: Testing methods of the authorization controller
   Scenario: Authorize with response type token but not logged in
     Given The scope is "READ"
     When The Controller is called to authorize with response type TOKEN
-    Then The result is redirected to location "http://localhost/login"
+    Then The result is redirected to location "https://localhost/login"
 
   Scenario: Issue token with grand type password
     Given The scope is "WRITE"

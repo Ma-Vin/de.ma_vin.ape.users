@@ -14,9 +14,19 @@ spring:
     oauth2:
       resourceserver:
         opaque:
-          introspection-uri: http://localhost:8080/oauth/introspection
+          introspection-uri: https://localhost:8443/oauth/introspection
           introspection-client-id: users
           introspection-client-secret: f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store-type: PKCS12
+    key-store: target/keystore/keystore.p12
+    key-store-password: changeit
+    key-alias: users
+    protocol: TLS
+    enabled-protocols: TLSv1.3
 logging:
   level:
     root: INFO
@@ -35,11 +45,11 @@ auth:
   clients:
     - clientId: users
       secret: f58497fe32e68138273588d18f62d92366a97bb451d573fb1860ce615e540e15
-      url: http://localhost:8080
+      url: https://localhost:8443
       redirects:
-        - redirect-start: http://localhost:8080/
+        - redirect-start: https://localhost:8443/
     - clientId: ape.user.ui
       secret: changeIt
-      url: http://localhost:4200
+      url: https://localhost:4200
       redirects:
-        - redirect-start: http://localhost:4200/
+        - redirect-start: https://localhost:4200/

@@ -2,11 +2,13 @@ package de.ma_vin.ape.users.controller.it.steps;
 
 import de.ma_vin.ape.utils.TestUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.web.servlet.*;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -22,6 +24,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 
 public abstract class AbstractIntegrationTestSteps {
+
+    @Value("${server.ssl.enabled}")
+    private Boolean sslEnabled;
 
     @Autowired
     protected MockMvc mvc;
@@ -45,7 +50,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performPostWithAuthorization(String url, MultiValueMap<String, String> valueMap) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(post(url)
+                () -> mvc.perform(post(expandUrl(url))
                         .with(csrf())
                         .header("Authorization", "Bearer " + shared.getAccessToken())
                         .params(valueMap)
@@ -55,7 +60,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performPostWithBasicAuthorization(String url, MultiValueMap<String, String> valueMap) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(post(url)
+                () -> mvc.perform(post(expandUrl(url))
                         .with(csrf())
                         .header("Authorization", getClientAuthBasic())
                         .params(valueMap)
@@ -65,7 +70,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performPost(String url, MultiValueMap<String, String> valueMap) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(post(url)
+                () -> mvc.perform(post(expandUrl(url))
                         .with(csrf())
                         .params(valueMap)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -74,7 +79,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performGetWithAuthorization(String url, String pathVariable) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(get(url + "/" + pathVariable)
+                () -> mvc.perform(get(expandUrl(url) + "/" + pathVariable)
                         .with(csrf())
                         .header("Authorization", "Bearer " + shared.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -83,7 +88,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performGetWithBasicAuthorization(String url, String pathVariable) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(get(url + "/" + pathVariable)
+                () -> mvc.perform(get(expandUrl(url) + "/" + pathVariable)
                         .with(csrf())
                         .header("Authorization", getClientAuthBasic())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -92,7 +97,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performGet(String url, MultiValueMap<String, String> valueMap) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(get(url)
+                () -> mvc.perform(get(expandUrl(url))
                         .with(csrf())
                         .params(valueMap)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -101,7 +106,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performGet(String url, MultiValueMap<String, String> valueMap, String username) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(get(url)
+                () -> mvc.perform(get(expandUrl(url))
                         .with(csrf())
                         .with(user(username))
                         .params(valueMap)
@@ -111,7 +116,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performGetWithAuthorization(String url, String pathVariable, MultiValueMap<String, String> valueMap) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(get(url + "/" + pathVariable)
+                () -> mvc.perform(get(expandUrl(url) + "/" + pathVariable)
                         .with(csrf())
                         .header("Authorization", "Bearer " + shared.getAccessToken())
                         .params(valueMap)
@@ -121,7 +126,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performGetWithAuthorization(String url, MultiValueMap<String, String> valueMap) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(get(url)
+                () -> mvc.perform(get(expandUrl(url))
                         .with(csrf())
                         .header("Authorization", "Bearer " + shared.getAccessToken())
                         .params(valueMap)
@@ -131,7 +136,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performGetWithAuthorization(String url) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(get(url)
+                () -> mvc.perform(get(expandUrl(url))
                         .with(csrf())
                         .header("Authorization", "Bearer " + shared.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -140,7 +145,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performPutWithAuthorization(String url, String pathVariable, String updatedResourceAlias) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(put(url + "/" + pathVariable)
+                () -> mvc.perform(put(expandUrl(url) + "/" + pathVariable)
                         .with(csrf())
                         .header("Authorization", "Bearer " + shared.getAccessToken())
                         .content(TestUtil.getObjectMapper().writeValueAsString(shared.get(updatedResourceAlias)))
@@ -150,7 +155,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performPatchWithAuthorization(String url, String pathVariable, String changedValue) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(patch(url + "/" + pathVariable)
+                () -> mvc.perform(patch(expandUrl(url) + "/" + pathVariable)
                         .with(csrf())
                         .header("Authorization", "Bearer " + shared.getAccessToken())
                         .content(changedValue)
@@ -160,7 +165,7 @@ public abstract class AbstractIntegrationTestSteps {
 
     protected ResultActions performDeleteWithAuthorization(String url, String pathVariable) {
         return performAndCheckHttpStatus(
-                () -> mvc.perform(delete(url + "/" + pathVariable)
+                () -> mvc.perform(delete(expandUrl(url) + "/" + pathVariable)
                         .with(csrf())
                         .header("Authorization", "Bearer " + shared.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -230,10 +235,18 @@ public abstract class AbstractIntegrationTestSteps {
             }
             fail(String.format("fail with AuthenticationServiceException to call get at %s: %s", url, e.getMessage()));
         } catch (Exception e) {
-            fail(String.format("fail to call get at %s: %s", url, e.getMessage()));
+            fail(String.format("fail to call get at %s: %s", expandUrl(url), e.getMessage()));
         }
         shared.setHttpStatus(null);
         return null;
+    }
+
+    private String  expandUrl(String url) {
+        if (!url.startsWith("/") || !Boolean.TRUE.equals(sslEnabled)) {
+            return url;
+        }
+
+        return "https://localhost" + url;
     }
 
     @FunctionalInterface

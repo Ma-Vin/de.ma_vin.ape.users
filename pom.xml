@@ -36,6 +36,15 @@
         <layer.generator.version>1.3</layer.generator.version>
         <maven.plugin-dependency.version>3.1.2</maven.plugin-dependency.version>
         <build.helper.maven.plugin.version>3.2.0</build.helper.maven.plugin.version>
+        <keytool.plugin.version>1.6</keytool.plugin.version>
+
+        <keytool.plugin.pass>changeit</keytool.plugin.pass>
+        <keytool.plugin.signature.alg>SHA384withRSA</keytool.plugin.signature.alg>
+        <keytool.plugin.validity>100</keytool.plugin.validity>
+        <keytool.plugin.alias>users</keytool.plugin.alias>
+        <keytool.plugin.name>keystore.p12</keytool.plugin.name>
+        <keytool.plugin.request.name>certReq.csr</keytool.plugin.request.name>
+        <keytool.plugin.verified.name>certVerified.crt</keytool.plugin.verified.name>
 
         <skip.generating.model>true</skip.generating.model>
         <sonar.projectName>de.ma_vin.ape.users</sonar.projectName>
@@ -294,6 +303,75 @@
                                 <enabled>true</enabled>
                                 <includeLayerTools>true</includeLayerTools>
                             </layers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--The generated keystore and certificates are to be used for testing purposes only -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>keytool-maven-plugin</artifactId>
+                <version>${keytool.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>gen-keystore</id>
+                        <goals>
+                            <goal>generateKeyPair</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.name}</keystore>
+                            <storepass>${keytool.plugin.pass}</storepass>
+                            <alias>${keytool.plugin.alias}</alias>
+                            <dname>cn=localhost, ou=None, L=Cologne, ST=NRW, o=MaVin, c=GER</dname>
+                            <sigalg>${keytool.plugin.signature.alg}</sigalg>
+                            <validity>${keytool.plugin.validity}</validity>
+                            <keyalg>RSA</keyalg>
+                            <keysize>4096</keysize>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>certificate-request</id>
+                        <goals>
+                            <goal>generateCertificateRequest</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.name}</keystore>
+                            <storepass>${keytool.plugin.pass}</storepass>
+                            <alias>${keytool.plugin.alias}</alias>
+                            <sigalg>${keytool.plugin.signature.alg}</sigalg>
+                            <file>${project.build.directory}/keystore/${keytool.plugin.request.name}</file>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-certificate</id>
+                        <goals>
+                            <goal>generateCertificate</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.name}</keystore>
+                            <storepass>${keytool.plugin.pass}</storepass>
+                            <alias>${keytool.plugin.alias}</alias>
+                            <dname>cn=www.ma-vin.de, ou=None, L=Cologne, ST=NRW, o=MaVin, c=GER</dname>
+                            <sigalg>${keytool.plugin.signature.alg}</sigalg>
+                            <validity>${keytool.plugin.validity}</validity>
+                            <infile>${project.build.directory}/keystore/${keytool.plugin.request.name}</infile>
+                            <outfile>${project.build.directory}/keystore/${keytool.plugin.verified.name}</outfile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>import-certificate</id>
+                        <goals>
+                            <goal>importCertificate</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.name}</keystore>
+                            <storepass>${keytool.plugin.pass}</storepass>
+                            <alias>default</alias>
+                            <file>${project.build.directory}/keystore/${keytool.plugin.verified.name}</file>
                         </configuration>
                     </execution>
                 </executions>
