@@ -58,7 +58,7 @@ jobs:
         run: > 
           mvn -B clean install org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
           -P sonar-cloud,gen-model
-          -Djavax.net.ssl.trustStore=main/target/keystore/keystore.p12 -Djavax.net.ssl.trustStorePassword=changeit
+          -Djavax.net.ssl.trustStore=${{ env.GITHUB_WORKSPACE }}/main/target/keystore/keystore.p12 -Djavax.net.ssl.trustStorePassword=changeit
           --file main/pom.xml
           --settings maven/settings.xml
       - name: Perform CodeQL Analysis
