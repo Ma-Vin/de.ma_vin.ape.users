@@ -374,6 +374,19 @@
                             <file>${project.build.directory}/keystore/${keytool.plugin.verified.name}</file>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>import-keystore</id>
+                        <goals>
+                            <goal>importKeystore</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <srckeystore>${env.JAVA_HOME}/lib/security/cacerts</srckeystore>
+                            <destkeystore>${project.build.directory}/keystore/${keytool.plugin.name}</destkeystore>
+                            <srcstorepass>changeit</srcstorepass>
+                            <deststorepass>${keytool.plugin.pass}</deststorepass>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
