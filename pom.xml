@@ -42,7 +42,9 @@
         <keytool.plugin.signature.alg>SHA384withRSA</keytool.plugin.signature.alg>
         <keytool.plugin.validity>100</keytool.plugin.validity>
         <keytool.plugin.alias>users</keytool.plugin.alias>
-        <keytool.plugin.name>keystore.p12</keytool.plugin.name>
+        <keytool.plugin.issuer.alias>mavin</keytool.plugin.issuer.alias>
+        <keytool.plugin.keystore.name>keystore.p12</keytool.plugin.keystore.name>
+        <keytool.plugin.trusted.keystore.name>trusted_keystore.p12</keytool.plugin.trusted.keystore.name>
         <keytool.plugin.request.name>certReq.csr</keytool.plugin.request.name>
         <keytool.plugin.verified.name>certVerified.crt</keytool.plugin.verified.name>
 
@@ -314,13 +316,13 @@
                 <version>${keytool.plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>gen-keystore</id>
+                        <id>gen-keystore-users</id>
                         <goals>
                             <goal>generateKeyPair</goal>
                         </goals>
                         <phase>pre-integration-test</phase>
                         <configuration>
-                            <keystore>${project.build.directory}/keystore/${keytool.plugin.name}</keystore>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.keystore.name}</keystore>
                             <storepass>${keytool.plugin.pass}</storepass>
                             <alias>${keytool.plugin.alias}</alias>
                             <dname>cn=localhost, ou=None, L=Cologne, ST=NRW, o=MaVin, c=GER</dname>
@@ -331,13 +333,33 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>gen-keystore-issuer</id>
+                        <goals>
+                            <goal>generateKeyPair</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.keystore.name}</keystore>
+                            <storepass>${keytool.plugin.pass}</storepass>
+                            <alias>${keytool.plugin.issuer.alias}</alias>
+                            <dname>cn=www.ma-vin.de, ou=None, L=Cologne, ST=NRW, o=MaVin, c=GER</dname>
+                            <sigalg>${keytool.plugin.signature.alg}</sigalg>
+                            <validity>${keytool.plugin.validity}</validity>
+                            <keyalg>RSA</keyalg>
+                            <keysize>4096</keysize>
+                            <exts>
+                                <ext>BC=ca:true,pathlen:0</ext>
+                            </exts>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>certificate-request</id>
                         <goals>
                             <goal>generateCertificateRequest</goal>
                         </goals>
                         <phase>pre-integration-test</phase>
                         <configuration>
-                            <keystore>${project.build.directory}/keystore/${keytool.plugin.name}</keystore>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.keystore.name}</keystore>
                             <storepass>${keytool.plugin.pass}</storepass>
                             <alias>${keytool.plugin.alias}</alias>
                             <sigalg>${keytool.plugin.signature.alg}</sigalg>
@@ -351,14 +373,18 @@
                         </goals>
                         <phase>pre-integration-test</phase>
                         <configuration>
-                            <keystore>${project.build.directory}/keystore/${keytool.plugin.name}</keystore>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.keystore.name}</keystore>
                             <storepass>${keytool.plugin.pass}</storepass>
-                            <alias>${keytool.plugin.alias}</alias>
-                            <dname>cn=www.ma-vin.de, ou=None, L=Cologne, ST=NRW, o=MaVin, c=GER</dname>
+                            <alias>${keytool.plugin.issuer.alias}</alias>
+                            <dname>cn=localhost, ou=None, L=Cologne, ST=NRW, o=MaVin, c=GER</dname>
                             <sigalg>${keytool.plugin.signature.alg}</sigalg>
                             <validity>${keytool.plugin.validity}</validity>
                             <infile>${project.build.directory}/keystore/${keytool.plugin.request.name}</infile>
                             <outfile>${project.build.directory}/keystore/${keytool.plugin.verified.name}</outfile>
+                            <exts>
+                                <ext>SAN=dns:localhost</ext>
+                                <ext>BC=ca:false</ext>
+                            </exts>
                         </configuration>
                     </execution>
                     <execution>
@@ -368,21 +394,36 @@
                         </goals>
                         <phase>pre-integration-test</phase>
                         <configuration>
-                            <keystore>${project.build.directory}/keystore/${keytool.plugin.name}</keystore>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.keystore.name}</keystore>
                             <storepass>${keytool.plugin.pass}</storepass>
-                            <alias>default</alias>
+                            <alias>${keytool.plugin.alias}</alias>
                             <file>${project.build.directory}/keystore/${keytool.plugin.verified.name}</file>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>import-keystore</id>
+                        <id>import-certificate-trusted</id>
+                        <goals>
+                            <goal>importCertificate</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <keystore>${project.build.directory}/keystore/${keytool.plugin.trusted.keystore.name}</keystore>
+                            <storepass>${keytool.plugin.pass}</storepass>
+                            <keypass>${keytool.plugin.pass}</keypass>
+                            <alias>${keytool.plugin.alias}</alias>
+                            <file>${project.build.directory}/keystore/${keytool.plugin.verified.name}</file>
+                            <noprompt>true</noprompt>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>import-java-keystore-trusted</id>
                         <goals>
                             <goal>importKeystore</goal>
                         </goals>
                         <phase>pre-integration-test</phase>
                         <configuration>
                             <srckeystore>${env.JAVA_HOME}/lib/security/cacerts</srckeystore>
-                            <destkeystore>${project.build.directory}/keystore/${keytool.plugin.name}</destkeystore>
+                            <destkeystore>${project.build.directory}/keystore/${keytool.plugin.trusted.keystore.name}</destkeystore>
                             <srcstorepass>changeit</srcstorepass>
                             <deststorepass>${keytool.plugin.pass}</deststorepass>
                         </configuration>
