@@ -40,8 +40,10 @@ RUN rm -rf ${TEMP_DIR}
 COPY target/keystore/keystore.p12 ${APP_DIR}/sampleKeystore/
 COPY target/keystore/trusted_keystore.p12 ${APP_DIR}/sampleKeystore/
 ENV server.ssl.key-store=${APP_DIR}/sampleKeystore/keystore.p12
-ENV client.trusted.keystore=${APP_DIR}/sampleKeystore/trusted_keystore.p12
-ENV client.trusted.keystore.pwd="changeit"
+ENV client_trusted_keystore=${APP_DIR}/sampleKeystore/trusted_keystore.p12
+ENV client_trusted_keystore_pwd="changeit"
 
+# copy and define entrypoint
+COPY src/main/resources/docker/entrypoint.sh ${APP_DIR}/entrypoint.sh
 
-ENTRYPOINT ["java", "-Djavax.net.ssl.trustStore${client.trusted.keystore}", "-Djavax.net.ssl.trustStorePassword=${client.trusted.keystore.pwd}", "org.springframework.boot.loader.JarLauncher"]
+ENTRYPOINT ./entrypoint.sh
