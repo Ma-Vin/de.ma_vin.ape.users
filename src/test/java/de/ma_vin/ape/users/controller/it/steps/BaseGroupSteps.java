@@ -132,19 +132,19 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     }
 
     @When("Controller is called to get all sub groups of base group with alias {string}")
-    public void callControllerToFindAllBaseAtBaseGroup(String baseGroupAlias) {
-        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias)));
+    public void callControllerToGetAllBaseAtBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseAtBaseGroup", getIdentification(baseGroupAlias)));
     }
 
     @When("Controller is called to get all sub group parts of base group with alias {string}")
-    public void callControllerToFindAllBasePartAtBaseGroup(String baseGroupAlias) {
-        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBasePartAtBaseGroup", getIdentification(baseGroupAlias)));
+    public void callControllerToGetAllBasePartAtBaseGroup(String baseGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBasePartAtBaseGroup", getIdentification(baseGroupAlias)));
     }
 
     @When("Controller is called to get all base groups at page {int} with size {int} from base group with alias {string}")
-    public void callControllerToFindAllBaseAtBaseGroup(int page, int size, String baseGroupAlias) {
+    public void callControllerToGetAllBaseAtBaseGroup(int page, int size, String baseGroupAlias) {
         MultiValueMap<String, String> getAllBaseGroupValues = createValueMap("page", "" + page, "size", "" + size);
-        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtBaseGroup", getIdentification(baseGroupAlias), getAllBaseGroupValues));
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseAtBaseGroup", getIdentification(baseGroupAlias), getAllBaseGroupValues));
     }
 
     @When("Controller is called to get all available base groups for base group with alias {string}")
@@ -193,26 +193,26 @@ public class BaseGroupSteps extends AbstractIntegrationTestSteps {
     }
 
     @When("Controller is called to get all sub base groups of privilege group with alias {string}")
-    public void callControllerToFindAllBaseAtPrivilegeGroup(String privilegeGroupAlias) {
-        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    public void callControllerToGetAllBaseAtPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
     }
 
     @When("Controller is called to get all sub base group parts of privilege group with alias {string}")
-    public void callControllerToFindAllBasePartAtPrivilegeGroup(String privilegeGroupAlias) {
-        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBasePartAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
+    public void callControllerToGetAllBasePartAtPrivilegeGroup(String privilegeGroupAlias) {
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBasePartAtPrivilegeGroup", getIdentification(privilegeGroupAlias)));
     }
 
     @When("Controller is called to get all sub base groups of privilege group with alias {string} and role {roleValue}")
-    public void callControllerToFindAllBaseAtPrivilegeGroup(String privilegeGroupAlias, Role role) {
-        MultiValueMap<String, String> findAllBaseAtPrivilegeGroupValues = createValueMap("role", "" + role.name());
-        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)
-                , findAllBaseAtPrivilegeGroupValues));
+    public void callControllerToGetAllBaseAtPrivilegeGroup(String privilegeGroupAlias, Role role) {
+        MultiValueMap<String, String> getAllBaseAtPrivilegeGroupValues = createValueMap("role", "" + role.name());
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias)
+                , getAllBaseAtPrivilegeGroupValues));
     }
 
     @When("Controller is called to get all base groups at page {int} with size {int} from privilege group with alias {string}")
-    public void callControllerToFindAllBaseAtPrivilegeGroup(int page, int size, String privilegeGroupAlias) {
+    public void callControllerToGetAllBaseAtPrivilegeGroup(int page, int size, String privilegeGroupAlias) {
         MultiValueMap<String, String> getAllBaseGroupValues = createValueMap("page", "" + page, "size", "" + size);
-        shared.setResultActions(performGetWithAuthorization("/group/base/findAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias), getAllBaseGroupValues));
+        shared.setResultActions(performGetWithAuthorization("/group/base/getAllBaseAtPrivilegeGroup", getIdentification(privilegeGroupAlias), getAllBaseGroupValues));
     }
 
     @When("Controller is called to get all available base groups for privilege group with alias {string}")

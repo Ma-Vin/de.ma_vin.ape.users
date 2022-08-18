@@ -433,7 +433,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtBaseGroup() {
         mockDefaultFindAllBaseAtBaseGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, null, null);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, null, null);
 
         checkOk(response);
 
@@ -449,7 +449,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtBaseGroupPageableMissingPage() {
         mockDefaultFindAllBaseAtBaseGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, null, 20);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, null, 20);
 
         checkWarn(response);
 
@@ -466,7 +466,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtBaseGroupPageableMissingSize() {
         mockDefaultFindAllBaseAtBaseGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 2, null);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 2, null);
 
         checkWarn(response);
 
@@ -483,7 +483,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtBaseGroupPageable() {
         mockDefaultFindAllBaseAtBaseGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 2, 20);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION, 2, 20);
 
         checkOk(response);
 
@@ -707,7 +707,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtPrivilegeGroup() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
 
         checkOk(response);
 
@@ -723,7 +723,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtPrivilegeGroupPageableMissingPage() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
 
         checkWarn(response);
 
@@ -740,7 +740,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtPrivilegeGroupPageableMissingSize() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
 
         checkWarn(response);
 
@@ -757,7 +757,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBaseAtPrivilegeGroupPageable() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
+        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
 
         checkOk(response);
 
@@ -778,7 +778,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBasePartAtPrivilegeGroup() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupPartDto>> response = cut.findAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
 
         checkOk(response);
 
@@ -794,7 +794,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBasePartAtPrivilegeGroupPageableMissingPage() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupPartDto>> response = cut.findAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
 
         checkWarn(response);
 
@@ -811,7 +811,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBasePartAtPrivilegeGroupPageableMissingSize() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupPartDto>> response = cut.findAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
 
         checkWarn(response);
 
@@ -828,7 +828,7 @@ public class BaseGroupControllerTest {
     public void testFindAllBasePartAtPrivilegeGroupPageable() {
         mockDefaultFindAllBaseAtPrivilegeGroup();
 
-        ResponseWrapper<List<BaseGroupPartDto>> response = cut.findAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
+        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
 
         checkOk(response);
 

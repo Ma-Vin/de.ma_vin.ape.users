@@ -166,21 +166,21 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     }
 
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
-    @GetMapping("/findAllBaseAtPrivilegeGroup/{parentGroupIdentification}")
+    @GetMapping("/getAllBaseAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
+    ResponseWrapper<List<BaseGroupDto>> getAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return findAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, GroupTransportMapper::convertToBaseGroupDto);
+        return getAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, GroupTransportMapper::convertToBaseGroupDto);
     }
 
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
-    @GetMapping("/findAllBasePartAtPrivilegeGroup/{parentGroupIdentification}")
+    @GetMapping("/getAllBasePartAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupPartDto>> findAllBasePartAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
+    ResponseWrapper<List<BaseGroupPartDto>> getAllBasePartAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return findAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+        return getAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
     }
 
     /**
@@ -194,7 +194,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
      * @param <T>                          the transport model
      * @return a wrapped list of loaded base groups
      */
-    private <T extends ITransportable> ResponseWrapper<List<T>> findAllBaseAtPrivilegeGroup(String privilegeGroupIdentification
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllBaseAtPrivilegeGroup(String privilegeGroupIdentification
             , Role role, Integer page, Integer size, Function<BaseGroup, T> mapper) {
 
         return getAllSubElements(privilegeGroupIdentification, page, size
@@ -216,7 +216,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     ResponseWrapper<List<BaseGroupDto>> getAllAvailableBasesForPrivilegeGroup(@PathVariable String privilegeGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return findAllAvailableBasesForPrivilegeGroup(privilegeGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
+        return getAllAvailableBasesForPrivilegeGroup(privilegeGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
     }
 
     @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
@@ -225,7 +225,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     ResponseWrapper<List<BaseGroupPartDto>> getAllAvailableBasePartsForPrivilegeGroup(@PathVariable String privilegeGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return findAllAvailableBasesForPrivilegeGroup(privilegeGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+        return getAllAvailableBasesForPrivilegeGroup(privilegeGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
     }
 
     /**
@@ -238,7 +238,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
      * @param <T>                          the transport model
      * @return a wrapped list of loaded base groups
      */
-    private <T extends ITransportable> ResponseWrapper<List<T>> findAllAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification
             , Integer page, Integer size, Function<BaseGroup, T> mapper) {
 
         return getAllSubElements(privilegeGroupIdentification, page, size
@@ -275,21 +275,21 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     }
 
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'BASE')")
-    @GetMapping("/findAllBaseAtBaseGroup/{parentGroupIdentification}")
+    @GetMapping("/getAllBaseAtBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupDto>> findAllBaseAtBaseGroup(@PathVariable String parentGroupIdentification
+    ResponseWrapper<List<BaseGroupDto>> getAllBaseAtBaseGroup(@PathVariable String parentGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return findAllBaseAtBaseGroup(parentGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
+        return getAllBaseAtBaseGroup(parentGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
     }
 
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'BASE')")
-    @GetMapping("/findAllBasePartAtBaseGroup/{parentGroupIdentification}")
+    @GetMapping("/getAllBasePartAtBaseGroup/{parentGroupIdentification}")
     public @ResponseBody
     ResponseWrapper<List<BaseGroupPartDto>> findAllBasePartAtBaseGroup(@PathVariable String parentGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return findAllBaseAtBaseGroup(parentGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+        return getAllBaseAtBaseGroup(parentGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
     }
 
     /**
@@ -302,7 +302,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
      * @param <T>                     the transport model
      * @return a wrapped list of loaded base groups
      */
-    private <T extends ITransportable> ResponseWrapper<List<T>> findAllBaseAtBaseGroup(String baseGroupIdentification
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllBaseAtBaseGroup(String baseGroupIdentification
             , Integer page, Integer size, Function<BaseGroup, T> mapper) {
 
         return getAllSubElements(baseGroupIdentification, page, size
@@ -324,7 +324,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     ResponseWrapper<List<BaseGroupDto>> getAllAvailableBasesForBaseGroup(@PathVariable String baseGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return findAllAvailableBasesForBaseGroup(baseGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
+        return getAllAvailableBasesForBaseGroup(baseGroupIdentification, page, size, GroupTransportMapper::convertToBaseGroupDto);
     }
 
     @PreAuthorize("isVisitor(#baseGroupIdentification, 'BASE')")
@@ -333,7 +333,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     ResponseWrapper<List<BaseGroupPartDto>> getAllAvailableBasePartsForBaseGroup(@PathVariable String baseGroupIdentification
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return findAllAvailableBasesForBaseGroup(baseGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+        return getAllAvailableBasesForBaseGroup(baseGroupIdentification, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
     }
 
     /**
@@ -346,7 +346,7 @@ public class BaseGroupController extends AbstractDefaultOperationController {
      * @param <T>                     the transport model
      * @return a wrapped list of loaded base groups
      */
-    private <T extends ITransportable> ResponseWrapper<List<T>> findAllAvailableBasesForBaseGroup(String baseGroupIdentification
+    private <T extends ITransportable> ResponseWrapper<List<T>> getAllAvailableBasesForBaseGroup(String baseGroupIdentification
             , Integer page, Integer size, Function<BaseGroup, T> mapper) {
 
         return getAllSubElements(baseGroupIdentification, page, size
