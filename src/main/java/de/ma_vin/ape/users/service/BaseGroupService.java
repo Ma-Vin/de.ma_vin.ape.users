@@ -10,7 +10,9 @@ import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.history.BaseGroupChange;
+import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.GroupAccessMapper;
+import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
 import de.ma_vin.ape.users.persistence.*;
 import de.ma_vin.ape.users.service.context.RepositoryServiceContext;
 import de.ma_vin.ape.users.service.context.SavingWithParentRepositoryServiceContext;
@@ -23,10 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
 @Data
@@ -337,15 +336,15 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
      * @param role                 role of base groups at privilege group
      * @return List of base groups. If the role is given, the result is filtered by this role.
      */
-    public List<BaseGroup> findAllBaseAtPrivilegeGroup(String parentIdentification, Role role) {
-        log.debug(SEARCH_START_LOG_MESSAGE, GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+    public Map<Role, List<BaseGroup>> findAllBaseAtPrivilegeGroup(String parentIdentification, Role role) {
+        log.debug("Search for base groups with role {} with at {} with identification \"{}\""
+                , role != null ? role.getDescription() : "null", PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
 
-        List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, null, null)
-                .stream()
-                .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
-                .toList();
+        Map<Role, List<BaseGroup>> result = findAllBaseAtPrivilegeGroup(parentIdentification, role, null, null);
 
-        log.debug(SEARCH_RESULT_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+        result.forEach((r, l) -> log.debug("{} base groups with role {} are found at {} with identification \"{}\""
+                , l.size(), r.getDescription(), PRIVILEGE_GROUP_LOG_PARAM, parentIdentification));
+
         return result;
     }
 
@@ -358,15 +357,30 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
      * @param size                 the size of the page to be returned, must be greater than 0.
      * @return List of base groups. If the role is given, the result is filtered by this role.
      */
-    public List<BaseGroup> findAllBaseAtPrivilegeGroup(String parentIdentification, Role role, Integer page, Integer size) {
-        log.debug(SEARCH_START_PAGE_LOG_MESSAGE, GROUPS_LOG_PARAM, page, size, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
+    public Map<Role, List<BaseGroup>> findAllBaseAtPrivilegeGroup(String parentIdentification, Role role, Integer page, Integer size) {
+        log.debug("Search for base groups with role {}, page {} and size {} at {} with identification \"{}\""
+                , role != null ? role.getDescription() : "null", page, size, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification);
 
-        List<BaseGroup> result = findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, page, size)
-                .stream()
-                .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
-                .toList();
+        Map<Role, List<BaseGroup>> result = new EnumMap<>(Role.class);
 
-        log.debug(SEARCH_RESULT_PAGE_LOG_MESSAGE, result.size(), GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, parentIdentification, page, size);
+        if (role == null || Role.NOT_RELEVANT.equals(role)) {
+            findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), page, size).entrySet()
+                    .forEach(e ->
+                            result.computeIfAbsent(e.getKey(), r -> new ArrayList<>())
+                                    .addAll(e.getValue().stream()
+                                            .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
+                                            .toList()
+                                    )
+                    );
+        } else {
+            result.put(role, findAllBaseAtPrivilegeGroup(new PrivilegeGroupDaoExt(parentIdentification), role, page, size)
+                    .stream()
+                    .map(bg -> GroupAccessMapper.convertToBaseGroup(bg, false))
+                    .toList());
+        }
+
+        result.forEach((r, l) -> log.debug("{} base groups with role {} are found at {} with identification \"{}\""
+                , l.size(), r.getDescription(), PRIVILEGE_GROUP_LOG_PARAM, parentIdentification));
         return result;
     }
 
@@ -557,17 +571,18 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
      * @param parent parent privilege group
      * @param page   zero-based page index, must not be negative.
      * @param size   the size of the page to be returned, must be greater than 0.
-     * @return List of base groups
+     * @return Map of list of base groups for each role. If {@code page} or {@code size} are {@code null} everything will be loaded
      */
-    private List<BaseGroupDao> findAllBaseAtPrivilegeGroup(PrivilegeGroupDao parent, Integer page, Integer size) {
+    private Map<Role, List<BaseGroupDao>> findAllBaseAtPrivilegeGroup(PrivilegeGroupDao parent, Integer page, Integer size) {
+        Map<Role, List<BaseGroupDao>> result = new EnumMap<>(Role.class);
         if (page == null || size == null) {
-            return privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent).stream()
-                    .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
-                    .toList();
+            privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent)
+                    .forEach(ptb -> result.computeIfAbsent(ptb.getFilterRole(), r -> new ArrayList<>()).add(ptb.getBaseGroup()));
+        } else {
+            privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent, PageRequest.of(page, size)).stream()
+                    .forEach(ptb -> result.computeIfAbsent(ptb.getFilterRole(), r -> new ArrayList<>()).add(ptb.getBaseGroup()));
         }
-        return privilegeToBaseGroupRepository.findAllByPrivilegeGroup(parent, PageRequest.of(page, size)).stream()
-                .map(PrivilegeGroupToBaseGroupDao::getBaseGroup)
-                .toList();
+        return result;
     }
 
     /**
@@ -581,7 +596,10 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
      */
     private List<BaseGroupDao> findAllBaseAtPrivilegeGroup(PrivilegeGroupDao parent, Role role, Integer page, Integer size) {
         if (role == null) {
-            return findAllBaseAtPrivilegeGroup(parent, page, size);
+            return findAllBaseAtPrivilegeGroup(parent, page, size)
+                    .entrySet().stream()
+                    .flatMap(e -> e.getValue().stream())
+                    .toList();
         }
         if (page == null || size == null) {
             return privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(parent, role).stream()

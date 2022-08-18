@@ -4,10 +4,13 @@ import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.domain.group.BaseGroupExt;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.history.BaseGroupChange;
+import de.ma_vin.ape.users.model.gen.dto.IBasicTransportable;
 import de.ma_vin.ape.users.model.gen.dto.ITransportable;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
+import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.BaseGroupPartDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.BaseGroupRolePartDto;
 import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.model.gen.mapper.GroupPartTransportMapper;
 import de.ma_vin.ape.users.model.gen.mapper.GroupTransportMapper;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -168,19 +172,29 @@ public class BaseGroupController extends AbstractDefaultOperationController {
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/getAllBaseAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupDto>> getAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
+    ResponseWrapper<List<BaseGroupRoleDto>> getAllBaseAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return getAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, GroupTransportMapper::convertToBaseGroupDto);
+        return getAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, (b,r)->{
+            BaseGroupRoleDto baseGroupRoleDto = new BaseGroupRoleDto();
+            baseGroupRoleDto.setRole(r);
+            baseGroupRoleDto.setBaseGroup(GroupTransportMapper.convertToBaseGroupDto(b));
+            return baseGroupRoleDto;
+        });
     }
 
     @PreAuthorize("isVisitor(#parentGroupIdentification, 'PRIVILEGE')")
     @GetMapping("/getAllBasePartAtPrivilegeGroup/{parentGroupIdentification}")
     public @ResponseBody
-    ResponseWrapper<List<BaseGroupPartDto>> getAllBasePartAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
+    ResponseWrapper<List<BaseGroupRolePartDto>> getAllBasePartAtPrivilegeGroup(@PathVariable String parentGroupIdentification, @RequestParam(required = false) Role role
             , @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) {
 
-        return getAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size, GroupPartTransportMapper::convertToBaseGroupPartDto);
+        return getAllBaseAtPrivilegeGroup(parentGroupIdentification, role, page, size,(b,r)->{
+            BaseGroupRolePartDto baseGroupRoleDto = new BaseGroupRolePartDto();
+            baseGroupRoleDto.setRole(r);
+            baseGroupRoleDto.setBaseGroup(GroupPartTransportMapper.convertToBaseGroupPartDto(b));
+            return baseGroupRoleDto;
+        });
     }
 
     /**
@@ -194,13 +208,22 @@ public class BaseGroupController extends AbstractDefaultOperationController {
      * @param <T>                          the transport model
      * @return a wrapped list of loaded base groups
      */
-    private <T extends ITransportable> ResponseWrapper<List<T>> getAllBaseAtPrivilegeGroup(String privilegeGroupIdentification
-            , Role role, Integer page, Integer size, Function<BaseGroup, T> mapper) {
+    private <T extends IBasicTransportable> ResponseWrapper<List<T>> getAllBaseAtPrivilegeGroup(String privilegeGroupIdentification
+            , Role role, Integer page, Integer size, BaseGroupRoleMapper<T> mapper) {
 
-        return getAllSubElements(privilegeGroupIdentification, page, size
-                , identification -> baseGroupService.findAllBaseAtPrivilegeGroup(identification, role)
-                , (identification, pageToUse, sizeToUse) -> baseGroupService.findAllBaseAtPrivilegeGroup(identification, role, pageToUse, sizeToUse)
-                , mapper);
+        int pageToUse = page == null ? DEFAULT_PAGE : page;
+        int sizeToUse = size == null ? DEFAULT_SIZE : size;
+
+        Map<Role, List<BaseGroup>> rolesWithUsers = page == null && size == null
+                ? baseGroupService.findAllBaseAtPrivilegeGroup(privilegeGroupIdentification, role)
+                : baseGroupService.findAllBaseAtPrivilegeGroup(privilegeGroupIdentification, role, pageToUse, sizeToUse);
+
+        List<T> result = rolesWithUsers.entrySet().stream()
+                .flatMap(e -> e.getValue().stream()
+                        .map(u -> mapper.map(u, e.getKey())))
+                .toList();
+
+        return createPageableResponse(result, page, size);
     }
 
     @PreAuthorize("isVisitor(#privilegeGroupIdentification, 'PRIVILEGE')")
@@ -353,5 +376,10 @@ public class BaseGroupController extends AbstractDefaultOperationController {
                 , identification -> baseGroupService.findAllAvailableBasesForBaseGroup(identification)
                 , (identification, pageToUse, sizeToUse) -> baseGroupService.findAllAvailableBasesForBaseGroup(identification, pageToUse, sizeToUse)
                 , mapper);
+    }
+
+    @FunctionalInterface
+    private interface BaseGroupRoleMapper<T extends IBasicTransportable> {
+        T map(BaseGroup baseGroup, Role role);
     }
 }

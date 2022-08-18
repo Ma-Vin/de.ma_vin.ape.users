@@ -9,7 +9,9 @@ import de.ma_vin.ape.users.model.gen.domain.group.history.BaseGroupChange;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupDto;
 import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupIdRoleDto;
+import de.ma_vin.ape.users.model.gen.dto.group.BaseGroupRoleDto;
 import de.ma_vin.ape.users.model.gen.dto.group.part.BaseGroupPartDto;
+import de.ma_vin.ape.users.model.gen.dto.group.part.BaseGroupRolePartDto;
 import de.ma_vin.ape.users.model.gen.dto.history.ChangeDto;
 import de.ma_vin.ape.users.service.BaseGroupService;
 import de.ma_vin.ape.users.service.history.BaseGroupChangeService;
@@ -25,10 +27,7 @@ import org.mockito.Mock;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static de.ma_vin.ape.utils.controller.response.ResponseTestUtil.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -705,14 +704,15 @@ public class BaseGroupControllerTest {
     @DisplayName("Find all base groups at privilege group")
     @Test
     public void testFindAllBaseAtPrivilegeGroup() {
-        mockDefaultFindAllBaseAtPrivilegeGroup();
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.MANAGER);
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
+        ResponseWrapper<List<BaseGroupRoleDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
 
         checkOk(response);
 
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
-        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getBaseGroup().getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER));
         verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any());
@@ -721,15 +721,16 @@ public class BaseGroupControllerTest {
     @DisplayName("Find all base groups at privilege group with pages, but missing page")
     @Test
     public void testFindAllBaseAtPrivilegeGroupPageableMissingPage() {
-        mockDefaultFindAllBaseAtPrivilegeGroup();
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.MANAGER);
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
+        ResponseWrapper<List<BaseGroupRoleDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
 
         checkWarn(response);
 
         assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
-        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getBaseGroup().getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), any(), eq(Integer.valueOf(20)));
@@ -738,15 +739,16 @@ public class BaseGroupControllerTest {
     @DisplayName("Find all base groups at privilege group with pages, but missing size")
     @Test
     public void testFindAllBaseAtPrivilegeGroupPageableMissingSize() {
-        mockDefaultFindAllBaseAtPrivilegeGroup();
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.MANAGER);
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
+        ResponseWrapper<List<BaseGroupRoleDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
 
         checkWarn(response);
 
         assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
-        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getBaseGroup().getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), any());
@@ -755,35 +757,44 @@ public class BaseGroupControllerTest {
     @DisplayName("Find all base groups at privilege group with pages")
     @Test
     public void testFindAllBaseAtPrivilegeGroupPageable() {
-        mockDefaultFindAllBaseAtPrivilegeGroup();
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.MANAGER);
 
-        ResponseWrapper<List<BaseGroupDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
+        ResponseWrapper<List<BaseGroupRoleDto>> response = cut.getAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
 
         checkOk(response);
 
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
-        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getBaseGroup().getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));
     }
 
+    private void mockDefaultFindAllBaseAtPrivilegeGroup(Role role) {
+        Map<Role, List<BaseGroup>> rolesAndBaseGroups = new EnumMap<>(Role.class);
+        rolesAndBaseGroups.put(role, Collections.singletonList(baseGroup));
+
+        when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any())).thenReturn(rolesAndBaseGroups);
+        when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any(), any(), any())).thenReturn(rolesAndBaseGroups);
+    }
+
     private void mockDefaultFindAllBaseAtPrivilegeGroup() {
-        when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any())).thenReturn(Collections.singletonList(baseGroup));
-        when(baseGroupService.findAllBaseAtPrivilegeGroup(any(), any(), any(), any())).thenReturn(Collections.singletonList(baseGroup));
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.ADMIN);
     }
 
     @DisplayName("Find all base group parts at privilege group")
     @Test
     public void testFindAllBasePartAtPrivilegeGroup() {
-        mockDefaultFindAllBaseAtPrivilegeGroup();
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.MANAGER);
 
-        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
+        ResponseWrapper<List<BaseGroupRolePartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, null);
 
         checkOk(response);
 
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
-        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getBaseGroup().getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER));
         verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any(), any(), any());
@@ -792,15 +803,16 @@ public class BaseGroupControllerTest {
     @DisplayName("Find all base group parts at privilege group with pages, but missing page")
     @Test
     public void testFindAllBasePartAtPrivilegeGroupPageableMissingPage() {
-        mockDefaultFindAllBaseAtPrivilegeGroup();
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.MANAGER);
 
-        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
+        ResponseWrapper<List<BaseGroupRolePartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, null, 20);
 
         checkWarn(response);
 
         assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
-        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getBaseGroup().getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), any(), eq(Integer.valueOf(20)));
@@ -809,15 +821,16 @@ public class BaseGroupControllerTest {
     @DisplayName("Find all base group parts at privilege group with pages, but missing size")
     @Test
     public void testFindAllBasePartAtPrivilegeGroupPageableMissingSize() {
-        mockDefaultFindAllBaseAtPrivilegeGroup();
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.MANAGER);
 
-        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
+        ResponseWrapper<List<BaseGroupRolePartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, null);
 
         checkWarn(response);
 
         assertEquals(1, response.getMessages().size(), "Wrong number of warnings");
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
-        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getBaseGroup().getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), any());
@@ -826,14 +839,15 @@ public class BaseGroupControllerTest {
     @DisplayName("Find all base group parts at privilege group with pages")
     @Test
     public void testFindAllBasePartAtPrivilegeGroupPageable() {
-        mockDefaultFindAllBaseAtPrivilegeGroup();
+        mockDefaultFindAllBaseAtPrivilegeGroup(Role.MANAGER);
 
-        ResponseWrapper<List<BaseGroupPartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
+        ResponseWrapper<List<BaseGroupRolePartDto>> response = cut.getAllBasePartAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.MANAGER, 2, 20);
 
         checkOk(response);
 
         assertEquals(1, response.getResponse().size(), "Wrong number of sub base groups");
-        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getIdentification(), "Wrong identification at first entry");
+        assertEquals(Role.MANAGER, response.getResponse().get(0).getRole(), "Wrong role at first entry");
+        assertEquals(BASE_GROUP_IDENTIFICATION, response.getResponse().get(0).getBaseGroup().getIdentification(), "Wrong identification at first entry");
 
         verify(baseGroupService, never()).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), any());
         verify(baseGroupService).findAllBaseAtPrivilegeGroup(eq(PRIVILEGE_GROUP_IDENTIFICATION), eq(Role.MANAGER), eq(Integer.valueOf(2)), eq(Integer.valueOf(20)));

@@ -698,6 +698,12 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
      */
     private List<UserDao> findAllUsers(PrivilegeGroupDao parent, Role role, Integer page, Integer size) {
+        if (role == null) {
+            return findAllUsers(parent, page, size)
+                    .entrySet().stream()
+                    .flatMap(e -> e.getValue().stream())
+                    .toList();
+        }
         if (page == null || size == null) {
             return privilegeGroupToUserRepository.findAllByPrivilegeGroupAndFilterRole(parent, role).stream()
                     .map(PrivilegeGroupToUserDao::getUser)
@@ -714,7 +720,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * @param parent
      * @param page   zero-based page index, must not be negative.
      * @param size   the size of the page to be returned, must be greater than 0.
-     * @return List of users. If {@code page} or {@code size} are {@code null} everything will be loaded
+     * @return Map of list of users for each role. If {@code page} or {@code size} are {@code null} everything will be loaded
      */
     private Map<Role, List<UserDao>> findAllUsers(PrivilegeGroupDao parent, Integer page, Integer size) {
         Map<Role, List<UserDao>> result = new EnumMap<>(Role.class);

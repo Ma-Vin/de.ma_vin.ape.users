@@ -116,6 +116,14 @@
                         <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
                     </fields>
                 </entity>
+                <entity baseName="BaseGroupRole" models="DTO" genIdIfDto="false">
+                    <fields>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
+                    </fields>
+                    <references>
+                        <reference referenceName="baseGroup" targetEntity="BaseGroup"/>
+                    </references>
+                </entity>
                 <entity baseName="UserIdRole" models="DTO" genIdIfDto="false">
                     <fields>
                         <field fieldName="userIdentification" type="String"/>
@@ -158,6 +166,14 @@
                     <fields>
                         <field fieldName="groupName" type="String"/>
                     </fields>
+                </entity>
+                <entity baseName="BaseGroupRolePart" models="DTO" genIdIfDto="false">
+                    <fields>
+                        <field fieldName="role" type="Role" typePackage="de.ma_vin.ape.users.enums" isTypeEnum="true"/>
+                    </fields>
+                    <references>
+                        <reference referenceName="baseGroup" targetEntity="BaseGroupPart"/>
+                    </references>
                 </entity>
                 <entity baseName="UserRolePart" models="DTO" genIdIfDto="false">
                     <fields>

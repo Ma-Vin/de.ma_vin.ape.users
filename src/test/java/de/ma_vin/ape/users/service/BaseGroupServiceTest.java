@@ -16,10 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -541,10 +538,12 @@ public class BaseGroupServiceTest {
     public void testFindAllBaseAtPrivilegeGroup() {
         defaultMockFindAllBaseAtPrivilegeGroup();
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null);
+        Map<Role, List<BaseGroup>> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+        assertNotNull(result.get(Role.MANAGER), "There should be an entry for " + Role.MANAGER.name());
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of elements at result for " + Role.MANAGER.name());
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first entry for " + Role.MANAGER.name());
 
         verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
@@ -557,10 +556,12 @@ public class BaseGroupServiceTest {
     public void testFindAllBaseAtPrivilegeGroupWithRole() {
         defaultMockFindAllBaseAtPrivilegeGroup(Role.ADMIN);
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.ADMIN);
+        Map<Role, List<BaseGroup>> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.ADMIN);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+        assertNotNull(result.get(Role.ADMIN), "There should be an entry for " + Role.ADMIN.name());
+        assertEquals(1, result.get(Role.ADMIN).size(), "Wrong number of elements at result for " + Role.ADMIN.name());
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(Role.ADMIN).get(0).getIdentification(), "Wrong identification at first entry for " + Role.ADMIN.name());
 
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
@@ -573,10 +574,12 @@ public class BaseGroupServiceTest {
     public void testFindAllBaseAtPrivilegeGroupPageable() {
         defaultMockFindAllBaseAtPrivilegeGroup();
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 1, 20);
+        Map<Role, List<BaseGroup>> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 1, 20);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+        assertNotNull(result.get(Role.MANAGER), "There should be an entry for " + Role.MANAGER.name());
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of elements at result for " + Role.MANAGER.name());
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first entry for " + Role.MANAGER.name());
 
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any(), any());
@@ -589,10 +592,12 @@ public class BaseGroupServiceTest {
     public void testFindAllBaseAtPrivilegeGroupWithRolePageable() {
         defaultMockFindAllBaseAtPrivilegeGroup(Role.ADMIN);
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.ADMIN, 1, 20);
+        Map<Role, List<BaseGroup>> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.ADMIN, 1, 20);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+        assertNotNull(result.get(Role.ADMIN), "There should be an entry for " + Role.ADMIN.name());
+        assertEquals(1, result.get(Role.ADMIN).size(), "Wrong number of elements at result for " + Role.ADMIN.name());
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(Role.ADMIN).get(0).getIdentification(), "Wrong identification at first entry for " + Role.ADMIN.name());
 
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
@@ -605,10 +610,12 @@ public class BaseGroupServiceTest {
     public void testFindAllBaseAtPrivilegeGroupPageableMissingPage() {
         defaultMockFindAllBaseAtPrivilegeGroup();
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, null, 20);
+        Map<Role, List<BaseGroup>> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, null, 20);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+        assertNotNull(result.get(Role.MANAGER), "There should be an entry for " + Role.MANAGER.name());
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of elements at result for " + Role.MANAGER.name());
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first entry for " + Role.MANAGER.name());
 
         verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
@@ -621,10 +628,12 @@ public class BaseGroupServiceTest {
     public void testFindAllBaseAtPrivilegeGroupWithRolePageableMissingPage() {
         defaultMockFindAllBaseAtPrivilegeGroup(Role.ADMIN);
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.ADMIN, null, 20);
+        Map<Role, List<BaseGroup>> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.ADMIN, null, 20);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+        assertNotNull(result.get(Role.ADMIN), "There should be an entry for " + Role.ADMIN.name());
+        assertEquals(1, result.get(Role.ADMIN).size(), "Wrong number of elements at result for " + Role.ADMIN.name());
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(Role.ADMIN).get(0).getIdentification(), "Wrong identification at first entry for " + Role.ADMIN.name());
 
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
@@ -637,10 +646,12 @@ public class BaseGroupServiceTest {
     public void testFindAllBaseAtPrivilegeGroupPageableMissingSize() {
         defaultMockFindAllBaseAtPrivilegeGroup();
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 1, null);
+        Map<Role, List<BaseGroup>> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, null, 1, null);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+        assertNotNull(result.get(Role.MANAGER), "There should be an entry for " + Role.MANAGER.name());
+        assertEquals(1, result.get(Role.MANAGER).size(), "Wrong number of elements at result for " + Role.MANAGER.name());
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(Role.MANAGER).get(0).getIdentification(), "Wrong identification at first entry for " + Role.MANAGER.name());
 
         verify(privilegeToBaseGroupRepository).findAllByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
@@ -653,10 +664,12 @@ public class BaseGroupServiceTest {
     public void testFindAllBaseAtPrivilegeGroupWithRolePageableMissingSize() {
         defaultMockFindAllBaseAtPrivilegeGroup(Role.ADMIN);
 
-        List<BaseGroup> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.ADMIN, 1, null);
+        Map<Role, List<BaseGroup>> result = cut.findAllBaseAtPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION, Role.ADMIN, 1, null);
         assertNotNull(result, "The result should not be null");
         assertEquals(1, result.size(), "Wrong number of elements at result");
-        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
+        assertNotNull(result.get(Role.ADMIN), "There should be an entry for " + Role.ADMIN.name());
+        assertEquals(1, result.get(Role.ADMIN).size(), "Wrong number of elements at result for " + Role.ADMIN.name());
+        assertEquals(BASE_GROUP_IDENTIFICATION, result.get(Role.ADMIN).get(0).getIdentification(), "Wrong identification at first entry for " + Role.ADMIN.name());
 
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any());
         verify(privilegeToBaseGroupRepository, never()).findAllByPrivilegeGroup(any(), any());
@@ -665,7 +678,7 @@ public class BaseGroupServiceTest {
     }
 
     private void defaultMockFindAllBaseAtPrivilegeGroup() {
-        defaultMockFindAllBaseAtPrivilegeGroup(null);
+        defaultMockFindAllBaseAtPrivilegeGroup(Role.MANAGER);
     }
 
     private void defaultMockFindAllBaseAtPrivilegeGroup(Role role) {
@@ -677,6 +690,7 @@ public class BaseGroupServiceTest {
         when(privilegeToBaseGroupRepository.findAllByPrivilegeGroup(any())).then(a -> {
             if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
                 when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+                when(privilegeGroupToBaseGroupDao.getFilterRole()).thenReturn(role);
                 return Collections.singletonList(privilegeGroupToBaseGroupDao);
             }
             return Collections.emptyList();
@@ -685,28 +699,29 @@ public class BaseGroupServiceTest {
         when(privilegeToBaseGroupRepository.findAllByPrivilegeGroup(any(), any())).then(a -> {
             if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
                 when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+                when(privilegeGroupToBaseGroupDao.getFilterRole()).thenReturn(role);
                 return Collections.singletonList(privilegeGroupToBaseGroupDao);
             }
             return Collections.emptyList();
         });
 
-        if (role != null) {
-            when(privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(any(), eq(role))).then(a -> {
-                if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
-                    when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
-                    return Collections.singletonList(privilegeGroupToBaseGroupDao);
-                }
-                return Collections.emptyList();
-            });
+        when(privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(any(), eq(role))).then(a -> {
+            if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
+                when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+                when(privilegeGroupToBaseGroupDao.getFilterRole()).thenReturn(role);
+                return Collections.singletonList(privilegeGroupToBaseGroupDao);
+            }
+            return Collections.emptyList();
+        });
 
-            when(privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(any(), eq(role), any())).then(a -> {
-                if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
-                    when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
-                    return Collections.singletonList(privilegeGroupToBaseGroupDao);
-                }
-                return Collections.emptyList();
-            });
-        }
+        when(privilegeToBaseGroupRepository.findAllByPrivilegeGroupAndFilterRole(any(), eq(role), any())).then(a -> {
+            if (((PrivilegeGroupDao) a.getArgument(0)).getIdentification().equals(PRIVILEGE_GROUP_IDENTIFICATION)) {
+                when(privilegeGroupToBaseGroupDao.getPrivilegeGroup()).thenReturn(a.getArgument(0));
+                when(privilegeGroupToBaseGroupDao.getFilterRole()).thenReturn(role);
+                return Collections.singletonList(privilegeGroupToBaseGroupDao);
+            }
+            return Collections.emptyList();
+        });
     }
 
     @DisplayName("Find all available base groups for privilege group")
