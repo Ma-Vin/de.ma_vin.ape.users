@@ -232,7 +232,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
     public Long countAvailableUsersForBaseGroup(String baseGroupIdentification) {
         log.debug(COUNT_FOR_START_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
 
-        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+        BaseGroupDao baseGroupDao = baseGroupRepository.getReferenceById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
 
         long result = baseGroupToUserRepository.countAvailableUsers(baseGroupDao, baseGroupDao.getParentCommonGroup());
 
@@ -295,7 +295,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
     public Long countAvailableUsersForPrivilegeGroup(String privilegeGroupIdentification) {
         log.debug(COUNT_FOR_START_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
 
-        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getReferenceById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
 
         long result = privilegeGroupToUserRepository.countAvailableUsers(privilegeGroupDao, privilegeGroupDao.getParentCommonGroup());
 
@@ -414,7 +414,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
     public List<User> findAllAvailableUsersForBaseGroup(String baseGroupIdentification) {
         log.debug(SEARCH_FOR_START_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
 
-        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+        BaseGroupDao baseGroupDao = baseGroupRepository.getReferenceById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
 
         List<User> result = findAllAvailableUsers(baseGroupDao, null, null)
                 .stream()
@@ -436,7 +436,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
     public List<User> findAllAvailableUsersForBaseGroup(String baseGroupIdentification, Integer page, Integer size) {
         log.debug(SEARCH_FOR_START_PAGE_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, page, size, BASE_GROUP_LOG_PARAM, baseGroupIdentification);
 
-        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+        BaseGroupDao baseGroupDao = baseGroupRepository.getReferenceById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
 
         List<User> result = findAllAvailableUsers(baseGroupDao, page, size)
                 .stream()
@@ -563,7 +563,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
     public List<User> findAllAvailableUsersForPrivilegeGroup(String privilegeGroupIdentification) {
         log.debug(SEARCH_FOR_START_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
 
-        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getReferenceById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
 
         List<User> result = findAllAvailableUsers(privilegeGroupDao, null, null)
                 .stream()
@@ -585,7 +585,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
     public List<User> findAllAvailableUsersForPrivilegeGroup(String privilegeGroupIdentification, Integer page, Integer size) {
         log.debug(SEARCH_FOR_START_PAGE_LOG_MESSAGE, AVAILABLE_USERS_LOG_PARAM, page, size, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
 
-        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getReferenceById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
 
         List<User> result = findAllAvailableUsers(privilegeGroupDao, page, size)
                 .stream()

@@ -250,7 +250,7 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
     public Long countAvailableBasesForBaseGroup(String baseGroupIdentification) {
         log.debug(COUNT_FOR_START_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, GROUP_LOG_PARAM, baseGroupIdentification);
 
-        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+        BaseGroupDao baseGroupDao = baseGroupRepository.getReferenceById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
 
         long result = baseToBaseGroupRepository.countAvailableBaseGroups(baseGroupDao, baseGroupDao.getParentCommonGroup());
 
@@ -321,7 +321,7 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
     public Long countAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification) {
         log.debug(COUNT_FOR_START_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
 
-        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getReferenceById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
 
         long result = privilegeToBaseGroupRepository.countAvailableBaseGroups(privilegeGroupDao, privilegeGroupDao.getParentCommonGroup());
 
@@ -393,7 +393,7 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
     public List<BaseGroup> findAllAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification) {
         log.debug(SEARCH_FOR_START_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
 
-        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getReferenceById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
 
         List<BaseGroup> result = findAllAvailableBaseGroups(privilegeGroupDao, null, null)
                 .stream()
@@ -415,7 +415,7 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
     public List<BaseGroup> findAllAvailableBasesForPrivilegeGroup(String privilegeGroupIdentification, Integer page, Integer size) {
         log.debug(SEARCH_FOR_START_PAGE_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, page, size, PRIVILEGE_GROUP_LOG_PARAM, privilegeGroupIdentification);
 
-        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
+        PrivilegeGroupDao privilegeGroupDao = privilegeGroupRepository.getReferenceById(IdGenerator.generateId(privilegeGroupIdentification, PrivilegeGroup.ID_PREFIX));
 
         List<BaseGroup> result = findAllAvailableBaseGroups(privilegeGroupDao, page, size)
                 .stream()
@@ -505,7 +505,7 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
     public List<BaseGroup> findAllAvailableBasesForBaseGroup(String baseGroupIdentification) {
         log.debug(SEARCH_FOR_START_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, GROUP_LOG_PARAM, baseGroupIdentification);
 
-        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+        BaseGroupDao baseGroupDao = baseGroupRepository.getReferenceById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
 
         List<BaseGroup> result = findAllAvailableBaseGroups(baseGroupDao, null, null)
                 .stream()
@@ -527,7 +527,7 @@ public class BaseGroupService extends AbstractChildRepositoryService<BaseGroupDa
     public List<BaseGroup> findAllAvailableBasesForBaseGroup(String baseGroupIdentification, Integer page, Integer size) {
         log.debug(SEARCH_FOR_START_PAGE_LOG_MESSAGE, AVAILABLE_GROUPS_LOG_PARAM, page, size, GROUP_LOG_PARAM, baseGroupIdentification);
 
-        BaseGroupDao baseGroupDao = baseGroupRepository.getById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
+        BaseGroupDao baseGroupDao = baseGroupRepository.getReferenceById(IdGenerator.generateId(baseGroupIdentification, BaseGroup.ID_PREFIX));
 
         List<BaseGroup> result = findAllAvailableBaseGroups(baseGroupDao, page, size)
                 .stream()

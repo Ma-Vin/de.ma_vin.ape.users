@@ -244,7 +244,7 @@ public class UserServiceTest {
     @DisplayName("Count available users for base group")
     @Test
     public void testCountAvailableUsersForBaseGroup() {
-        when(baseGroupRepository.getById(eq(BASE_GROUP_ID))).thenReturn(baseGroupDao);
+        when(baseGroupRepository.getReferenceById(eq(BASE_GROUP_ID))).thenReturn(baseGroupDao);
         when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
         when(baseGroupToUserRepository.countAvailableUsers(eq(baseGroupDao), eq(commonGroupDao))).thenReturn(42L);
 
@@ -310,7 +310,7 @@ public class UserServiceTest {
     @DisplayName("Count available users for privilege group")
     @Test
     public void testCountAvailableUsersForPrivilegeGroup() {
-        when(privilegeGroupRepository.getById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
+        when(privilegeGroupRepository.getReferenceById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
         when(privilegeGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
         when(privilegeGroupToUserRepository.countAvailableUsers(eq(privilegeGroupDao), eq(commonGroupDao))).thenReturn(42L);
 
@@ -626,7 +626,7 @@ public class UserServiceTest {
     }
 
     private void mockDefaultFindAllAvailableUsersForBaseGroup() {
-        when(baseGroupRepository.getById(eq(BASE_GROUP_ID))).thenReturn(baseGroupDao);
+        when(baseGroupRepository.getReferenceById(eq(BASE_GROUP_ID))).thenReturn(baseGroupDao);
         when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
         when(baseGroupToUserRepository.findAvailableUsers(eq(baseGroupDao), eq(commonGroupDao))).thenReturn(Collections.singletonList(userDao));
         when(baseGroupToUserRepository.findAvailableUsers(eq(baseGroupDao), eq(commonGroupDao), any())).thenReturn(Collections.singletonList(userDao));
@@ -985,7 +985,7 @@ public class UserServiceTest {
     }
 
     private void mockDefaultFindAllAvailableUsersForPrivilegeGroup() {
-        when(privilegeGroupRepository.getById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
+        when(privilegeGroupRepository.getReferenceById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
         when(privilegeGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
         when(privilegeGroupToUserRepository.findAvailableUsers(eq(privilegeGroupDao), eq(commonGroupDao))).thenReturn(Collections.singletonList(userDao));
         when(privilegeGroupToUserRepository.findAvailableUsers(eq(privilegeGroupDao), eq(commonGroupDao), any())).thenReturn(Collections.singletonList(userDao));

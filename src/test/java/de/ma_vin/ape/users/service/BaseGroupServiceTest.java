@@ -318,14 +318,14 @@ public class BaseGroupServiceTest {
         when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
         when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
 
-        when(baseGroupRepository.getById(eq(PARENT_BASE_GROUP_ID))).thenReturn(parentBaseGroupDao);
+        when(baseGroupRepository.getReferenceById(eq(PARENT_BASE_GROUP_ID))).thenReturn(parentBaseGroupDao);
         when(baseToBaseGroupRepository.countAvailableBaseGroups(eq(parentBaseGroupDao), eq(commonGroupDao))).thenReturn(42L);
 
         Long result = cut.countAvailableBasesForBaseGroup(PARENT_BASE_GROUP_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
 
-        verify(baseGroupRepository).getById(any());
+        verify(baseGroupRepository).getReferenceById(any());
         verify(baseToBaseGroupRepository).countAvailableBaseGroups(any(), any());
     }
 
@@ -419,7 +419,7 @@ public class BaseGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(baseGroupRepository).getById(any());
+        verify(baseGroupRepository).getReferenceById(any());
         verify(baseToBaseGroupRepository).findAvailableBaseGroups(any(), any());
         verify(baseToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
     }
@@ -434,7 +434,7 @@ public class BaseGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(baseGroupRepository).getById(any());
+        verify(baseGroupRepository).getReferenceById(any());
         verify(baseToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any());
         verify(baseToBaseGroupRepository).findAvailableBaseGroups(any(), any(), any());
     }
@@ -449,7 +449,7 @@ public class BaseGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(baseGroupRepository).getById(any());
+        verify(baseGroupRepository).getReferenceById(any());
         verify(baseToBaseGroupRepository).findAvailableBaseGroups(any(), any());
         verify(baseToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
     }
@@ -464,7 +464,7 @@ public class BaseGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(baseGroupRepository).getById(any());
+        verify(baseGroupRepository).getReferenceById(any());
         verify(baseToBaseGroupRepository).findAvailableBaseGroups(any(), any());
         verify(baseToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
     }
@@ -479,7 +479,7 @@ public class BaseGroupServiceTest {
         when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
 
-        when(baseGroupRepository.getById(eq(PARENT_BASE_GROUP_ID))).thenReturn(parentBaseGroupDao);
+        when(baseGroupRepository.getReferenceById(eq(PARENT_BASE_GROUP_ID))).thenReturn(parentBaseGroupDao);
         when(baseToBaseGroupRepository.findAvailableBaseGroups(eq(parentBaseGroupDao), eq(commonGroupDao))).thenReturn(Collections.singletonList(baseGroupDao));
         when(baseToBaseGroupRepository.findAvailableBaseGroups(eq(parentBaseGroupDao), eq(commonGroupDao), any())).thenReturn(Collections.singletonList(baseGroupDao));
     }
@@ -507,14 +507,14 @@ public class BaseGroupServiceTest {
         when(commonGroupDao.getId()).thenReturn(COMMON_GROUP_ID);
         when(commonGroupDao.getIdentification()).thenReturn(COMMON_GROUP_IDENTIFICATION);
 
-        when(privilegeGroupRepository.getById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
+        when(privilegeGroupRepository.getReferenceById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
         when(privilegeToBaseGroupRepository.countAvailableBaseGroups(eq(privilegeGroupDao), eq(commonGroupDao))).thenReturn(42L);
 
         Long result = cut.countAvailableBasesForPrivilegeGroup(PRIVILEGE_GROUP_IDENTIFICATION);
         assertNotNull(result, "The result should not be null");
         assertEquals(Long.valueOf(42L), result, "Wrong number of elements at result");
 
-        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeGroupRepository).getReferenceById(any());
         verify(privilegeToBaseGroupRepository).countAvailableBaseGroups(any(), any());
     }
 
@@ -734,7 +734,7 @@ public class BaseGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeGroupRepository).getReferenceById(any());
         verify(privilegeToBaseGroupRepository).findAvailableBaseGroups(any(), any());
         verify(privilegeToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
     }
@@ -749,7 +749,7 @@ public class BaseGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeGroupRepository).getReferenceById(any());
         verify(privilegeToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any());
         verify(privilegeToBaseGroupRepository).findAvailableBaseGroups(any(), any(), any());
     }
@@ -764,7 +764,7 @@ public class BaseGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeGroupRepository).getReferenceById(any());
         verify(privilegeToBaseGroupRepository).findAvailableBaseGroups(any(), any());
         verify(privilegeToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
     }
@@ -779,7 +779,7 @@ public class BaseGroupServiceTest {
         assertEquals(1, result.size(), "Wrong number of elements at result");
         assertEquals(BASE_GROUP_IDENTIFICATION, result.get(0).getIdentification(), "Wrong identification at first entry");
 
-        verify(privilegeGroupRepository).getById(any());
+        verify(privilegeGroupRepository).getReferenceById(any());
         verify(privilegeToBaseGroupRepository).findAvailableBaseGroups(any(), any());
         verify(privilegeToBaseGroupRepository, never()).findAvailableBaseGroups(any(), any(), any());
     }
@@ -794,7 +794,7 @@ public class BaseGroupServiceTest {
         when(baseGroupDao.getIdentification()).thenReturn(BASE_GROUP_IDENTIFICATION);
         when(baseGroupDao.getParentCommonGroup()).thenReturn(commonGroupDao);
 
-        when(privilegeGroupRepository.getById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
+        when(privilegeGroupRepository.getReferenceById(eq(PRIVILEGE_GROUP_ID))).thenReturn(privilegeGroupDao);
         when(privilegeToBaseGroupRepository.findAvailableBaseGroups(eq(privilegeGroupDao), eq(commonGroupDao))).thenReturn(Collections.singletonList(baseGroupDao));
         when(privilegeToBaseGroupRepository.findAvailableBaseGroups(eq(privilegeGroupDao), eq(commonGroupDao), any())).thenReturn(Collections.singletonList(baseGroupDao));
     }
