@@ -41,6 +41,9 @@ public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.opaque.introspection-client-secret}")
     private String clientSecret;
 
+    @Value("${spring.h2.console.enabled}")
+    private boolean h2ConsoleEnabled;
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -122,15 +125,16 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /*
     @Bean
     @Order(4)
-    */
     public SecurityFilterChain h2ConsoleFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeRequests().antMatchers(CONSOLE_PATTERN).permitAll()
-                .and().csrf().disable()
-                .headers().frameOptions().disable();
-
+        if (h2ConsoleEnabled) {
+            http.antMatcher(CONSOLE_PATTERN).authorizeRequests().anyRequest().permitAll()
+                    .and().csrf().disable()
+                    .headers().frameOptions().disable();
+        } else {
+            http.antMatcher(CONSOLE_PATTERN).authorizeRequests().anyRequest().denyAll();
+        }
         return http.build();
     }
 

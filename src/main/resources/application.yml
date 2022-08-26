@@ -6,7 +6,7 @@ spring:
     password:
   h2:
     console:
-      enabled: true
+      enabled: false
       path: /h2-console
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
