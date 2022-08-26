@@ -15,6 +15,7 @@ APE spring boot application for user authentication and groupings
 * [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=Ma-Vin_de.ma_vin.ape.users&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=Ma-Vin_de.ma_vin.ape.users)  [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=Ma-Vin_de.ma_vin.ape.users&metric=ncloc)](https://sonarcloud.io/dashboard?id=Ma-Vin_de.ma_vin.ape.users)
 
 ## Profiles
+* ***jwt-verification-token***: verifies the payload of the token against its signature
 * ***database-token***: persists the issued tokens and refresh tokens at a database table *Tokens*. 
 In this case it is possible to use more than one application instance.
 * ***memory-token***: holds the issued tokens and refresh tokens at a map. 
