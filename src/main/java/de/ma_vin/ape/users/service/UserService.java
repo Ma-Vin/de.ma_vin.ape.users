@@ -801,9 +801,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * In case of not existing user for given identification, the result will be {@link Optional#empty()}
      */
     public Optional<User> saveAtAdminGroup(User user, String groupIdentification, String editorIdentification) {
-        if (!initializePassword(user)) {
-            return Optional.empty();
-        }
+        initializePassword(user);
         SavingWithParentRepositoryServiceContext<User, UserDao, AdminGroupDao> context = new SavingWithParentRepositoryServiceContext<User, UserDao, AdminGroupDao>(
                 user
                 , editorIdentification
@@ -834,9 +832,7 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * In case of not existing user for given identification, the result will be {@link Optional#empty()}
      */
     public Optional<User> saveAtCommonGroup(User user, String groupIdentification, String editorIdentification) {
-        if (!initializePassword(user)) {
-            return Optional.empty();
-        }
+        initializePassword(user);
         SavingWithParentRepositoryServiceContext<User, UserDao, CommonGroupDao> context = new SavingWithParentRepositoryServiceContext<User, UserDao, CommonGroupDao>(
                 user
                 , editorIdentification
@@ -860,16 +856,12 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * Sets a default password at user if it is to initialize
      *
      * @param user the user who gets the default password
-     * @return {@code false} if a password could not be set
      */
-    private boolean initializePassword(User user) {
-        if (!initUserWithDefaultPwd || !isObjectToCreate(user) || (user.getPassword() != null && !user.getPassword().isEmpty())) {
-            return true;
+    private void initializePassword(User user) {
+        if (initUserWithDefaultPwd && isObjectToCreate(user) && (user.getPassword() == null || user.getPassword().isEmpty())) {
+            String rawPassword = createDefaultPassword(user);
+            ((UserExt) user).setRawPassword(passwordEncoder, rawPassword);
         }
-
-        String rawPassword = createDefaultPassword(user);
-        ((UserExt) user).setRawPassword(passwordEncoder, rawPassword);
-        return true;
     }
 
     private Adoption<UserDao> createUserAdoption() {
