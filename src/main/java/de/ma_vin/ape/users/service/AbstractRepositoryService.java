@@ -121,7 +121,7 @@ public abstract class AbstractRepositoryService<S extends IIdentifiableDao, Q ex
         S daoObject = context.getDaoWithParentConverter().convert(context.getDomainObject(), parent);
         T result;
 
-        if (context.getDomainObject().getIdentification() == null) {
+        if (isObjectToCreate(context.getDomainObject())) {
             log.debug("There is not any identification, so the {} with name {} will be stored the first time", simpleClassName
                     , context.getNameable().getName(context.getDomainObject()));
             daoObject = context.getRepository().save(daoObject);
@@ -150,6 +150,16 @@ public abstract class AbstractRepositoryService<S extends IIdentifiableDao, Q ex
         log.debug("The {} with identification {} was saved", simpleClassName, result.getIdentification());
 
         return Optional.of(result);
+    }
+
+    /**
+     * Checks if a given domain object will be stored for the first time
+     *
+     * @param objectToCheck domain object to check
+     * @return {@code true} if the domain object will be stored for the first time, otherwise {@code false}
+     */
+    protected boolean isObjectToCreate(IIdentifiable objectToCheck) {
+        return objectToCheck.getIdentification() == null;
     }
 
     @FunctionalInterface

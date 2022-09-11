@@ -42,6 +42,8 @@ public class UserServiceTest {
     public static final Long USER_SMALL_IMAGE_ID = 7L;
     public static final String USER_IDENTIFICATION = IdGenerator.generateIdentification(USER_ID, User.ID_PREFIX);
     public static final String USER_PASSWORD = "1 Dummy Password!";
+    public static final String USER_FIRST_NAME = "Max";
+    public static final String USER_LAST_NAME = "Power";
     public static final String COMMON_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(COMMON_GROUP_ID, CommonGroup.ID_PREFIX);
     public static final String ADMIN_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(ADMIN_GROUP_ID, AdminGroup.ID_PREFIX);
     public static final String PRIVILEGE_GROUP_IDENTIFICATION = IdGenerator.generateIdentification(PRIVILEGE_GROUP_ID, PrivilegeGroup.ID_PREFIX);
@@ -133,11 +135,18 @@ public class UserServiceTest {
         when(userDao.getPassword()).thenReturn(USER_PASSWORD);
         when(userDao.getRole()).thenReturn(Role.VISITOR);
         when(userDao.getParentCommonGroup()).thenReturn(commonGroupDao);
+        when(userDao.getFirstName()).thenReturn(USER_FIRST_NAME);
+        when(userDao.getLastName()).thenReturn(USER_LAST_NAME);
 
         when(user.getIdentification()).thenReturn(USER_IDENTIFICATION);
-        when(user.getPassword()).thenReturn(USER_PASSWORD);
         when(user.getRole()).thenReturn(Role.VISITOR);
         when(user.isGlobalAdmin()).thenReturn(Boolean.FALSE);
+        when(user.getFirstName()).thenReturn(USER_FIRST_NAME);
+        when(user.getLastName()).thenReturn(USER_LAST_NAME);
+        doAnswer(a -> {
+            when(user.getPassword()).thenReturn(a.getArgument(1));
+            return null;
+        }).when(user).setRawPassword(any(), any());
 
         when(userRepository.findById(eq(USER_ID))).thenReturn(Optional.of(userDao));
     }
@@ -1010,7 +1019,7 @@ public class UserServiceTest {
         verify(userResourceService, never()).save(any(UserResourceDao.class));
     }
 
-    @DisplayName("Save user with admin group parent")
+    @DisplayName("Save user with common group parent")
     @Test
     public void testSaveCommonGroup() {
         when(userRepository.save(any())).then(a -> a.getArgument(0));
@@ -1083,11 +1092,39 @@ public class UserServiceTest {
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+        assertNull(result.get().getPassword(), "Password should be null at result");
 
         verify(userRepository, never()).findById(any());
         verify(userRepository).save(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
         verify(userResourceService, never()).save(any(UserResourceDao.class));
+        verify(user, never()).setRawPassword(any(), any());
+    }
+
+    @DisplayName("Save new user at admin group and set default password")
+    @Test
+    public void testSaveAtAdminGroupNewInitPassword() {
+        cut.setInitUserWithDefaultPwd(true);
+        when(user.getIdentification()).thenReturn(null);
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Parent at save should not be null");
+            assertEquals(ADMIN_GROUP_ID, ((UserDao) a.getArgument(0)).getParentAdminGroup().getId(), "Wrong parent at save");
+            ((UserDao) a.getArgument(0)).setId(USER_ID);
+            return a.getArgument(0);
+        });
+
+        Optional<User> result = cut.saveAtAdminGroup(user, ADMIN_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+        String expectedPassword = USER_FIRST_NAME.toLowerCase() + "_" + USER_LAST_NAME.toUpperCase() + "_1";
+        assertEquals(expectedPassword, result.get().getPassword(), "Wrong password at result");
+
+        verify(userRepository, never()).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
+        verify(user).setRawPassword(any(), eq(expectedPassword));
     }
 
     @DisplayName("Save existing user at admin group")
@@ -1103,11 +1140,13 @@ public class UserServiceTest {
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+        assertEquals(USER_PASSWORD, result.get().getPassword(), "Wrong password at result");
 
         verify(userRepository).findById(any());
         verify(userRepository).save(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
         verify(userResourceService, never()).save(any(UserResourceDao.class));
+        verify(user, never()).setRawPassword(any(), any());
     }
 
     @DisplayName("Save existing user at admin group with equal images")
@@ -1267,11 +1306,39 @@ public class UserServiceTest {
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+        assertNull(result.get().getPassword(), "Password should be null at result");
 
         verify(userRepository, never()).findById(any());
         verify(userRepository).save(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
         verify(userResourceService, never()).save(any(UserResourceDao.class));
+        verify(user, never()).setRawPassword(any(), any());
+    }
+
+    @DisplayName("Save new user at common group and set default password")
+    @Test
+    public void testSaveAtCommonGroupNewInitPassword() {
+        cut.setInitUserWithDefaultPwd(true);
+        when(user.getIdentification()).thenReturn(null);
+        when(userRepository.save(any())).then(a -> {
+            assertNotNull(((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Parent at save should not be null");
+            assertEquals(COMMON_GROUP_ID, ((UserDao) a.getArgument(0)).getParentCommonGroup().getId(), "Wrong parent at save");
+            ((UserDao) a.getArgument(0)).setId(USER_ID);
+            return a.getArgument(0);
+        });
+
+        Optional<User> result = cut.saveAtCommonGroup(user, COMMON_GROUP_IDENTIFICATION, PRINCIPAL_IDENTIFICATION);
+        assertNotNull(result, "The result should not be null");
+        assertTrue(result.isPresent(), "The result should be present");
+        assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+        String expectedPassword = USER_FIRST_NAME.toLowerCase() + "_" + USER_LAST_NAME.toUpperCase() + "_1";
+        assertEquals(expectedPassword, result.get().getPassword(), "Wrong password at result");
+
+        verify(userRepository, never()).findById(any());
+        verify(userRepository).save(any());
+        verify(userResourceService, never()).delete(any(UserResourceDao.class));
+        verify(userResourceService, never()).save(any(UserResourceDao.class));
+        verify(user).setRawPassword(any(), eq(expectedPassword));
     }
 
     @DisplayName("Save existing user at common group")
@@ -1283,11 +1350,13 @@ public class UserServiceTest {
         assertNotNull(result, "The result should not be null");
         assertTrue(result.isPresent(), "The result should be present");
         assertEquals(USER_IDENTIFICATION, result.get().getIdentification(), "Wrong identification at result");
+        assertEquals(USER_PASSWORD, result.get().getPassword(), "Wrong password at result");
 
         verify(userRepository).findById(any());
         verify(userRepository).save(any());
         verify(userResourceService, never()).delete(any(UserResourceDao.class));
         verify(userResourceService, never()).save(any(UserResourceDao.class));
+        verify(user, never()).setRawPassword(any(), any());
     }
 
     @DisplayName("Save existing user at common group with equal images")

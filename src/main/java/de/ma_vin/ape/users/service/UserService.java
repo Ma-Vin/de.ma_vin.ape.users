@@ -801,6 +801,9 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * In case of not existing user for given identification, the result will be {@link Optional#empty()}
      */
     public Optional<User> saveAtAdminGroup(User user, String groupIdentification, String editorIdentification) {
+        if (!initializePassword(user)) {
+            return Optional.empty();
+        }
         SavingWithParentRepositoryServiceContext<User, UserDao, AdminGroupDao> context = new SavingWithParentRepositoryServiceContext<User, UserDao, AdminGroupDao>(
                 user
                 , editorIdentification
@@ -831,6 +834,9 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
      * In case of not existing user for given identification, the result will be {@link Optional#empty()}
      */
     public Optional<User> saveAtCommonGroup(User user, String groupIdentification, String editorIdentification) {
+        if (!initializePassword(user)) {
+            return Optional.empty();
+        }
         SavingWithParentRepositoryServiceContext<User, UserDao, CommonGroupDao> context = new SavingWithParentRepositoryServiceContext<User, UserDao, CommonGroupDao>(
                 user
                 , editorIdentification
@@ -848,6 +854,22 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
                         , UserAccessMapper::convertToUserDao);
 
         return save(context);
+    }
+
+    /**
+     * Sets a default password at user if it is to initialize
+     *
+     * @param user the user who gets the default password
+     * @return {@code false} if a password could not be set
+     */
+    private boolean initializePassword(User user) {
+        if (!initUserWithDefaultPwd || !isObjectToCreate(user) || (user.getPassword() != null && !user.getPassword().isEmpty())) {
+            return true;
+        }
+
+        String rawPassword = createDefaultPassword(user);
+        ((UserExt) user).setRawPassword(passwordEncoder, rawPassword);
+        return true;
     }
 
     private Adoption<UserDao> createUserAdoption() {
@@ -871,6 +893,9 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
                     log.debug("Small image at user \"{}\" is new and has to stored", dao.getIdentification());
                     userResourceService.save(dao.getSmallImage()).ifPresent(dao::setSmallImage);
                 }
+            }
+            if (dao.getPassword() == null) {
+                dao.setPassword(storedDao.getPassword());
             }
             return dao;
         };
@@ -1040,6 +1065,16 @@ public class UserService extends AbstractChildRepositoryService<UserDao, Privile
             return false;
         }
         return true;
+    }
+
+    /**
+     * Creates a default password which fulfills {@link UserService#isPasswordRequirementFulfilled}
+     *
+     * @param user user who gets the default password
+     * @return a default password
+     */
+    private String createDefaultPassword(User user) {
+        return user.getFirstName().toLowerCase() + "_" + user.getLastName().toUpperCase() + "_1";
     }
 
     /**
