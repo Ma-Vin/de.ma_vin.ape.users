@@ -140,7 +140,7 @@ public class AuthController {
         if (authClients.getClients().stream()
                 .filter(c -> c.getClientId().equals(clientId))
                 .flatMap(c -> c.getRedirects().stream())
-                .noneMatch(r -> redirectUri.equalsIgnoreCase(r.getRedirectStart()))) {
+                .noneMatch(r -> redirectUri.toLowerCase().startsWith(r.getRedirectStart().toLowerCase()))) {
             throw new AuthTokenException(String.format("The redirection uri %s is not allowed for client %s", redirectUri, clientId)
                     , HttpServletResponse.SC_FORBIDDEN);
         }

@@ -41,7 +41,9 @@ public class AuthControllerTest {
     public static final String CLIENT_ID = "DummyClientId";
     public static final String CLIENT_SECRET = "DummyClientSecret";
     public static final String ISSUER_URL = "http://localhost/dummy";
-    public static final String REDIRECT_URL = "http://localhost:8080/";
+
+    public static final String REDIRECT_START_URL = "http://localhost:8080/";
+    public static final String REDIRECT_URL = REDIRECT_START_URL + "/someContext";
     public static final String SCOPE = "DummyScope";
     public static final String STATE = "DummyState";
     public static final String CODE = "DummyCode";
@@ -125,7 +127,7 @@ public class AuthControllerTest {
         client.setClientId(CLIENT_ID);
         client.setSecret(CLIENT_SECRET);
         authClients.getClients().add(client);
-        redirect = new AuthClients.Redirect(REDIRECT_URL);
+        redirect = new AuthClients.Redirect(REDIRECT_START_URL);
         client.getRedirects().add(redirect);
         cut.setAuthClients(authClients);
     }
