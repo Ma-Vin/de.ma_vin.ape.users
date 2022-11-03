@@ -24,29 +24,29 @@ jobs:
         with:
           path: main
       - name: Checkout maven settings
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: Ma-Vin/de.ma_vin.maven
           token: ${{ secrets.APE_DEPENDENCY_BUILD_PAT }}
           path: maven
       - name: Set up JDK 1.17
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
           java-version: 1.17
       - name: Cache SonarCloud packages
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Cache Maven packages
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v1
+        uses: github/codeql-action/init@v2
         with:
           languages: java
       - name: Build and analyze users
@@ -61,4 +61,4 @@ jobs:
           --file main/pom.xml
           --settings maven/settings.xml
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v1
+        uses: github/codeql-action/analyze@v2
