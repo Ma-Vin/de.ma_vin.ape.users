@@ -7,7 +7,7 @@ import de.ma_vin.ape.utils.properties.SystemProperties;
 import de.ma_vin.util.layer.generator.annotations.model.ExtendingDao;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 @ExtendingDao
