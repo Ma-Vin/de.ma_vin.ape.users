@@ -37,6 +37,8 @@
         <maven.plugin-dependency.version>3.5.0</maven.plugin-dependency.version>
         <build.helper.maven.plugin.version>3.2.0</build.helper.maven.plugin.version>
         <keytool.plugin.version>1.6</keytool.plugin.version>
+        <!-- plexus-utils should match the dependency at pom of keytool -->
+        <plexus-utils.version>3.4.1</plexus-utils.version>
 
         <ape.util.version>${project.version}</ape.util.version>
 
@@ -442,6 +444,14 @@
                         </configuration>
                     </execution>
                 </executions>
+                <dependencies>
+                    <!-- github build misses a required class, but local build was fine without explicit naming -->
+                    <dependency>
+                        <groupId>org.codehaus.plexus</groupId>
+                        <artifactId>plexus-utils</artifactId>
+                        <version>${plexus-utils.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>
