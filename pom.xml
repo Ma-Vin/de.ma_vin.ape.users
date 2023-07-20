@@ -34,11 +34,11 @@
 
     <properties>
         <layer.generator.version>1.4</layer.generator.version>
-        <maven.plugin-dependency.version>3.5.0</maven.plugin-dependency.version>
-        <build.helper.maven.plugin.version>3.2.0</build.helper.maven.plugin.version>
-        <keytool.plugin.version>1.6</keytool.plugin.version>
+        <maven.plugin-dependency.version>3.6.0</maven.plugin-dependency.version>
+        <build.helper.maven.plugin.version>3.4.0</build.helper.maven.plugin.version>
+        <keytool.plugin.version>1.7</keytool.plugin.version>
         <!-- plexus-utils should match the dependency at pom of keytool -->
-        <plexus-utils.version>3.4.1</plexus-utils.version>
+        <plexus-utils.version>4.0.0</plexus-utils.version>
 
         <ape.util.version>${project.version}</ape.util.version>
 
@@ -109,8 +109,8 @@
             <version>${layer.generator.version}</version>
         </dependency>
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
