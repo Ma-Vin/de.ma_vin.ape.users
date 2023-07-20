@@ -22,6 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Collections;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -91,12 +93,15 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain oAuthTokenFilterChain(HttpSecurity http, AuthClients authClients) throws Exception {
         if (authClients.isTokenWithClientSecret()) {
-            http.securityMatcher(TOKEN_PATTERN).authorizeHttpRequests().anyRequest().authenticated()
-                    .and().httpBasic();
+            http.securityMatcher(TOKEN_PATTERN)
+                    .authorizeHttpRequests((httpRequests) -> httpRequests.anyRequest().authenticated())
+                    .httpBasic(withDefaults());
         } else {
-            http.securityMatcher(TOKEN_PATTERN).authorizeHttpRequests().anyRequest().permitAll();
+            http.securityMatcher(TOKEN_PATTERN)
+                    .authorizeHttpRequests((httpRequests) -> httpRequests.anyRequest().permitAll());
         }
-        http.cors().and().csrf().disable();
+        http.cors(withDefaults())
+                .csrf(csrfConfigurer -> csrfConfigurer.disable());
 
         return http.build();
     }
@@ -104,10 +109,11 @@ public class SecurityConfig {
     @Bean
     @Order(2)
     public SecurityFilterChain introspectionFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher(INTROSPECTION_PATTERN).authorizeHttpRequests().anyRequest().authenticated()
-                .and().cors()
-                .and().httpBasic()
-                .and().csrf().disable();
+        http.securityMatcher(INTROSPECTION_PATTERN)
+                .authorizeHttpRequests((httpRequests) -> httpRequests.anyRequest().authenticated())
+                .cors(withDefaults())
+                .httpBasic(withDefaults())
+                .csrf(csrfConfigurer -> csrfConfigurer.disable());
 
         return http.build();
     }
@@ -117,13 +123,13 @@ public class SecurityConfig {
     @Order(3)
     public SecurityFilterChain oAuthResourceFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher(OAUTH_SECURED_ADMIN_PATTERN, OAUTH_SECURED_GROUP_PATTERN, OAUTH_SECURED_USER_PATTERN)
-                .authorizeHttpRequests().anyRequest().authenticated().and()
+                .authorizeHttpRequests((httpRequests) -> httpRequests.anyRequest().authenticated())
                 .oauth2ResourceServer(
                         oauth2 -> oauth2.opaqueToken(token -> token.introspectionUri(this.introspectionUri)
                                 .introspectionClientCredentials(this.clientId, this.clientSecret)
                         )
                 )
-                .cors();
+                .cors(withDefaults());
 
         return http.build();
     }
@@ -132,11 +138,11 @@ public class SecurityConfig {
     @Order(4)
     public SecurityFilterChain h2ConsoleFilterChain(HttpSecurity http) throws Exception {
         if (h2ConsoleEnabled) {
-            http.securityMatcher(CONSOLE_PATTERN).authorizeHttpRequests().anyRequest().permitAll()
-                    .and().csrf().disable()
-                    .headers().frameOptions().disable();
+            http.securityMatcher(CONSOLE_PATTERN).authorizeHttpRequests((httpRequests) -> httpRequests.anyRequest().permitAll())
+                    .csrf(csrfConfigurer -> csrfConfigurer.disable())
+                    .headers(headersConfigurer -> headersConfigurer.frameOptions(frameOptionsConfig -> frameOptionsConfig.disable()));
         } else {
-            http.securityMatcher(CONSOLE_PATTERN).authorizeHttpRequests().anyRequest().denyAll();
+            http.securityMatcher(CONSOLE_PATTERN).authorizeHttpRequests(httpRequests -> httpRequests.anyRequest().denyAll());
         }
         return http.build();
     }
@@ -144,9 +150,9 @@ public class SecurityConfig {
     @Bean
     @Order(5)
     public SecurityFilterChain oAuthAuthorizeFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests().requestMatchers(AUTHORIZE_PATTERN).authenticated()
-                .and().cors()
-                .and().formLogin();
+        http.authorizeHttpRequests(httpRequests -> httpRequests.requestMatchers(AUTHORIZE_PATTERN).authenticated())
+                .cors(withDefaults())
+                .formLogin(withDefaults());
 
         return http.build();
     }
