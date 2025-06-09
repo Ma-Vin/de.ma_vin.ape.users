@@ -1,12 +1,12 @@
 package de.ma_vin.ape.users.enums;
 
+import com.github.ma_vin.util.layer_generator.annotations.model.ExtendingDomain;
 import de.ma_vin.ape.users.model.gen.domain.group.AdminGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.BaseGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.CommonGroup;
 import de.ma_vin.ape.users.model.gen.domain.group.PrivilegeGroup;
 import de.ma_vin.ape.users.model.gen.domain.resource.UserResource;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
-import de.ma_vin.util.layer.generator.annotations.model.ExtendingDomain;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -1,9 +1,9 @@
 package de.ma_vin.ape.users.model.domain.user;
 
+import com.github.ma_vin.util.layer_generator.annotations.model.ExtendingDomain;
 import de.ma_vin.ape.users.enums.Role;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.utils.properties.SystemProperties;
-import de.ma_vin.util.layer.generator.annotations.model.ExtendingDomain;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,13 +1,15 @@
 package de.ma_vin.ape.users.controller;
 
-import io.cucumber.junit.Cucumber;
-import io.cucumber.junit.CucumberOptions;
-import org.junit.runner.RunWith;
+import io.cucumber.junit.platform.engine.Constants;
+import org.junit.platform.suite.api.*;
 
-@RunWith(Cucumber.class)
-@CucumberOptions(plugin = {"pretty", "summary"}
-        , snippets = CucumberOptions.SnippetType.CAMELCASE
-        , glue = "de.ma_vin.ape.users.controller.it.steps"
-        , features = "src/test/resources/de/ma_vin/ape/users/controller/user")
+@Suite
+@IncludeEngines("cucumber")
+@SelectClasspathResource("de/ma_vin/ape/users/controller/user")
+@ConfigurationParameters({
+        @ConfigurationParameter(key = Constants.PLUGIN_PROPERTY_NAME, value = "pretty,summary")
+        , @ConfigurationParameter(key = Constants.SNIPPET_TYPE_PROPERTY_NAME, value = "camelcase")
+        , @ConfigurationParameter(key = Constants.GLUE_PROPERTY_NAME, value = "de.ma_vin.ape.users.controller.it.steps")
+})
 public class UserControllerIT {
 }

@@ -1,10 +1,10 @@
 package de.ma_vin.ape.users.model.dao.user.history;
 
+import com.github.ma_vin.util.layer_generator.annotations.model.ExtendingDao;
 import de.ma_vin.ape.users.model.dao.user.UserDaoExt;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.dao.user.history.UserChangeDao;
 import de.ma_vin.ape.utils.properties.SystemProperties;
-import de.ma_vin.util.layer.generator.annotations.model.ExtendingDao;
 import lombok.NoArgsConstructor;
 
 import jakarta.persistence.Entity;

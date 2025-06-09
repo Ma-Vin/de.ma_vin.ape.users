@@ -33,12 +33,12 @@
     </distributionManagement>
 
     <properties>
-        <layer.generator.version>1.4</layer.generator.version>
-        <maven.plugin-dependency.version>3.6.0</maven.plugin-dependency.version>
-        <build.helper.maven.plugin.version>3.4.0</build.helper.maven.plugin.version>
+        <layer.generator.version>2.1.0</layer.generator.version>
+        <maven.plugin-dependency.version>3.8.1</maven.plugin-dependency.version>
+        <build.helper.maven.plugin.version>3.6.0</build.helper.maven.plugin.version>
         <keytool.plugin.version>1.7</keytool.plugin.version>
         <!-- plexus-utils should match the dependency at pom of keytool -->
-        <plexus-utils.version>4.0.0</plexus-utils.version>
+        <plexus-utils.version>4.0.2</plexus-utils.version>
 
         <ape.util.version>${project.version}</ape.util.version>
 
@@ -104,8 +104,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>de.ma_vin.util.layer.generator</groupId>
-            <artifactId>layer-generator-annotation</artifactId>
+            <groupId>com.github.ma_vin.util.layer_generator</groupId>
+            <artifactId>generator-annotation</artifactId>
+            <version>${layer.generator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ma_vin.util.layer_generator</groupId>
+            <artifactId>extension-annotation</artifactId>
             <version>${layer.generator.version}</version>
         </dependency>
         <dependency>
@@ -126,8 +131,13 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -182,7 +192,7 @@
         </dependency>
         <dependency>
             <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-junit</artifactId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -199,7 +209,14 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <configuration>
-                            <argLine>@{argLine} -Djavax.net.ssl.trustStore=${project.build.directory}/keystore/${keytool.plugin.trusted.keystore.name} -Djavax.net.ssl.trustStorePassword=${keytool.plugin.pass}</argLine>
+                        <argLine>@{argLine} -Djavax.net.ssl.trustStore=${project.build.directory}/keystore/${keytool.plugin.trusted.keystore.name} -Djavax.net.ssl.trustStorePassword=${keytool.plugin.pass}</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <parameters>true</parameters>
                     </configuration>
                 </plugin>
             </plugins>
@@ -219,8 +236,8 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>de.ma_vin.util.layer.generator</groupId>
-                                    <artifactId>layer-generator-plugin</artifactId>
+                                    <groupId>com.github.ma_vin.util.layer_generator</groupId>
+                                    <artifactId>generator-plugin</artifactId>
                                     <version>${layer.generator.version}</version>
                                     <outputDirectory>${project.build.directory}</outputDirectory>
                                     <includes>**\/*.xsd</includes>
@@ -270,8 +287,8 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>de.ma_vin.util.layer.generator</groupId>
-                <artifactId>layer-generator-plugin</artifactId>
+                <groupId>com.github.ma_vin.util.layer_generator</groupId>
+                <artifactId>generator-plugin</artifactId>
                 <version>${layer.generator.version}</version>
                 <executions>
                     <execution>
@@ -316,9 +333,9 @@
                             <goal>repackage</goal>
                         </goals>
                         <configuration>
+                            <includeTools>true</includeTools>
                             <layers>
                                 <enabled>true</enabled>
-                                <includeLayerTools>true</includeLayerTools>
                             </layers>
                         </configuration>
                     </execution>

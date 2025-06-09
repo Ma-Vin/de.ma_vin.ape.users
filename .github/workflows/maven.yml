@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout users
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: main
       - name: Checkout maven settings
@@ -29,15 +29,15 @@ jobs:
           repository: Ma-Vin/de.ma_vin.maven
           token: ${{ secrets.APE_DEPENDENCY_BUILD_PAT }}
           path: maven
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: 17
+          java-version: 21
           distribution: adopt
           java-package: jdk
           cache: 'maven'
       - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar

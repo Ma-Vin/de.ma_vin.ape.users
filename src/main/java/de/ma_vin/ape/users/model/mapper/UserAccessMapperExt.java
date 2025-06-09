@@ -1,9 +1,9 @@
 package de.ma_vin.ape.users.model.mapper;
 
+import com.github.ma_vin.util.layer_generator.annotations.mapper.ExtendingAccessMapper;
 import de.ma_vin.ape.users.model.gen.dao.user.UserDao;
 import de.ma_vin.ape.users.model.gen.domain.user.User;
 import de.ma_vin.ape.users.model.gen.mapper.UserAccessMapper;
-import de.ma_vin.util.layer.generator.annotations.mapper.ExtendingAccessMapper;
 
 @ExtendingAccessMapper
 public class UserAccessMapperExt extends UserAccessMapper {

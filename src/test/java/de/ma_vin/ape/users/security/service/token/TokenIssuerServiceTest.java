@@ -142,14 +142,6 @@ public class TokenIssuerServiceTest {
         assertTrue(cut.isValid(encodedToken), "The token should be valid");
     }
 
-    @DisplayName("The encoded token is valid with scope")
-    @Test
-    public void testIsValidWithScope() throws JwtGeneratingException {
-        String encodedToken = token.getEncodedToken();
-
-        assertTrue(cut.isValid(encodedToken, "read"), "The token should be valid");
-    }
-
     @DisplayName("The encoded token is valid and not store but is not needed to")
     @Test
     public void testIsValidNotStoredButNotNeeded() throws JwtGeneratingException {

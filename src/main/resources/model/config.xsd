@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="de.ma_vin.util.gen.model" targetNamespace="de.ma_vin.util.gen.model" version="1.0">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="com.github.ma_vin.util.layer_generator.gen.model" targetNamespace="com.github.ma_vin.util.layer_generator.gen.model" version="1.0">
       
   
   <xs:element name="config" type="tns:config"/>
@@ -241,6 +241,33 @@ Two static function are to provide:
                       
       
       </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="versions">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[Versions of data transport objects for this entity]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="version" type="tns:version"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
                 
     
     </xs:sequence>
@@ -358,6 +385,52 @@ Generated Mapper work only one way, from domain model to transport one]]></xs:do
     </xs:annotation>
             
     
+    <xs:complexContent>
+                  
+      
+      <xs:extension base="tns:abstractBasicField">
+                        
+        
+        <xs:sequence>
+                              
+          
+          <xs:element minOccurs="0" name="daoInfo" type="tns:daoInfo">
+                        
+            <xs:annotation>
+                            
+              <xs:documentation><![CDATA[(Optional) additional information for database.]]></xs:documentation>
+                          
+            </xs:annotation>
+                      
+          </xs:element>
+                            
+        
+        </xs:sequence>
+                        
+        
+        <xs:attribute name="models" type="tns:models">
+                    
+          <xs:annotation>
+                        
+            <xs:documentation><![CDATA[For which object is this field relevant]]></xs:documentation>
+                      
+          </xs:annotation>
+                  
+        </xs:attribute>
+                      
+      
+      </xs:extension>
+                
+    
+    </xs:complexContent>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType abstract="true" name="abstractBasicField">
+            
+    
     <xs:sequence>
                   
       
@@ -366,17 +439,6 @@ Generated Mapper work only one way, from domain model to transport one]]></xs:do
         <xs:annotation>
                     
           <xs:documentation><![CDATA[Description of the attribute]]></xs:documentation>
-                  
-        </xs:annotation>
-              
-      </xs:element>
-                  
-      
-      <xs:element minOccurs="0" name="daoInfo" type="tns:daoInfo">
-                
-        <xs:annotation>
-                    
-          <xs:documentation><![CDATA[(Optional) additional information for database.]]></xs:documentation>
                   
         </xs:annotation>
               
@@ -435,17 +497,6 @@ Generated Mapper work only one way, from domain model to transport one]]></xs:do
       <xs:annotation>
                 
         <xs:documentation><![CDATA[Short description of the attribute]]></xs:documentation>
-              
-      </xs:annotation>
-          
-    </xs:attribute>
-            
-    
-    <xs:attribute name="models" type="tns:models">
-            
-      <xs:annotation>
-                
-        <xs:documentation><![CDATA[For which object is this field relevant]]></xs:documentation>
               
       </xs:annotation>
           
@@ -620,21 +671,75 @@ the DDL for the column.]]></xs:documentation>
     </xs:annotation>
             
     
-    <xs:sequence>
+    <xs:complexContent>
                   
       
-      <xs:element minOccurs="0" name="nonOwnerFilterField" type="tns:nonOwnerFilterField">
-                
-        <xs:annotation>
+      <xs:extension base="tns:abstractBasicReference">
+                        
+        
+        <xs:sequence>
+                              
+          
+          <xs:element minOccurs="0" name="nonOwnerFilterField" type="tns:nonOwnerFilterField">
+                        
+            <xs:annotation>
+                            
+              <xs:documentation><![CDATA[Filtering on non owner references whose target value differs from target entity values]]></xs:documentation>
+                          
+            </xs:annotation>
+                      
+          </xs:element>
+                            
+        
+        </xs:sequence>
+                        
+        
+        <xs:attribute name="filterField" type="xs:string">
                     
-          <xs:documentation><![CDATA[Filtering on non owner references whose target value differs from target entity values]]></xs:documentation>
+          <xs:annotation>
+                        
+            <xs:documentation><![CDATA[Field of enum type to filter references from one entity to another multiple times]]></xs:documentation>
+                      
+          </xs:annotation>
                   
-        </xs:annotation>
-              
-      </xs:element>
+        </xs:attribute>
+                        
+        
+        <xs:attribute name="filterFieldValue" type="xs:string">
+                    
+          <xs:annotation>
+                        
+            <xs:documentation><![CDATA[Value which should be used for filtering.]]></xs:documentation>
+                      
+          </xs:annotation>
+                  
+        </xs:attribute>
+                        
+        
+        <xs:attribute name="isList" type="xs:boolean">
+                    
+          <xs:annotation>
+                        
+            <xs:documentation><![CDATA[Indicator if a one to one relation or an one to many relation exists]]></xs:documentation>
+                      
+          </xs:annotation>
+                  
+        </xs:attribute>
+                      
+      
+      </xs:extension>
                 
     
-    </xs:sequence>
+    </xs:complexContent>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType abstract="true" name="abstractBasicReference">
+            
+    
+    <xs:sequence/>
             
     
     <xs:attribute name="referenceName" type="xs:string" use="required">
@@ -670,44 +775,11 @@ the DDL for the column.]]></xs:documentation>
     </xs:attribute>
             
     
-    <xs:attribute name="filterField" type="xs:string">
-            
-      <xs:annotation>
-                
-        <xs:documentation><![CDATA[Field of enum type to filter references from one entity to another multiple times]]></xs:documentation>
-              
-      </xs:annotation>
-          
-    </xs:attribute>
-            
-    
-    <xs:attribute name="filterFieldValue" type="xs:string">
-            
-      <xs:annotation>
-                
-        <xs:documentation><![CDATA[Value which should be used for filtering.]]></xs:documentation>
-              
-      </xs:annotation>
-          
-    </xs:attribute>
-            
-    
     <xs:attribute name="isOwner" type="xs:boolean">
             
       <xs:annotation>
                 
         <xs:documentation><![CDATA[{@code true} if the parent should also be the parent at database. Otherwise some connection table will be generated]]></xs:documentation>
-              
-      </xs:annotation>
-          
-    </xs:attribute>
-            
-    
-    <xs:attribute name="isList" type="xs:boolean">
-            
-      <xs:annotation>
-                
-        <xs:documentation><![CDATA[Indicator if a one to one relation or an one to many relation exists]]></xs:documentation>
               
       </xs:annotation>
           
@@ -721,7 +793,7 @@ the DDL for the column.]]></xs:documentation>
         
     <xs:annotation>
             
-      <xs:documentation><![CDATA[Describes an filter criteria for non owner reference whose filter enum differs from target entity fields.]]></xs:documentation>
+      <xs:documentation><![CDATA[Describes a filter criteria for non owner reference whose filter enum differs from target entity fields.]]></xs:documentation>
           
     </xs:annotation>
             
@@ -760,6 +832,219 @@ the DDL for the column.]]></xs:documentation>
       </xs:annotation>
           
     </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="version">
+        
+    <xs:annotation>
+            
+      <xs:documentation><![CDATA[class to provide versioning of the data transport objects]]></xs:documentation>
+          
+    </xs:annotation>
+            
+    
+    <xs:sequence>
+                  
+      
+      <xs:element minOccurs="0" name="versionName" type="xs:string">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[(Optional) name of the versioned entity. If not set, it will be generated from {@link Entity#baseName} and {@link Version#versionId}]]></xs:documentation>
+                  
+        </xs:annotation>
+              
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="removedFieldNames">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[List of {@link Field#fieldName} which should be removed]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="removedField" type="xs:string"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="addedFields">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[List of {@link Field}s which should be added]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="addedField" type="tns:versionField"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="removedReferenceNames">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[List of single {@link Reference#referenceName} which should be removed]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="removedReference" type="xs:string"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                  
+      
+      <xs:element minOccurs="0" name="addedReferences">
+                
+        <xs:annotation>
+                    
+          <xs:documentation><![CDATA[List of single {@link Reference}s which should be added]]></xs:documentation>
+                  
+        </xs:annotation>
+                        
+        
+        <xs:complexType>
+                              
+          
+          <xs:sequence>
+                                    
+            
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="addedReference" type="tns:versionReference"/>
+                                  
+          
+          </xs:sequence>
+                            
+        
+        </xs:complexType>
+                      
+      
+      </xs:element>
+                
+    
+    </xs:sequence>
+            
+    
+    <xs:attribute name="versionId" type="xs:string" use="required">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[identification of the version]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+            
+    
+    <xs:attribute name="baseVersionId" type="xs:string">
+            
+      <xs:annotation>
+                
+        <xs:documentation><![CDATA[(Optional) name of the version which is to use as reference to derive difference from. If not set, the owner entity will be used.]]></xs:documentation>
+              
+      </xs:annotation>
+          
+    </xs:attribute>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="versionField">
+            
+    
+    <xs:complexContent>
+                  
+      
+      <xs:extension base="tns:abstractBasicField">
+                        
+        
+        <xs:sequence/>
+                      
+      
+      </xs:extension>
+                
+    
+    </xs:complexContent>
+          
+  
+  </xs:complexType>
+      
+  
+  <xs:complexType name="versionReference">
+            
+    
+    <xs:complexContent>
+                  
+      
+      <xs:extension base="tns:abstractBasicReference">
+                        
+        
+        <xs:sequence/>
+                        
+        
+        <xs:attribute name="divergentTargetVersion" type="xs:string">
+                    
+          <xs:annotation>
+                        
+            <xs:documentation><![CDATA[Possibility to references another version than the owner {@link Version#getVersionId()} (if some target entity exists with a version with the same id)
+or the non version entity (if not any target entity exists with a version)]]></xs:documentation>
+                      
+          </xs:annotation>
+                  
+        </xs:attribute>
+                      
+      
+      </xs:extension>
+                
+    
+    </xs:complexContent>
           
   
   </xs:complexType>

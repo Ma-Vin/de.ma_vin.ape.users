@@ -78,16 +78,15 @@ public class AuthController {
     @PostMapping("/introspection")
     public @ResponseBody
     IntrospectionResponse introspection(@RequestParam String token, @RequestParam(required = false, name = "token_type_hint") String tokenTypeHint) {
-        Optional<JsonWebToken> decodedToken = tokenIssuerService.getToken(token);
-        if (decodedToken.isEmpty()) {
+        Optional<TokenIssuerService.TokenInfo> tokenInfo = tokenIssuerService.getTokenInfo(token);
+        if (tokenInfo.isEmpty()) {
             throw new AuthTokenException("The token is not known or not valid anymore", HttpServletResponse.SC_UNAUTHORIZED);
-
         }
-        Payload payload = decodedToken.get().getPayload();
+        Payload payload = tokenInfo.get().getToken().getPayload();
 
         IntrospectionResponse response = new IntrospectionResponse();
         response.setActive(Boolean.TRUE);
-        response.setTokenType(decodedToken.get().getHeader().getTyp());
+        response.setTokenType(tokenInfo.get().getToken().getHeader().getTyp());
         response.setUsername(payload.getSub());
         response.setSub(payload.getSub());
         response.setAud(payload.getAud());
@@ -96,6 +95,7 @@ public class AuthController {
         response.setNbf(payload.getNbf());
         response.setIss(payload.getIss());
         response.setJti(payload.getJti());
+        response.setScope(tokenInfo.get().getScope());
 
         return response;
     }

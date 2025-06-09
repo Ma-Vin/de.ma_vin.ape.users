@@ -1,4 +1,4 @@
-<conf:config xmlns:conf="de.ma_vin.util.gen.model">
+<conf:config xmlns:conf="com.github.ma_vin.util.layer_generator.gen.model">
     <basePackage>de.ma_vin.ape.users.model.gen</basePackage>
     <dtoPackage>dto</dtoPackage>
     <domainPackage>domain</domainPackage>

@@ -44,6 +44,8 @@ public class TokenIssuerService {
     private Long refreshTokenExpiresInSeconds;
     @Value("${encodingAlgorithm}")
     private String encodingAlgorithm;
+    @Value("${defaultTokenScope}")
+    private String defaultScope;
 
     /**
      * Clears all existing tokens
@@ -67,7 +69,7 @@ public class TokenIssuerService {
      * @return new {@link Optional} of a pair token and refresh token
      */
     public Optional<TokenInfo> refresh(String encodedRefreshToken) {
-        if (!isValidInternal(encodedRefreshToken, false, null)) {
+        if (!isValidInternal(encodedRefreshToken, false)) {
             return Optional.empty();
         }
 
@@ -80,7 +82,7 @@ public class TokenIssuerService {
         if (tokenStorageService.isStoringTokens()) {
             tokenInfoOpt = tokenStorageService.findToken(refreshToken.get().getPayload().getJti());
         } else {
-            tokenInfoOpt = getTokenInfo(encodedRefreshToken, false, null);
+            tokenInfoOpt = getTokenInfo(encodedRefreshToken, false);
         }
 
         if (tokenInfoOpt.isEmpty()) {
@@ -235,18 +237,7 @@ public class TokenIssuerService {
      * @return {@code true} if the token is valid. Otherwise {@code false}
      */
     public boolean isValid(String encodedToken) {
-        return isValid(encodedToken, null);
-    }
-
-    /**
-     * Checks whether is a given token is known and valid
-     *
-     * @param encodedToken token to check
-     * @param scope        the scope for which is validated
-     * @return {@code true} if the token is valid. Otherwise {@code false}
-     */
-    public boolean isValid(String encodedToken, String scope) {
-        return isValidInternal(encodedToken, true, scope);
+        return isValidInternal(encodedToken, true);
     }
 
     /**
@@ -254,11 +245,10 @@ public class TokenIssuerService {
      *
      * @param encodedToken token to check
      * @param isToken      {@code true} if to check a token. {@code false} if the its a refresh token
-     * @param scope        the scope for which is validated
      * @return {@code true} if the token is valid. Otherwise {@code false}
      */
-    private boolean isValidInternal(String encodedToken, boolean isToken, String scope) {
-        return getTokenInfo(encodedToken, isToken, scope).isPresent();
+    private boolean isValidInternal(String encodedToken, boolean isToken) {
+        return getTokenInfo(encodedToken, isToken).isPresent();
     }
 
     /**
@@ -268,7 +258,17 @@ public class TokenIssuerService {
      * @return Optional of the known and valid decoded token.
      */
     public Optional<JsonWebToken> getToken(String encodedToken) {
-        return getTokenInfo(encodedToken, true, null).map(TokenInfo::getToken);
+        return getTokenInfo(encodedToken).map(TokenInfo::getToken);
+    }
+
+    /**
+     * Determines the known token info and checks if it is valid
+     *
+     * @param encodedToken the encoded token
+     * @return Optional of the known and valid decoded token.
+     */
+    public Optional<TokenInfo> getTokenInfo(String encodedToken) {
+        return getTokenInfo(encodedToken, true);
     }
 
     /**
@@ -276,10 +276,9 @@ public class TokenIssuerService {
      *
      * @param encodedToken token to check
      * @param isToken      {@code true} if to check a token. {@code false} if the its a refresh token
-     * @param scope        the scope for which is validated
      * @return Optional of the known and valid token info.
      */
-    private Optional<TokenInfo> getTokenInfo(String encodedToken, boolean isToken, String scope) {
+    public Optional<TokenInfo> getTokenInfo(String encodedToken, boolean isToken) {
         String logText = isToken ? "token" : "refresh token";
         Optional<JsonWebToken> token = JsonWebToken.decodeToken(encodedToken, secret);
         if (token.isEmpty()) {
@@ -287,9 +286,9 @@ public class TokenIssuerService {
             return Optional.empty();
         }
         if (tokenStorageService.isStoringTokens()) {
-            return getTokenInfoOfStoredOne(encodedToken, token.get(), isToken, scope);
+            return getTokenInfoOfStoredOne(encodedToken, token.get(), isToken);
         }
-        return getTokenInfoOfVerification(token.get(), scope);
+        return getTokenInfoOfVerification(token.get());
     }
 
     /**
@@ -298,10 +297,9 @@ public class TokenIssuerService {
      * @param encodedToken token to check
      * @param token        the encoded jwt
      * @param isToken      {@code true} if to check a token. {@code false} if the its a refresh token
-     * @param scope        the scope for which is validated
      * @return Optional of the known and valid token info.
      */
-    private Optional<TokenInfo> getTokenInfoOfStoredOne(String encodedToken, JsonWebToken token, boolean isToken, String scope) {
+    private Optional<TokenInfo> getTokenInfoOfStoredOne(String encodedToken, JsonWebToken token, boolean isToken) {
         LocalDateTime now = SystemProperties.getSystemDateTime();
         String logText = isToken ? "token" : "refresh token";
         Optional<TokenInfo> tokenInfoOpt = tokenStorageService.findToken(token.getPayload().getJti());
@@ -315,10 +313,6 @@ public class TokenIssuerService {
             log.error("The {} {} is different to the known one", logText, encodedToken);
             return Optional.empty();
         }
-        if (!tokenInfo.containsScope(scope)) {
-            log.error("The {} {} has the wrong scope {}", logText, encodedToken, scope);
-            return Optional.empty();
-        }
         if (referenceToken.getPayload().getExpAsLocalDateTime().isBefore(now)) {
             log.error("The {} {} is expired", logText, encodedToken);
             return Optional.empty();
@@ -329,13 +323,12 @@ public class TokenIssuerService {
     /**
      * This methods only checks the signature and does not check against a stored token
      *
-     * @param token   the encoded jwt
-     * @param scope   the scope for which is validated
+     * @param token the encoded jwt
      * @return Optional of a new token info. The token and the refresh token are the same, since the other can not be determined
      */
-    private Optional<TokenInfo> getTokenInfoOfVerification(JsonWebToken token, String scope) {
+    private Optional<TokenInfo> getTokenInfoOfVerification(JsonWebToken token) {
         TokenInfo result = new TokenInfo(tokenStorageService.getUuid(), token.getPayload().getExpAsLocalDateTime()
-                , token, token, scope);
+                , token, token, defaultScope);
 
         return Optional.of(result);
     }

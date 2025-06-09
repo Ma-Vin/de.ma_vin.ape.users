@@ -1,7 +1,7 @@
 package de.ma_vin.ape.users.model.dao.group;
 
+import com.github.ma_vin.util.layer_generator.annotations.model.ExtendingDao;
 import de.ma_vin.ape.users.model.gen.dao.group.BaseGroupDao;
-import de.ma_vin.util.layer.generator.annotations.model.ExtendingDao;
 import lombok.NoArgsConstructor;
 
 import jakarta.persistence.Entity;

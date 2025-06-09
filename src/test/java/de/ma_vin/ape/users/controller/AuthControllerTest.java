@@ -928,7 +928,7 @@ public class AuthControllerTest {
     @DisplayName("Introspect a valid token")
     @Test
     public void testIntrospection() {
-        when(tokenIssuerService.getToken(eq(TOKEN))).thenReturn(Optional.of(token));
+        when(tokenIssuerService.getTokenInfo(eq(TOKEN))).thenReturn(Optional.of(tokenInfo));
 
         IntrospectionResponse result = cut.introspection(TOKEN, null);
 
@@ -938,13 +938,13 @@ public class AuthControllerTest {
         assertEquals(SystemProperties.getSystemDateTime().plus(10L, ChronoUnit.SECONDS)
                 .atZone(SystemProperties.getZoneId()).toEpochSecond(), result.getExp(), "Wrong expiration");
 
-        verify(tokenIssuerService).getToken(eq(TOKEN));
+        verify(tokenIssuerService).getTokenInfo(eq(TOKEN));
     }
 
     @DisplayName("Introspect an invalid token")
     @Test
     public void testIntrospectionInvalid() {
-        when(tokenIssuerService.getToken(eq(TOKEN))).thenReturn(Optional.empty());
+        when(tokenIssuerService.getTokenInfo(eq(TOKEN))).thenReturn(Optional.empty());
 
         try {
             cut.introspection(TOKEN, null);
@@ -953,6 +953,6 @@ public class AuthControllerTest {
             assertEquals(HttpServletResponse.SC_UNAUTHORIZED, e.getHttpStatus(), "Wrong error status");
         }
 
-        verify(tokenIssuerService).getToken(eq(TOKEN));
+        verify(tokenIssuerService).getTokenInfo(eq(TOKEN));
     }
 }
